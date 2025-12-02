@@ -1,0 +1,18 @@
+# 依赖包
+node_modules/  
+backend/.m2/     
+*.jar             
+*.war             
+# 环境变量文件
+.env               
+.env.*           
+# idea
+.idea/
+target/
+.mvn/
+mvnw*
+log.*
+#配置文件
+application-*.yml
+# 缓存文件
+file/
