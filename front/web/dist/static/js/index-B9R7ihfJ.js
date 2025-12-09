@@ -1,0 +1,1 @@
+import{_ as n}from"./index-CEdlrQCP.js";import{r as o,s as t,o as l,C as p,j as e}from"./index-VkklmaQD.js";const f={__name:"index",setup(u){const r=o("/prod-api/swagger-ui/index.html");return(c,s)=>(l(),t(e(n),{src:e(r),"onUpdate:src":s[0]||(s[0]=a=>p(r)?r.value=a:null)},null,8,["src"]))}};export{f as default};
