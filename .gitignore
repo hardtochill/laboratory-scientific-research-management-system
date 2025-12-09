@@ -1,18 +1,67 @@
 # 依赖包
 node_modules/  
 backend/.m2/     
-*.jar             
-*.war             
+*.jar              
+*.war              
+*.ear
+
 # 环境变量文件
-.env               
-.env.*           
-# idea
+.env                
+.env.*            
+!.env.example
+
+# IDE 配置
 .idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# 构建输出
+dist/
+dist-ssr/
+build/
 target/
+
+# Maven
 .mvn/
 mvnw*
+*.class
+
+# NPM
+.npm/
+yarn-error.log
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+
+# 日志文件
 log.*
-#配置文件
+logs/
+*.log
+
+# 配置文件
 application-*.yml
+application-*.properties
+
 # 缓存文件
+.cache/
+.temp/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器临时文件
+*.swp
+*.swo
+*~
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 本地文件
+*.local
 file/
