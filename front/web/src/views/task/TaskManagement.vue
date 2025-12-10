@@ -38,17 +38,27 @@
             </el-tag>
 
             <!-- 展开子任务按钮 -->
-            <el-button
-              type="primary"
-              size="small"
-              @click.stop="toggleSubTasks(task)"
-              v-if="task.hasSubTasks"
-            >
-              {{ task.expanded ? '收起' : '展开' }}子任务
-            </el-button>
-          </div>
+          <el-button
+            type="primary"
+            size="small"
+            @click.stop="toggleSubTasks(task)"
+            v-if="task.hasSubTasks"
+          >
+            {{ task.expanded ? '收起' : '展开' }}子任务
+          </el-button>
+        </div>
 
-          <!-- 子任务列表（带动画效果） -->
+        <!-- 任务进度条 -->
+        <div class="progress-container">
+          <el-progress
+            :percentage="getProgressPercentage(task)"
+            :color="getProgressColor(task)"
+            :status="getProgressStatus(task)"
+            :stroke-width="8"
+          ></el-progress>
+        </div>
+
+        <!-- 子任务列表（带动画效果） -->
           <transition name="expand">
             <div v-if="task.expanded" class="sub-tasks">
               <div class="loading" v-if="task.loading">
@@ -91,14 +101,17 @@
           <el-descriptions-item label="创建人">
             {{ currentTask.createNickName }}
           </el-descriptions-item>
+          <el-descriptions-item label="执行人">
+            {{ currentTask.executeNickName }}
+          </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ parseTime(currentTask.createTime) }}
           </el-descriptions-item>
           <el-descriptions-item label="预期完成时间">
-            {{ parseTime(currentTask.expectedFinishTime) }}
+            {{ parseTime(currentTask.expectedFinishTime)|| '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="实际完成时间">
-            {{ parseTime(currentTask.actualFinishTime) || '-' }}
+            {{ parseTime(currentTask.actualFinishTime)|| '-'}}
           </el-descriptions-item>
           <el-descriptions-item label="备注">
             {{ currentTask.taskRemark || '-' }}
@@ -114,8 +127,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+<script setup>
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getParentTasks, getSubTasks, getTaskDetail } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
@@ -130,7 +143,7 @@ const TASK_STATUS = {
 }
 
 // 任务状态类型映射
-const getStatusType = (status: number) => {
+const getStatusType = (status) => {
   switch (status) {
     case TASK_STATUS.PENDING:
       return 'info'
@@ -146,7 +159,7 @@ const getStatusType = (status: number) => {
 }
 
 // 任务状态文本映射
-const getStatusText = (status: number) => {
+const getStatusText = (status) => {
   switch (status) {
     case TASK_STATUS.PENDING:
       return '未开始'
@@ -161,23 +174,71 @@ const getStatusText = (status: number) => {
   }
 }
 
+// 使用后端返回的进度百分比
+const getProgressPercentage = (task) => {
+  // 确保task对象有效
+  if (!task) return 0
+  
+  // 使用后端返回的percentage字段，如果不存在则默认为0%
+  return task.percentage !== undefined ? task.percentage : 0
+}
+
+// 任务进度颜色
+const getProgressColor = (task) => {
+  // 确保task对象有效
+  if (!task) return '#909399'
+  
+  // 根据任务状态决定颜色
+  switch (task.taskStatus) {
+    case TASK_STATUS.PENDING:
+      return '#909399'
+    case TASK_STATUS.PROCESSING:
+      return '#E6A23C'
+    case TASK_STATUS.FINISHED:
+      return '#67C23A'
+    case TASK_STATUS.SKIPPED:
+      return '#F56C6C'
+    default:
+      return '#909399'
+  }
+}
+
+// 任务进度状态
+const getProgressStatus = (task) => {
+  // 确保task对象有效
+  if (!task) return 'normal'
+  
+  // 根据任务状态决定进度条状态
+  switch (task.taskStatus) {
+    case TASK_STATUS.FINISHED:
+      return 'success'
+    case TASK_STATUS.SKIPPED:
+      return 'exception'
+    case TASK_STATUS.PROCESSING:
+      return 'active'
+    default:
+      return 'normal'
+  }
+}
+
 // 父任务列表
-const parentTasks = ref<any[]>([])
+const parentTasks = ref([])
 // 任务详情对话框可见性
 const dialogVisible = ref(false)
 // 当前选中的任务
-const currentTask = ref<any>(null)
+const currentTask = ref(null)
 
 // 加载父任务列表
 const loadParentTasks = async () => {
   try {
     const response = await getParentTasks()
     // 为每个任务添加扩展属性，添加空值检查
-    parentTasks.value = (response.data || []).map((task: any) => ({
+    parentTasks.value = (response.data || []).map((task) => ({
       ...task,
       expanded: false,
       loading: false,
-      hasSubTasks: true, // 假设都有子任务，实际可以根据后端返回判断
+      // 保留后端返回的hasSubTasks和percentage字段
+      hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false,
       subTasks: []
     }))
   } catch (error) {
@@ -187,7 +248,7 @@ const loadParentTasks = async () => {
 }
 
 // 切换子任务显示/隐藏
-const toggleSubTasks = async (task: any) => {
+const toggleSubTasks = async (task) => {
   if (!task.expanded) {
     // 加载子任务
     await loadSubTasks(task)
@@ -196,16 +257,16 @@ const toggleSubTasks = async (task: any) => {
 }
 
 // 加载子任务
-const loadSubTasks = async (parentTask: any) => {
+const loadSubTasks = async (parentTask) => {
   if (!parentTask.loading && parentTask.subTasks.length === 0) {
     try {
       parentTask.loading = true
       const response = await getSubTasks(parentTask.taskId)
-      parentTask.subTasks = (response.data || []).map((task: any) => ({
+      parentTask.subTasks = (response.data || []).map((task) => ({
         ...task,
         expanded: false,
         loading: false,
-        hasSubTasks: true, // 假设都有子任务，实际可以根据后端返回判断
+        hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false, // 使用后端返回的值，默认false
         subTasks: [],
         parentTaskId: parentTask.taskId
       }))
@@ -219,7 +280,7 @@ const loadSubTasks = async (parentTask: any) => {
 }
 
 // 显示任务详情
-const showTaskDetail = async (task: any) => {
+const showTaskDetail = async (task) => {
   try {
     const response = await getTaskDetail(task.taskId)
     currentTask.value = response.data || null
@@ -289,6 +350,12 @@ onMounted(() => {
   width: 24px;
 }
 
+.progress-container {
+  margin: 8px 0 0 40px;
+  width: calc(100% - 60px);
+  animation: fadeIn 0.5s ease-in;
+}
+
 .sub-tasks {
   margin-left: 32px;
   margin-top: 8px;
@@ -310,6 +377,18 @@ onMounted(() => {
   max-height: 0;
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .task-detail {

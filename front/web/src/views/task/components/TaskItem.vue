@@ -38,8 +38,8 @@
     <div class="progress-container">
       <el-progress
         :percentage="getProgressPercentage(task)"
-        :color="getProgressColor(task.taskStatus)"
-        :status="getProgressStatus(task.taskStatus)"
+        :color="getProgressColor(task)"
+        :status="getProgressStatus(task)"
         :stroke-width="8"
       ></el-progress>
     </div>
@@ -63,29 +63,21 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
 
 // 组件属性
-const props = defineProps<{
+const props = defineProps({
   task: {
-    taskId: number
-    taskName: string
-    taskStatus: number
-    expanded: boolean
-    loading: boolean
-    hasSubTasks: boolean
-    subTasks: any[]
-    parentTaskId: number
+    type: Object,
+    required: true
   }
-}>()
+})
 
 // 组件事件
-const emit = defineEmits<{
-  'show-detail': [task: any]
-}>()
+const emit = defineEmits(['show-detail'])
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -96,7 +88,7 @@ const TASK_STATUS = {
 }
 
 // 任务状态类型映射
-const getStatusType = (status: number) => {
+const getStatusType = (status) => {
   switch (status) {
     case TASK_STATUS.PENDING:
       return 'info'
@@ -112,7 +104,7 @@ const getStatusType = (status: number) => {
 }
 
 // 任务状态文本映射
-const getStatusText = (status: number) => {
+const getStatusText = (status) => {
   switch (status) {
     case TASK_STATUS.PENDING:
       return '未开始'
@@ -127,9 +119,22 @@ const getStatusText = (status: number) => {
   }
 }
 
+// 使用后端返回的进度百分比
+const getProgressPercentage = (task) => {
+  // 确保task对象有效
+  if (!task) return 0
+  
+  // 使用后端返回的percentage字段，如果不存在则默认为0%
+  return task.percentage !== undefined ? task.percentage : 0
+}
+
 // 任务进度颜色
-const getProgressColor = (status: number) => {
-  switch (status) {
+const getProgressColor = (task) => {
+  // 确保task对象有效
+  if (!task) return '#909399'
+  
+  // 根据任务状态决定颜色
+  switch (task.taskStatus) {
     case TASK_STATUS.PENDING:
       return '#909399'
     case TASK_STATUS.PROCESSING:
@@ -144,8 +149,12 @@ const getProgressColor = (status: number) => {
 }
 
 // 任务进度状态
-const getProgressStatus = (status: number) => {
-  switch (status) {
+const getProgressStatus = (task) => {
+  // 确保task对象有效
+  if (!task) return 'normal'
+  
+  // 根据任务状态决定进度条状态
+  switch (task.taskStatus) {
     case TASK_STATUS.FINISHED:
       return 'success'
     case TASK_STATUS.SKIPPED:
@@ -154,23 +163,6 @@ const getProgressStatus = (status: number) => {
       return 'active'
     default:
       return 'normal'
-  }
-}
-
-// 计算任务进度百分比
-const getProgressPercentage = (task: any) => {
-  // 根据任务状态计算进度
-  switch (task.taskStatus) {
-    case TASK_STATUS.PENDING:
-      return 0
-    case TASK_STATUS.PROCESSING:
-      return Math.floor(Math.random() * 50) + 10 // 模拟10%-60%的进度
-    case TASK_STATUS.FINISHED:
-      return 100
-    case TASK_STATUS.SKIPPED:
-      return 0
-    default:
-      return 0
   }
 }
 
@@ -189,11 +181,11 @@ const loadSubTasks = async () => {
     try {
       props.task.loading = true
       const response = await getSubTasks(props.task.taskId)
-      props.task.subTasks = (response.data || []).map((task: any) => ({
+      props.task.subTasks = (response.data || []).map((task) => ({
         ...task,
         expanded: false,
         loading: false,
-        hasSubTasks: true, // 假设都有子任务，实际可以根据后端返回判断
+        hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false, // 使用后端返回的值，默认false
         subTasks: [],
         parentTaskId: props.task.taskId
       }))

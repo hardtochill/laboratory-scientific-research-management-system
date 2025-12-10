@@ -1,6 +1,7 @@
 package com.ruoyi.experiment.controller;
 
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.framework.aspectj.lang.annotation.Anonymous;
 import com.ruoyi.framework.web.domain.AjaxResult;
@@ -22,7 +23,7 @@ public class TaskController {
      */
     @GetMapping("/parent-tasks")
     public AjaxResult getParentTasks() {
-        List<Task> parentTasks = taskService.getAllTasksWithHierarchy();
+        List<TaskVO> parentTasks = taskService.getParentTasks(0L);
         return AjaxResult.success(parentTasks);
     }
 
@@ -33,7 +34,7 @@ public class TaskController {
      */
     @GetMapping("/sub-tasks/{parentTaskId}")
     public AjaxResult getSubTasks(@PathVariable Long parentTaskId) {
-        List<Task> subTasks = taskService.getSubTasksByParentId(parentTaskId);
+        List<TaskVO> subTasks = taskService.getParentTasks(parentTaskId);
         return AjaxResult.success(subTasks);
     }
 

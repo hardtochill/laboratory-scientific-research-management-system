@@ -12,6 +12,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="taskRemark"         column="task_remark"         />
         <result property="taskOrder"          column="task_order"          />
         <result property="taskDepth"          column="task_depth"          />
+        <result property="hasSubTasks"        column="has_sub_tasks"        />
         <result property="taskStatus"         column="task_status"         />
         <result property="visibleType"        column="visible_type"        />
         <result property="createUserId"       column="create_user_id"       />
@@ -23,21 +24,38 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="actualFinishTime"   column="actual_finish_time"   />
         <result property="updateTime"         column="update_time"         />
     </resultMap>
-
-    <select id="selectParentTasks" resultMap="TaskResult">
-        select * from task
-        where parent_task_id is null or parent_task_id = 0
+    <select id="selectFirstParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
+        select task_id,task_name,task_status from task
+        where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
+        order by create_time desc
+    </select>
+    <select id="selectSubParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
+        select task_id,task_name,task_status from task
+        where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
         order by task_order asc
     </select>
-
-    <select id="selectSubTasksByParentId" parameterType="Long" resultMap="TaskResult">
+    <select id="selectSubTasksByParentId" resultType="com.ruoyi.experiment.pojo.entity.Task">
         select * from task
         where parent_task_id = #{parentTaskId}
         order by task_order asc
     </select>
 
-    <select id="selectTaskById" parameterType="Long" resultMap="TaskResult">
+    <select id="selectTaskById" resultType="com.ruoyi.experiment.pojo.entity.Task">
         select * from task
         where task_id = #{taskId}
+    </select>
+
+    <select id="selectParentIdsWithSubTasks" resultType="java.lang.Long">
+        select parent_task_id from task
+        where parent_task_id in
+        <foreach collection="parentIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </select>
+    <select id="selectCalculatePercentage" resultType="map">
+        select count(*) as totalSubTasks,
+               sum(case when task_status>=2 then 1 else 0 end) as completedSubTasks
+        from task
+        where parent_task_id=#{parentTaskId}
     </select>
 </mapper>
