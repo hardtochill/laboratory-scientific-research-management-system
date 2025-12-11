@@ -4,39 +4,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.TaskMapper">
 
-    <resultMap type="com.ruoyi.experiment.pojo.entity.Task" id="TaskResult">
-        <id     property="taskId"             column="task_id"             />
-        <result property="parentTaskId"       column="parent_task_id"       />
-        <result property="taskName"           column="task_name"           />
-        <result property="taskDescription"    column="task_description"    />
-        <result property="taskRemark"         column="task_remark"         />
-        <result property="taskOrder"          column="task_order"          />
-        <result property="taskDepth"          column="task_depth"          />
-        <result property="hasSubTasks"        column="has_sub_tasks"        />
-        <result property="taskStatus"         column="task_status"         />
-        <result property="visibleType"        column="visible_type"        />
-        <result property="createUserId"       column="create_user_id"       />
-        <result property="createNickName"     column="create_nick_name"     />
-        <result property="executeUserId"      column="execute_user_id"      />
-        <result property="executeNickName"    column="execute_nick_name"    />
-        <result property="createTime"         column="create_time"         />
-        <result property="expectedFinishTime" column="expected_finish_time" />
-        <result property="actualFinishTime"   column="actual_finish_time"   />
-        <result property="updateTime"         column="update_time"         />
-    </resultMap>
     <select id="selectFirstParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
         select task_id,task_name,task_status from task
-        where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
+        <where>
+            parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
+        <if test="taskDTO.taskName!=null">and task_name like concat('%',#{taskDTO.taskName},'%')</if>
+        <if test="taskDTO.taskStatus!=null">and task_status=#{taskDTO.taskStatus}</if>
+        <if test="taskDTO.visibleType!=null">and visible_type=#{taskDTO.visibleType}</if>
+        <if test="taskDTO.executeNickName!=null">and execute_nick_name like concat('%',#{taskDTO.executeNickName},'%')</if>
+        <if test="taskDTO.createTimeStart!=null">and create_time &gt;= #{taskDTO.createTimeStart}</if>
+        <if test="taskDTO.createTimeEnd!=null">and create_time &lt;= #{taskDTO.createTimeEnd}</if>
+        </where>
         order by create_time desc
     </select>
+    
     <select id="selectSubParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
         select task_id,task_name,task_status from task
         where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
-        order by task_order asc
-    </select>
-    <select id="selectSubTasksByParentId" resultType="com.ruoyi.experiment.pojo.entity.Task">
-        select * from task
-        where parent_task_id = #{parentTaskId}
         order by task_order asc
     </select>
 
@@ -47,10 +31,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectParentIdsWithSubTasks" resultType="java.lang.Long">
         select parent_task_id from task
-        where parent_task_id in
-        <foreach collection="parentIds" item="id" open="(" close=")" separator=",">
-            #{id}
-        </foreach>
+        <where>
+            <if test="parentIds!=null and parentIds.size()>0">
+                parent_task_id in
+                <foreach collection="parentIds" item="id" open="(" close=")" separator=",">
+                    #{id}
+                </foreach>
+            </if>
+        </where>
     </select>
     <select id="selectCalculatePercentage" resultType="map">
         select count(*) as totalSubTasks,
@@ -58,4 +46,5 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from task
         where parent_task_id=#{parentTaskId}
     </select>
+    
 </mapper>

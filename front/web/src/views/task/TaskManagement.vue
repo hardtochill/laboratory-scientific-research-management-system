@@ -7,84 +7,98 @@
         </div>
       </template>
 
+      <!-- 查询表单 -->
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="任务状态" prop="taskStatus">
+          <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px">
+            <el-option label="未开始" value="0" />
+            <el-option label="进行中" value="1" />
+            <el-option label="已完成" value="2" />
+            <el-option label="已跳过" value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="可见范围" prop="visibleType">
+          <el-select v-model="queryParams.visibleType" placeholder="请选择可见范围" clearable style="width: 240px">
+            <el-option label="仅自己可见" value="0" />
+            <el-option label="所有可见" value="1" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="执行用户" prop="executeNickName">
+          <el-input v-model="queryParams.executeNickName" placeholder="请输入执行用户名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="创建时间" style="width: 308px">
+          <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <!-- 任务列表 -->
       <div class="task-list">
-        <div
-          v-for="task in parentTasks"
-          :key="task.taskId"
-          class="task-item"
-        >
+        <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
           <!-- 任务行 -->
           <div class="task-row" @click="showTaskDetail(task)">
             <!-- 展开/收起按钮 -->
-            <el-button
-              type="text"
-              @click.stop="toggleSubTasks(task)"
-              :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"
-              v-if="task.hasSubTasks"
-            ></el-button>
+            <el-button type="text" @click.stop="toggleSubTasks(task)"
+              :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
             <span v-else class="spacer"></span>
 
             <!-- 任务名称 -->
             <span class="task-name">{{ task.taskName }}</span>
 
             <!-- 任务状态 -->
-            <el-tag
-              :type="getStatusType(task.taskStatus)"
-              size="small"
-              class="task-status"
-            >
+            <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
               {{ getStatusText(task.taskStatus) }}
             </el-tag>
 
             <!-- 展开子任务按钮 -->
-          <el-button
-            type="primary"
-            size="small"
-            @click.stop="toggleSubTasks(task)"
-            v-if="task.hasSubTasks"
-          >
-            {{ task.expanded ? '收起' : '展开' }}子任务
-          </el-button>
-        </div>
+            <el-button type="primary" size="small" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks">
+              {{ task.expanded ? '收起' : '展开' }}子任务
+            </el-button>
+          </div>
 
-        <!-- 任务进度条 -->
-        <div class="progress-container">
-          <el-progress
-            :percentage="getProgressPercentage(task)"
-            :color="getProgressColor(task)"
-            :status="getProgressStatus(task)"
-            :stroke-width="8"
-          ></el-progress>
-        </div>
+          <!-- 任务进度条 -->
+          <div class="progress-container">
+            <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
+              :status="getProgressStatus(task)" :stroke-width="8"></el-progress>
+          </div>
 
-        <!-- 子任务列表（带动画效果） -->
+          <!-- 子任务列表（带动画效果） -->
           <transition name="expand">
             <div v-if="task.expanded" class="sub-tasks">
               <div class="loading" v-if="task.loading">
                 <el-skeleton :rows="3" animated />
               </div>
               <div v-else>
-                <TaskItem
-                  v-for="subTask in task.subTasks"
-                  :key="subTask.taskId"
-                  :task="subTask"
-                  @show-detail="showTaskDetail"
-                />
+                <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
+                  @show-detail="showTaskDetail" />
               </div>
             </div>
           </transition>
         </div>
       </div>
+      
+      <!-- 分页控件 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="queryParams.pageNum"
+          v-model:page-size="queryParams.pageSize"
+          :page-sizes="[5, 10, 20, 50]"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </el-card>
 
     <!-- 任务详情对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      title="任务详情"
-      width="600px"
-      :before-close="handleClose"
-    >
+    <el-dialog v-model="dialogVisible" title="任务详情" width="600px" :before-close="handleClose">
       <div v-if="currentTask" class="task-detail">
         <el-descriptions :column="1" border>
           <el-descriptions-item label="任务名称">
@@ -108,10 +122,10 @@
             {{ parseTime(currentTask.createTime) }}
           </el-descriptions-item>
           <el-descriptions-item label="预期完成时间">
-            {{ parseTime(currentTask.expectedFinishTime)|| '-' }}
+            {{ parseTime(currentTask.expectedFinishTime) || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="实际完成时间">
-            {{ parseTime(currentTask.actualFinishTime)|| '-'}}
+            {{ parseTime(currentTask.actualFinishTime) || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="备注">
             {{ currentTask.taskRemark || '-' }}
@@ -128,11 +142,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getParentTasks, getSubTasks, getTaskDetail } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
-import { parseTime } from '@/utils/ruoyi'
+import { parseTime, addDateRange } from '@/utils/ruoyi'
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -227,13 +241,33 @@ const parentTasks = ref([])
 const dialogVisible = ref(false)
 // 当前选中的任务
 const currentTask = ref(null)
+// 加载状态
+const loading = ref(true)
+// 日期范围
+const dateRange = ref([])
 
-// 加载父任务列表
+// 响应式数据
+const data = reactive({
+  queryParams: {
+    pageNum: 1,
+    pageSize: 10,
+    taskName: undefined,
+    taskStatus: undefined,
+    visibleType: undefined,
+    executeNickName: undefined
+  },
+  total: 0
+})
+
+const { queryParams, total } = toRefs(data)
+
+// 加载父任务列表（带分页）
 const loadParentTasks = async () => {
+  loading.value = true
   try {
-    const response = await getParentTasks()
+    const response = await getList(addDateRange(queryParams.value, dateRange.value))
     // 为每个任务添加扩展属性，添加空值检查
-    parentTasks.value = (response.data || []).map((task) => ({
+    parentTasks.value = (response.rows || []).map((task) => ({
       ...task,
       expanded: false,
       loading: false,
@@ -241,10 +275,45 @@ const loadParentTasks = async () => {
       hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false,
       subTasks: []
     }))
+    // 更新总条数
+    total.value = response.total || 0
   } catch (error) {
     ElMessage.error('加载任务列表失败')
     console.error('加载任务列表失败:', error)
+  } finally {
+    loading.value = false
   }
+}
+
+// 查询按钮操作
+const handleQuery = () => {
+  queryParams.value.pageNum = 1
+  loadParentTasks()
+}
+
+// 重置按钮操作
+const resetQuery = () => {
+  dateRange.value = []
+  queryParams.value = {
+    pageNum: 1,
+    pageSize: 10,
+    taskName: undefined,
+    taskStatus: undefined,
+    visibleType: undefined,
+    executeNickName: undefined
+  }
+  handleQuery()
+}
+
+// 分页变化处理
+const handleSizeChange = (newSize) => {
+  queryParams.value.pageSize = newSize
+  loadParentTasks()
+}
+
+const handleCurrentChange = (newNum) => {
+  queryParams.value.pageNum = newNum
+  loadParentTasks()
 }
 
 // 切换子任务显示/隐藏

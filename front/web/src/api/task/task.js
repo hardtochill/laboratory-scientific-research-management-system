@@ -1,10 +1,11 @@
 import request from '@/utils/request'
 
-// 查询父任务列表
-export function getParentTasks() {
+// 查询任务列表（带分页和查询条件）
+export function getList(params) {
   return request({
-    url: '/task/parent-tasks',
-    method: 'get'
+    url: '/task/list',
+    method: 'get',
+    params:params
   })
 }
 
@@ -23,3 +24,4 @@ export function getTaskDetail(taskId) {
     method: 'get'
   })
 }
+

@@ -3,45 +3,28 @@
     <!-- 任务行 -->
     <div class="task-row" @click="$emit('show-detail', task)">
       <!-- 展开/收起按钮 -->
-      <el-button
-        type="text"
-        @click.stop="toggleSubTasks"
-        :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'"
-        v-if="task.hasSubTasks"
-      ></el-button>
+      <el-button type="text" @click.stop="toggleSubTasks"
+        :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
       <span v-else class="spacer"></span>
 
       <!-- 任务名称 -->
       <span class="task-name">{{ task.taskName }}</span>
 
       <!-- 任务状态 -->
-      <el-tag
-        :type="getStatusType(task.taskStatus)"
-        size="small"
-        class="task-status"
-      >
+      <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
         {{ getStatusText(task.taskStatus) }}
       </el-tag>
 
       <!-- 展开子任务按钮 -->
-      <el-button
-        type="primary"
-        size="small"
-        @click.stop="toggleSubTasks"
-        v-if="task.hasSubTasks"
-      >
+      <el-button type="primary" size="small" @click.stop="toggleSubTasks" v-if="task.hasSubTasks">
         {{ task.expanded ? '收起' : '展开' }}子任务
       </el-button>
     </div>
 
     <!-- 任务进度条（动画效果） -->
     <div class="progress-container">
-      <el-progress
-        :percentage="getProgressPercentage(task)"
-        :color="getProgressColor(task)"
-        :status="getProgressStatus(task)"
-        :stroke-width="8"
-      ></el-progress>
+      <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
+        :status="getProgressStatus(task)" :stroke-width="8"></el-progress>
     </div>
 
     <!-- 子任务列表（带动画效果） -->
@@ -51,12 +34,8 @@
           <el-skeleton :rows="3" animated />
         </div>
         <div v-else>
-          <TaskItem
-            v-for="subTask in task.subTasks"
-            :key="subTask.taskId"
-            :task="subTask"
-            @show-detail="$emit('show-detail', $event)"
-          />
+          <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
+            @show-detail="$emit('show-detail', $event)" />
         </div>
       </div>
     </transition>
