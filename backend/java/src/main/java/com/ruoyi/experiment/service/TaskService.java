@@ -30,8 +30,14 @@ public interface TaskService {
      */
     Task getTaskById(Long taskId);
     /**
-     * 添加或更新任务
+     * 添加任务
      * @param taskDTO 任务DTO
      */
-    void addOrUpdateTask(TaskDTO taskDTO);
+    void addTask(TaskDTO taskDTO);
+
+    /**
+     * 更新任务
+     * @param taskDTO 任务DTO
+     */
+    void updateTask(TaskDTO taskDTO);
 }

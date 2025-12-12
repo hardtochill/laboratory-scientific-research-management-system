@@ -27,7 +27,13 @@ public class TaskController extends BaseController {
      */
     @PostMapping("/addOrUpdate")
     public AjaxResult addOrUpdateTask(@Validated @RequestBody TaskDTO taskDTO) {
-        taskService.addOrUpdateTask(taskDTO);
+        if(null==taskDTO.getTaskId()){
+            // 新增
+            taskService.addTask(taskDTO);
+        }else{
+            // 修改
+            taskService.updateTask(taskDTO);
+        }
         return AjaxResult.success();
     }
     /**

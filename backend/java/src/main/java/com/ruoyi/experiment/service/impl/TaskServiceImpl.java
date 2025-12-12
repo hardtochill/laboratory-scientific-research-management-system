@@ -51,7 +51,7 @@ public class TaskServiceImpl implements TaskService {
         return tasks;
     }
     @Override
-    public void addOrUpdateTask(TaskDTO taskDTO) {
+    public void addTask(TaskDTO taskDTO) {
         // 1.查出父任务
         Task parentTask = taskMapper.selectTaskById(taskDTO.getParentTaskId());
         if(taskDTO.getParentTaskId()>TaskConstants.FIRST_PARENT_TASK_ID && null==parentTask){
@@ -71,17 +71,14 @@ public class TaskServiceImpl implements TaskService {
             if(Objects.equals(lastSubTaskOrder,TaskConstants.MAX_TASK_ORDER)){
                 throw new ServiceException("任务顺序不能超过 "+TaskConstants.MAX_TASK_ORDER);
             }
-            if(null==lastSubTaskOrder){
-                throw new ServiceException("父任务状态异常，请重试");
-            }
-            task.setTaskOrder(lastSubTaskOrder+1);
+            task.setTaskOrder(lastSubTaskOrder==null?1:lastSubTaskOrder+1);
         }else{
             task.setTaskDepth(1);
             task.setTaskOrder(1);
         }
         // 3.检查用户的执行人
         if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
-                throw new ServiceException("执行用户不存在");
+            throw new ServiceException("执行用户不存在");
         }
         // 4.设置任务的创建人信息
         SysUser user = SecurityUtils.getLoginUser().getUser();
@@ -92,17 +89,33 @@ public class TaskServiceImpl implements TaskService {
         if(!(Objects.equals(task.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
             throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
         }
+        // 6.新增
+        taskMapper.insertTask(task);
+    }
+
+    @Override
+    public void updateTask(TaskDTO taskDTO) {
+        // 1.查出原任务
+        Task originTask = taskMapper.selectTaskById(taskDTO.getTaskId());
+        if(null==originTask){
+            throw new ServiceException("任务不存在");
+        }
+        Task task = new Task();
+        BeanUtils.copyProperties(taskDTO,task);
+        // 2.检查用户的执行人
+        if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
+            throw new ServiceException("执行用户不存在");
+        }
+        // 3.检查任务的可见范围：如果任务的创建人!=执行人，则可见范围必须是所有人
+        if(!(Objects.equals(originTask.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
+            throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
+        }
         // todo 搁置，修改任务状态是否需要受前置任务限制
 
-        // 6.新增或修改
-        if(null==task.getTaskId()){
-            // 新增
-            taskMapper.insertTask(task);
-        }else{
-            // 修改
-            taskMapper.updateTask(task);
-        }
+        // 4.修改
+        taskMapper.updateTask(task);
     }
+
     @Override
     public Task getTaskById(Long taskId) {
         return taskMapper.selectTaskById(taskId);
