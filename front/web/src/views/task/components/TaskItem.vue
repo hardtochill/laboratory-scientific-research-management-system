@@ -2,12 +2,14 @@
   <div class="task-item">
     <!-- 任务行 -->
     <div class="task-row" @click="$emit('show-detail', task)">
-      <!-- 展开/收起按钮 -->
-      <el-button type="text" @click.stop="toggleSubTasks"
-        :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
-      <span v-else class="spacer"></span>
+      <!-- 左侧内容区域 -->
+      <div class="left-content">
+        <!-- 展开/收起按钮 -->
+        <el-button type="text" @click.stop="toggleSubTasks"
+          :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
+        <span v-else class="spacer"></span>
 
-      <!-- 任务名称 -->
+        <!-- 任务名称 -->
       <span class="task-name">{{ task.taskName }}</span>
 
       <!-- 任务状态 -->
@@ -15,16 +17,24 @@
         {{ getStatusText(task.taskStatus) }}
       </el-tag>
 
-      <!-- 展开子任务按钮 -->
-      <el-button type="primary" size="small" @click.stop="toggleSubTasks" v-if="task.hasSubTasks">
-        {{ task.expanded ? '收起' : '展开' }}子任务
-      </el-button>
-    </div>
+      <!-- 任务进度条 -->
+      <div class="progress-container">
+        <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
+          :status="getProgressStatus(task)" :stroke-width="8"></el-progress>
+      </div>
+      </div>
 
-    <!-- 任务进度条（动画效果） -->
-    <div class="progress-container">
-      <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
-        :status="getProgressStatus(task)" :stroke-width="8"></el-progress>
+      <!-- 右侧按钮区域 -->
+      <div class="right-buttons">
+        <!-- 展开子任务按钮 -->
+        <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks" v-if="task.hasSubTasks" style="margin-right: 8px;">
+          {{ task.expanded ? '收起' : '展开' }}子任务
+        </el-button>
+        <!-- 新增子任务按钮 -->
+        <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask">
+          新增子任务
+        </el-button>
+      </div>
     </div>
 
     <!-- 子任务列表（带动画效果） -->
@@ -35,7 +45,10 @@
         </div>
         <div v-else>
           <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
-            @show-detail="$emit('show-detail', $event)" />
+            :expanded-task-ids="expandedTaskIds"
+            @show-detail="$emit('show-detail', $event)"
+            @add-sub-task="$emit('add-sub-task', $event)"
+            @update-expanded="$emit('update-expanded', $event)" />
         </div>
       </div>
     </transition>
@@ -52,11 +65,15 @@ const props = defineProps({
   task: {
     type: Object,
     required: true
+  },
+  expandedTaskIds: {
+    type: Object,
+    required: true
   }
 })
 
 // 组件事件
-const emit = defineEmits(['show-detail'])
+const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded'])
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -152,6 +169,17 @@ const toggleSubTasks = async () => {
     await loadSubTasks()
   }
   props.task.expanded = !props.task.expanded
+  
+  // 通知父组件更新展开状态
+  emit('update-expanded', {
+    taskId: props.task.taskId,
+    expanded: props.task.expanded
+  })
+}
+
+// 新增子任务
+const handleAddSubTask = () => {
+  emit('add-sub-task', props.task)
 }
 
 // 加载子任务
@@ -162,7 +190,7 @@ const loadSubTasks = async () => {
       const response = await getSubTasks(props.task.taskId)
       props.task.subTasks = (response.data || []).map((task) => ({
         ...task,
-        expanded: false,
+        expanded: props.expandedTaskIds.has(task.taskId), // 检查是否在展开集合中
         loading: false,
         hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false, // 使用后端返回的值，默认false
         subTasks: [],
@@ -185,6 +213,7 @@ const loadSubTasks = async () => {
 
 .task-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
   background-color: #f9f9f9;
@@ -193,22 +222,45 @@ const loadSubTasks = async () => {
   transition: background-color 0.3s;
 }
 
+.left-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.right-buttons {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .task-row:hover {
   background-color: #f0f0f0;
 }
 
 .task-name {
-  flex: 1;
-  margin: 0 16px;
-  font-weight: 500;
+  flex: 0 1 auto;
+  margin: 0 16px 0 0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #2c3e50;
+  min-width: 100px;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .task-status {
-  margin-right: 16px;
+  margin: 0 16px;
+  width: 70px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .spacer {
   width: 24px;
+  flex-shrink: 0;
 }
 
 .sub-tasks {
@@ -221,9 +273,12 @@ const loadSubTasks = async () => {
 }
 
 .progress-container {
-  margin: 8px 0 0 40px;
-  width: calc(100% - 60px);
+  flex: 3;
+  margin: 0 16px 0 0;
+  min-width: 200px;
+  max-width: 600px;
   animation: fadeIn 0.5s ease-in;
+  flex-shrink: 1;
 }
 
 /* 展开/收起动画 */
@@ -250,5 +305,22 @@ const loadSubTasks = async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 按钮样式统一 */
+:deep(.expand-subtasks-btn),
+:deep(.add-subtask-btn) {
+  width: 100px !important;
+}
+
+/* 按钮颜色区分增强 */
+:deep(.expand-subtasks-btn) {
+  --el-button-primary-bg-color: #409eff;
+  --el-button-primary-border-color: #409eff;
+}
+
+:deep(.add-subtask-btn) {
+  --el-button-success-bg-color: #67c23a;
+  --el-button-success-border-color: #67c23a;
 }
 </style>
