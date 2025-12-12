@@ -1,4 +1,4 @@
-package com.ruoyi.experiment.dto;
+package com.ruoyi.experiment.pojo.dto;
 
 import lombok.Data;
 import java.time.LocalDateTime;

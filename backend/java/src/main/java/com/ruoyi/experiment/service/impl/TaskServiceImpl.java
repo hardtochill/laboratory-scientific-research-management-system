@@ -1,12 +1,10 @@
 package com.ruoyi.experiment.service.impl;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.experiment.enums.TaskStatusEnum;
 import com.ruoyi.experiment.mapper.TaskMapper;
 import com.ruoyi.experiment.pojo.entity.Task;
-import com.ruoyi.experiment.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;

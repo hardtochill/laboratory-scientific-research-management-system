@@ -1,6 +1,6 @@
 package com.ruoyi.experiment.controller;
 
-import com.ruoyi.experiment.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;

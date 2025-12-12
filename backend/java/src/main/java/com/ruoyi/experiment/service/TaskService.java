@@ -1,12 +1,10 @@
 package com.ruoyi.experiment.service;
 
-import com.github.pagehelper.PageInfo;
-import com.ruoyi.experiment.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 
 import java.util.List;
-import java.util.Map;
 
 public interface TaskService {
 
