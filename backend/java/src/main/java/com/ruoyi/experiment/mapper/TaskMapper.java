@@ -1,10 +1,14 @@
 package com.ruoyi.experiment.mapper;
 
-import com.ruoyi.experiment.pojo.dto.TaskDTO;
+import com.ruoyi.experiment.annotations.AutoFill;
+import com.ruoyi.experiment.enums.OperationTypeEnum;
+import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -13,13 +17,11 @@ import java.util.Map;
 public interface TaskMapper {
     /**
      * 获取一级父任务
-     * @return
      */
-    List<TaskVO> selectFirstParentTasks(Long parentTaskId,Long userId,TaskDTO taskDTO);
+    List<TaskVO> selectFirstParentTasks(Long parentTaskId, Long userId, TaskQueryDTO taskQueryDTO);
     
     /**
      * 获取二级及以下父任务
-     * @return
      */
     List<TaskVO> selectSubParentTasks(Long parentTaskId,Long userId);
 
@@ -33,9 +35,24 @@ public interface TaskMapper {
     List<Long> selectParentIdsWithSubTasks(List<Long> parentIds);
     /**
      * 根据任务ID获取任务详情
-     * @param taskId 任务ID
-     * @return 任务详情
      */
-    Task selectTaskById(@Param("taskId") Long taskId);
+    @Select("select * from task where task_id = #{taskId}")
+    Task selectTaskById(Long taskId);
 
+    /**
+     * 根据父任务id获取其最大子任务
+     */
+    @Select("select task_order from task where parent_task_id=#{parentTaskId} order by task_order desc limit 1")
+     Integer selectLastSubTaskOrder(Long parentTaskId);
+
+    /**
+     * 新增任务
+     */
+    @AutoFill(OperationTypeEnum.INSERT)
+    void insertTask(Task task);
+     /**
+     * 更新任务
+     */
+     @AutoFill(OperationTypeEnum.UPDATE)
+    void updateTask(Task task);
 }

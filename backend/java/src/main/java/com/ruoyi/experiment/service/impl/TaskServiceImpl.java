@@ -1,12 +1,19 @@
 package com.ruoyi.experiment.service.impl;
 
+import com.ruoyi.experiment.constant.TaskConstants;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.experiment.enums.TaskStatusEnum;
+import com.ruoyi.experiment.enums.TaskVisibleTypeEnum;
 import com.ruoyi.experiment.mapper.TaskMapper;
-import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
+import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
+import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +22,7 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,12 +30,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
+    private final SysUserMapper sysUserMapper;
     @Override
-    public List<TaskVO> selectParentTaskList(TaskDTO taskDTO) {
+    public List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
         // 获取仅自己可见+所有可见的任务
         Long userId = SecurityUtils.getUserId();
         // 一级父任务条件查询，按创建时间倒序
-        List<TaskVO> tasks = taskMapper.selectFirstParentTasks(0L,userId,taskDTO);
+        List<TaskVO> tasks = taskMapper.selectFirstParentTasks(TaskConstants.FIRST_PARENT_TASK_ID,userId, taskQueryDTO);
         calculateTaskList(tasks);
         return tasks;
     }
@@ -40,6 +49,63 @@ public class TaskServiceImpl implements TaskService {
         List<TaskVO> tasks = taskMapper.selectSubParentTasks(parentTaskId,userId);
         calculateTaskList(tasks);
         return tasks;
+    }
+    @Override
+    public void addOrUpdateTask(TaskDTO taskDTO) {
+        // 1.查出父任务
+        Task parentTask = taskMapper.selectTaskById(taskDTO.getParentTaskId());
+        if(taskDTO.getParentTaskId()>TaskConstants.FIRST_PARENT_TASK_ID && null==parentTask){
+            throw new ServiceException("父任务不存在");
+        }
+        Task task = new Task();
+        BeanUtils.copyProperties(taskDTO,task);
+        // 2.检查并设置深度和顺序
+        if(null!=parentTask){
+            // 深度
+            if(Objects.equals(parentTask.getTaskDepth(), TaskConstants.MAX_TASK_DEPTH)){
+                throw new ServiceException("任务深度不能超过 "+TaskConstants.MAX_TASK_DEPTH);
+            }
+            task.setTaskDepth(parentTask.getTaskDepth()+1);
+            // 顺序
+            Integer lastSubTaskOrder = taskMapper.selectLastSubTaskOrder(parentTask.getTaskId());
+            if(Objects.equals(lastSubTaskOrder,TaskConstants.MAX_TASK_ORDER)){
+                throw new ServiceException("任务顺序不能超过 "+TaskConstants.MAX_TASK_ORDER);
+            }
+            if(null==lastSubTaskOrder){
+                throw new ServiceException("父任务状态异常，请重试");
+            }
+            task.setTaskOrder(lastSubTaskOrder+1);
+        }else{
+            task.setTaskDepth(1);
+            task.setTaskOrder(1);
+        }
+        // 3.检查用户的执行人
+        if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
+                throw new ServiceException("执行用户不存在");
+        }
+        // 4.设置任务的创建人信息
+        SysUser user = SecurityUtils.getLoginUser().getUser();
+        task.setCreateUserId(user.getUserId());
+        task.setCreateNickName(user.getNickName());
+        // 5.检查任务的可见范围
+        // 如果任务的创建人!=执行人，则可见范围必须是所有人
+        if(!(Objects.equals(task.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
+            throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
+        }
+        // todo 搁置，修改任务状态是否需要受前置任务限制
+
+        // 6.新增或修改
+        if(null==task.getTaskId()){
+            // 新增
+            taskMapper.insertTask(task);
+        }else{
+            // 修改
+            taskMapper.updateTask(task);
+        }
+    }
+    @Override
+    public Task getTaskById(Long taskId) {
+        return taskMapper.selectTaskById(taskId);
     }
 
     /**
@@ -74,11 +140,6 @@ public class TaskServiceImpl implements TaskService {
             }
         }
     }
-    @Override
-    public Task getTaskById(Long taskId) {
-        return taskMapper.selectTaskById(taskId);
-    }
-
     /**
      * 安全地将对象转换为int值
      * 支持Integer、Long、BigDecimal、Double、Float和String类型

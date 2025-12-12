@@ -1,6 +1,7 @@
 package com.ruoyi.experiment.service;
 
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 
@@ -10,10 +11,10 @@ public interface TaskService {
 
     /**
      * 根据条件查询父任务列表
-     * @param taskDTO 查询条件
+     * @param taskQueryDTO 查询条件
      * @return 父任务列表
      */
-    List<TaskVO> selectParentTaskList(TaskDTO taskDTO);
+    List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO);
 
     /**
      * 根据父任务ID查询子任务列表
@@ -28,4 +29,9 @@ public interface TaskService {
      * @return 任务详情
      */
     Task getTaskById(Long taskId);
+    /**
+     * 添加或更新任务
+     * @param taskDTO 任务DTO
+     */
+    void addOrUpdateTask(TaskDTO taskDTO);
 }

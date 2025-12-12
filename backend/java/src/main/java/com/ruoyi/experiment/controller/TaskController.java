@@ -1,6 +1,7 @@
 package com.ruoyi.experiment.controller;
 
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
+import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
@@ -8,6 +9,7 @@ import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,14 +19,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TaskController extends BaseController {
     private final TaskService taskService;
+
+    /**
+     * 添加或更新任务
+     * @param taskDTO 任务DTO
+     * @return 成功响应
+     */
+    @PostMapping("/addOrUpdate")
+    public AjaxResult addOrUpdateTask(@Validated @RequestBody TaskDTO taskDTO) {
+        taskService.addOrUpdateTask(taskDTO);
+        return AjaxResult.success();
+    }
     /**
      * 分页获取父任务列表
      * @return 分页任务列表
      */
     @GetMapping("/list")
-    public TableDataInfo getTaskList(TaskDTO taskDTO) {
+    public TableDataInfo getTaskList(TaskQueryDTO taskQueryDTO) {
         startPage();
-        List<TaskVO> list = taskService.selectParentTaskList(taskDTO);
+        List<TaskVO> list = taskService.selectParentTaskList(taskQueryDTO);
         return getDataTable(list);
     }
 

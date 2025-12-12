@@ -1,41 +1,73 @@
 package com.ruoyi.experiment.pojo.dto;
 
+import com.ruoyi.experiment.enums.TaskStatusEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
-/**
- * 任务查询参数DTO
- * @author ruoyi
- */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class TaskDTO {
+    /**
+     * 任务id
+     */
+    private Long taskId;
+    /**
+     * 父任务id
+     */
+    @NotNull
+    @Min(value = 0L)
+    private Long parentTaskId;
     /**
      * 任务名称
      */
+    @NotBlank
     private String taskName;
-
+    /**
+     * 任务描述
+     */
+    private String taskDescription;
+    /**
+     * 任务备注
+     */
+    private String taskRemark;
     /**
      * 任务状态
      */
+    @NotNull
+    @Min(value = 0)
+    @Max(value = 3)
     private Integer taskStatus;
-
     /**
      * 任务可见范围
      */
+    @NotNull
+    @Min(value = 0)
+    @Max(value = 1)
     private Integer visibleType;
-
     /**
-     * 执行用户名称
+     * 执行用户id
      */
+    @NotNull
+    private Long executeUserId;
+    /**
+     * 执行用户昵称
+     */
+    @NotBlank
     private String executeNickName;
-
     /**
-     * 创建时间开始
+     * 预期完成时间
      */
-    private LocalDateTime createTimeStart;
-
+    private LocalDateTime expectedFinishTime;
     /**
-     * 创建时间结束
+     * 实际完成时间
      */
-    private LocalDateTime createTimeEnd;
+    private LocalDateTime actualFinishTime;
 }

@@ -38,10 +38,6 @@ public class Task {
      * 任务深度
      */
     private Integer taskDepth;
-    /**
-     * 是否有子任务
-     */
-    private Integer hasSubTasks;
      /**
      * 任务状态
      */

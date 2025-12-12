@@ -3,17 +3,38 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.TaskMapper">
+    <insert id="insertTask">
+        insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, visible_type, create_user_id, create_nick_name, execute_user_id, execute_nick_name,  create_time,expected_finish_time, actual_finish_time, update_time)
+        VALUES
+        (#{parentTaskId},#{taskName},#{taskDescription},#{taskRemark},#{taskOrder},#{taskDepth},#{taskStatus},#{visibleType},#{createUserId},#{createNickName},#{executeUserId},#{executeNickName},#{createTime},#{expectedFinishTime},#{actualFinishTime},#{updateTime})
+    </insert>
+    <update id="updateTask">
+        update task
+        <set>
+            <if test="taskName!=null">task_name=#{taskName},</if>
+            <if test="taskDescription!=null">task_description=#{taskDescription},</if>
+            <if test="taskRemark!=null">task_remark=#{taskRemark},</if>
+            <if test="taskStatus!=null">task_status=#{taskStatus},</if>
+            <if test="visibleType!=null">visible_type=#{visibleType},</if>
+            <if test="executeUserId!=null">execute_user_id=#{executeUserId},</if>
+            <if test="executeNickName!=null">execute_nick_name=#{executeNickName},</if>
+            <if test="expectedFinishTime!=null">expected_finish_time=#{expectedFinishTime},</if>
+            <if test="actualFinishTime!=null">actual_finish_time=#{actualFinishTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+            where task_id=#{taskId}
+    </update>
 
     <select id="selectFirstParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
         select task_id,task_name,task_status from task
         <where>
             parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
-        <if test="taskDTO.taskName!=null">and task_name like concat('%',#{taskDTO.taskName},'%')</if>
-        <if test="taskDTO.taskStatus!=null">and task_status=#{taskDTO.taskStatus}</if>
-        <if test="taskDTO.visibleType!=null">and visible_type=#{taskDTO.visibleType}</if>
-        <if test="taskDTO.executeNickName!=null">and execute_nick_name like concat('%',#{taskDTO.executeNickName},'%')</if>
-        <if test="taskDTO.createTimeStart!=null">and create_time &gt;= #{taskDTO.createTimeStart}</if>
-        <if test="taskDTO.createTimeEnd!=null">and create_time &lt;= #{taskDTO.createTimeEnd}</if>
+        <if test="taskQueryDTO.taskName!=null">and task_name like concat('%',#{taskQueryDTO.taskName},'%')</if>
+        <if test="taskQueryDTO.taskStatus!=null">and task_status=#{taskQueryDTO.taskStatus}</if>
+        <if test="taskQueryDTO.visibleType!=null">and visible_type=#{taskQueryDTO.visibleType}</if>
+        <if test="taskQueryDTO.executeNickName!=null">and execute_nick_name like concat('%',#{taskQueryDTO.executeNickName},'%')</if>
+        <if test="taskQueryDTO.createTimeStart!=null">and create_time &gt;= #{taskQueryDTO.createTimeStart}</if>
+        <if test="taskQueryDTO.createTimeEnd!=null">and create_time &lt;= #{taskQueryDTO.createTimeEnd}</if>
         </where>
         order by create_time desc
     </select>
@@ -22,11 +43,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select task_id,task_name,task_status from task
         where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
         order by task_order asc
-    </select>
-
-    <select id="selectTaskById" resultType="com.ruoyi.experiment.pojo.entity.Task">
-        select * from task
-        where task_id = #{taskId}
     </select>
 
     <select id="selectParentIdsWithSubTasks" resultType="java.lang.Long">
