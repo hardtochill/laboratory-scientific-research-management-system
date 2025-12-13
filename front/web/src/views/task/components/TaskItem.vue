@@ -25,16 +25,20 @@
       </div>
 
       <!-- 右侧按钮区域 -->
-      <div class="right-buttons">
-        <!-- 展开子任务按钮 -->
-        <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks" v-if="task.hasSubTasks" style="margin-right: 8px;">
-          {{ task.expanded ? '收起' : '展开' }}子任务
-        </el-button>
-        <!-- 新增子任务按钮 -->
-        <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask">
-          新增子任务
-        </el-button>
-      </div>
+        <div class="right-buttons">
+          <!-- 展开子任务按钮 -->
+          <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks" v-if="task.hasSubTasks" style="margin-right: 8px;">
+            {{ task.expanded ? '收起' : '展开' }}子任务
+          </el-button>
+          <!-- 新增子任务按钮 -->
+          <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask" style="margin-right: 8px;">
+            新增子任务
+          </el-button>
+          <!-- 修改状态按钮 -->
+          <el-button type="warning" size="small" class="change-status-btn" @click.stop="handleChangeStatus">
+            修改状态
+          </el-button>
+        </div>
     </div>
 
     <!-- 子任务列表（带动画效果） -->
@@ -48,7 +52,8 @@
             :expanded-task-ids="expandedTaskIds"
             @show-detail="$emit('show-detail', $event)"
             @add-sub-task="$emit('add-sub-task', $event)"
-            @update-expanded="$emit('update-expanded', $event)" />
+            @update-expanded="$emit('update-expanded', $event)"
+            @change-status="$emit('change-status', $event)" />
         </div>
       </div>
     </transition>
@@ -73,7 +78,7 @@ const props = defineProps({
 })
 
 // 组件事件
-const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded'])
+const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status'])
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -180,6 +185,11 @@ const toggleSubTasks = async () => {
 // 新增子任务
 const handleAddSubTask = () => {
   emit('add-sub-task', props.task)
+}
+
+// 修改状态
+const handleChangeStatus = () => {
+  emit('change-status', props.task)
 }
 
 // 加载子任务

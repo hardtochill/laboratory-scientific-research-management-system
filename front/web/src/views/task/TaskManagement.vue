@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="task-management">
     <!-- 查询表单 -->
       <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
@@ -67,16 +67,20 @@
             </div>
 
             <!-- 右侧按钮区域 -->
-            <div class="right-buttons">
-              <!-- 展开子任务按钮 -->
-              <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks" style="margin-right: 8px;">
-                {{ task.expanded ? '收起' : '展开' }}子任务
-              </el-button>
-              <!-- 新增子任务按钮 -->
-              <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask(task)">
-                新增子任务
-              </el-button>
-            </div>
+        <div class="right-buttons">
+          <!-- 展开子任务按钮 -->
+          <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks" style="margin-right: 8px;">
+            {{ task.expanded ? '收起' : '展开' }}子任务
+          </el-button>
+          <!-- 新增子任务按钮 -->
+          <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask(task)" style="margin-right: 8px;">
+            新增子任务
+          </el-button>
+          <!-- 修改状态按钮 -->
+          <el-button type="warning" size="small" class="change-status-btn" @click.stop="handleChangeStatus(task)">
+            修改状态
+          </el-button>
+        </div>
           </div>
 
           <!-- 子任务列表（带动画效果） -->
@@ -89,7 +93,8 @@
                 <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
                   :expanded-task-ids="expandedTaskIds"
                   @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
-                  @update-expanded="handleUpdateExpanded" />
+                  @update-expanded="handleUpdateExpanded"
+                  @change-status="handleChangeStatus" />
               </div>
             </div>
           </transition>
@@ -218,16 +223,44 @@
         <div class="dialog-footer">
           <el-button @click="handleFormClose">取消</el-button>
           <el-button type="primary" @click="handleFormSubmit">保存</el-button>
-        </div>
-      </template>
-    </el-dialog>
-  </div>
+      </div>
+    </template>
+  </el-dialog>
+
+  <!-- 修改任务状态对话框 -->
+  <el-dialog v-model="statusDialogVisible" title="修改任务状态" width="400px" :before-close="handleStatusClose">
+    <el-form :model="statusFormData" ref="statusFormRef" label-width="80px">
+      <el-form-item label="任务名称" disabled>
+        <el-input v-model="statusFormData.taskName" placeholder="任务名称" />
+      </el-form-item>
+      <el-form-item label="当前状态" disabled>
+        <el-tag :type="getStatusType(statusFormData.taskStatus)">
+          {{ getStatusText(statusFormData.taskStatus) }}
+        </el-tag>
+      </el-form-item>
+      <el-form-item label="新状态" prop="newStatus" required>
+        <el-select v-model="statusFormData.newStatus" placeholder="请选择新状态" style="width: 100%;">
+          <el-option label="未开始" value="0" />
+          <el-option label="进行中" value="1" />
+          <el-option label="已完成" value="2" />
+          <el-option label="已跳过" value="3" />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="handleStatusClose">取消</el-button>
+        <el-button type="primary" @click="handleStatusSubmit">保存</el-button>
+      </div>
+    </template>
+  </el-dialog>
+</div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addOrUpdateTask } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
 
@@ -334,6 +367,17 @@ const formVisible = ref(false)
 const formTitle = ref('新增任务')
 // 表单引用
 const formRef = ref(null)
+// 修改状态对话框可见性
+const statusDialogVisible = ref(false)
+// 修改状态表单引用
+const statusFormRef = ref(null)
+// 修改状态表单数据
+const statusFormData = reactive({
+  taskId: undefined,
+  taskName: '',
+  taskStatus: '',
+  newStatus: ''
+})
 // 表单数据
 const formData = reactive({
   taskId: undefined,
@@ -604,6 +648,47 @@ const resetForm = () => {
 const handleFormClose = () => {
   formVisible.value = false
   resetForm()
+}
+
+// 打开修改状态对话框
+const handleChangeStatus = (task) => {
+  // 重置状态表单
+  statusFormRef.value?.resetFields()
+  // 填充表单数据
+  Object.assign(statusFormData, {
+    taskId: task.taskId,
+    newStatus: String(task.taskStatus)
+  })
+  // 打开对话框
+  statusDialogVisible.value = true
+}
+
+// 关闭修改状态对话框
+const handleStatusClose = () => {
+  statusDialogVisible.value = false
+}
+
+// 提交修改状态表单
+const handleStatusSubmit = async () => {
+  if (!statusFormRef.value) return
+  try {
+    // 表单验证
+    await statusFormRef.value.validate()
+    // 调用接口修改任务状态
+    await updateTaskStatus({
+      taskId: statusFormData.taskId,
+      taskStatus: statusFormData.newStatus
+    })
+    // 关闭对话框
+    statusDialogVisible.value = false
+    // 显示成功消息
+    ElMessage.success('任务状态修改成功')
+    // 重新加载任务列表
+    loadParentTasks()
+  } catch (error) {
+    ElMessage.error('任务状态修改失败')
+    console.error('任务状态修改失败:', error)
+  }
 }
 
 // 提交表单

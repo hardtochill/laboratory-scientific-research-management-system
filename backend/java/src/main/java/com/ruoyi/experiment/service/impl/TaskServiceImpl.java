@@ -12,10 +12,13 @@ import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
+import com.ruoyi.framework.web.exception.GlobalExceptionHandler;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,9 +28,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final SysUserMapper sysUserMapper;
@@ -113,6 +116,23 @@ public class TaskServiceImpl implements TaskService {
         // todo 搁置，修改任务状态是否需要受前置任务限制
 
         // 4.修改
+        taskMapper.updateTask(task);
+    }
+
+    @Override
+    public void updateTaskStatus(Task task) {
+        log.info("更新任务状态：task={}",task);
+        // 1.检查任务是否存在
+        Task originTask = taskMapper.selectTaskById(task.getTaskId());
+        if(null==originTask){
+            throw new ServiceException("任务不存在");
+        }
+        // 2.检查任务状态是否合法
+        if(null == TaskStatusEnum.getByStatus(task.getTaskStatus())){
+            throw new ServiceException("任务状态不合法");
+        }
+        // todo 搁置，修改任务状态是否需要受前置任务限制
+        // 3.更新任务状态
         taskMapper.updateTask(task);
     }
 

@@ -40,4 +40,8 @@ public interface TaskService {
      * @param taskDTO 任务DTO
      */
     void updateTask(TaskDTO taskDTO);
+    /**
+     * 更新任务状态
+     */
+    void updateTaskStatus(Task task);
 }

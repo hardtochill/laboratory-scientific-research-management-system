@@ -5,7 +5,7 @@ export function getList(params) {
   return request({
     url: '/task/list',
     method: 'get',
-    params:params
+    params
   })
 }
 
@@ -29,6 +29,15 @@ export function getTaskDetail(taskId) {
 export function addOrUpdateTask(data) {
   return request({
     url: '/task/addOrUpdate',
+    method: 'post',
+    data
+  })
+}
+
+// 更新任务状态
+export function updateTaskStatus(data) {
+  return request({
+    url: '/task/updateTaskStatus',
     method: 'post',
     data
   })
