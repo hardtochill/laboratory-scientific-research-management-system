@@ -1,13 +1,14 @@
 <template>
   <div class="task-item">
     <!-- 任务行 -->
-    <div class="task-row" @click="$emit('show-detail', task)">
+    <div class="task-row">
       <!-- 左侧内容区域 -->
       <div class="left-content">
-        <!-- 展开/收起按钮 -->
-        <el-button type="text" @click.stop="toggleSubTasks"
-          :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
-        <span v-else class="spacer"></span>
+        <!-- 展开/收起按钮容器 -->
+        <div class="expand-btn-container">
+          <el-button type="text" @click.stop="toggleSubTasks"
+            :icon="task.expanded ? ArrowDown : ArrowRight" v-if="task.hasSubTasks"></el-button>
+        </div>
 
         <!-- 任务名称 -->
       <span class="task-name">{{ task.taskName }}</span>
@@ -26,18 +27,28 @@
 
       <!-- 右侧按钮区域 -->
         <div class="right-buttons">
-          <!-- 展开子任务按钮 -->
-          <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks" v-if="task.hasSubTasks" style="margin-right: 8px;">
-            {{ task.expanded ? '收起' : '展开' }}子任务
-          </el-button>
           <!-- 新增子任务按钮 -->
-          <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask" style="margin-right: 8px;">
-            新增子任务
-          </el-button>
-          <!-- 修改状态按钮 -->
-          <el-button type="warning" size="small" class="change-status-btn" @click.stop="handleChangeStatus">
-            修改状态
-          </el-button>
+          <el-tooltip content="新增子任务" placement="top">
+            <el-button link type="primary" @click.stop="handleAddSubTask" :icon="Plus"></el-button>
+          </el-tooltip>
+          <!-- 修改任务按钮 -->
+          <el-tooltip content="任务详情" placement="top">
+            <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="Edit"></el-button>
+          </el-tooltip>
+          <!-- 修改状态下拉菜单 -->
+          <el-tooltip content="修改任务状态" placement="top">
+            <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(newStatus)">
+              <el-button link type="primary" :icon="Setting"></el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="0">未开始</el-dropdown-item>
+                  <el-dropdown-item command="1">进行中</el-dropdown-item>
+                  <el-dropdown-item command="2">已完成</el-dropdown-item>
+                  <el-dropdown-item command="3">已跳过</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </el-tooltip>
         </div>
     </div>
 
@@ -64,6 +75,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
+import { ArrowDown, ArrowRight, Plus, Edit, Setting } from '@element-plus/icons-vue'
 
 // 组件属性
 const props = defineProps({
@@ -188,8 +200,8 @@ const handleAddSubTask = () => {
 }
 
 // 修改状态
-const handleChangeStatus = () => {
-  emit('change-status', props.task)
+const handleChangeStatus = (newStatus) => {
+  emit('change-status', props.task, newStatus)
 }
 
 // 加载子任务
@@ -242,6 +254,7 @@ const loadSubTasks = async () => {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  gap: 8px;
 }
 
 .task-row:hover {
@@ -268,9 +281,11 @@ const loadSubTasks = async () => {
   flex-shrink: 0;
 }
 
-.spacer {
+.expand-btn-container {
   width: 24px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .sub-tasks {
@@ -283,10 +298,10 @@ const loadSubTasks = async () => {
 }
 
 .progress-container {
-  flex: 3;
+  flex: 3.6;
   margin: 0 16px 0 0;
   min-width: 200px;
-  max-width: 600px;
+  max-width: 850px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
 }
@@ -317,20 +332,5 @@ const loadSubTasks = async () => {
   }
 }
 
-/* 按钮样式统一 */
-:deep(.expand-subtasks-btn),
-:deep(.add-subtask-btn) {
-  width: 100px !important;
-}
 
-/* 按钮颜色区分增强 */
-:deep(.expand-subtasks-btn) {
-  --el-button-primary-bg-color: #409eff;
-  --el-button-primary-border-color: #409eff;
-}
-
-:deep(.add-subtask-btn) {
-  --el-button-success-bg-color: #67c23a;
-  --el-button-success-border-color: #67c23a;
-}
 </style>

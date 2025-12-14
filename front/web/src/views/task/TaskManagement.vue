@@ -43,13 +43,14 @@
       <div class="task-list">
         <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
           <!-- 任务行 -->
-          <div class="task-row" @click="showTaskDetail(task)">
+          <div class="task-row">
             <!-- 左侧内容区域 -->
             <div class="left-content">
-              <!-- 展开/收起按钮 -->
-              <el-button type="text" @click.stop="toggleSubTasks(task)"
-                :icon="task.expanded ? 'el-icon-arrow-down' : 'el-icon-arrow-right'" v-if="task.hasSubTasks"></el-button>
-              <span v-else class="spacer"></span>
+              <!-- 展开/收起按钮容器 -->
+          <div class="expand-btn-container">
+            <el-button type="text" @click.stop="toggleSubTasks(task)"
+              :icon="task.expanded ? ArrowDown : ArrowRight" v-if="task.hasSubTasks"></el-button>
+          </div>
 
               <!-- 任务名称 -->
               <span class="task-name">{{ task.taskName }}</span>
@@ -68,18 +69,28 @@
 
             <!-- 右侧按钮区域 -->
         <div class="right-buttons">
-          <!-- 展开子任务按钮 -->
-          <el-button type="primary" size="small" class="expand-subtasks-btn" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks" style="margin-right: 8px;">
-            {{ task.expanded ? '收起' : '展开' }}子任务
-          </el-button>
           <!-- 新增子任务按钮 -->
-          <el-button type="success" size="small" class="add-subtask-btn" @click.stop="handleAddSubTask(task)" style="margin-right: 8px;">
-            新增子任务
-          </el-button>
-          <!-- 修改状态按钮 -->
-          <el-button type="warning" size="small" class="change-status-btn" @click.stop="handleChangeStatus(task)">
-            修改状态
-          </el-button>
+          <el-tooltip content="新增子任务" placement="top">
+            <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
+          </el-tooltip>
+          <!-- 修改任务按钮 -->
+          <el-tooltip content="任务详情" placement="top">
+            <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Edit"></el-button>
+          </el-tooltip>
+          <!-- 修改状态下拉菜单 -->
+          <el-tooltip content="修改任务状态" placement="top">
+            <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
+              <el-button link type="primary" :icon="Setting"></el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="0">未开始</el-dropdown-item>
+                  <el-dropdown-item command="1">进行中</el-dropdown-item>
+                  <el-dropdown-item command="2">已完成</el-dropdown-item>
+                  <el-dropdown-item command="3">已跳过</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </el-tooltip>
         </div>
           </div>
 
@@ -226,34 +237,6 @@
       </div>
     </template>
   </el-dialog>
-
-  <!-- 修改任务状态对话框 -->
-  <el-dialog v-model="statusDialogVisible" title="修改任务状态" width="400px" :before-close="handleStatusClose">
-    <el-form :model="statusFormData" ref="statusFormRef" label-width="80px">
-      <el-form-item label="任务名称" disabled>
-        <el-input v-model="statusFormData.taskName" placeholder="任务名称" />
-      </el-form-item>
-      <el-form-item label="当前状态" disabled>
-        <el-tag :type="getStatusType(statusFormData.taskStatus)">
-          {{ getStatusText(statusFormData.taskStatus) }}
-        </el-tag>
-      </el-form-item>
-      <el-form-item label="新状态" prop="newStatus" required>
-        <el-select v-model="statusFormData.newStatus" placeholder="请选择新状态" style="width: 100%;">
-          <el-option label="未开始" value="0" />
-          <el-option label="进行中" value="1" />
-          <el-option label="已完成" value="2" />
-          <el-option label="已跳过" value="3" />
-        </el-select>
-      </el-form-item>
-    </el-form>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button @click="handleStatusClose">取消</el-button>
-        <el-button type="primary" @click="handleStatusSubmit">保存</el-button>
-      </div>
-    </template>
-  </el-dialog>
 </div>
 </template>
 
@@ -263,6 +246,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
+import { ArrowDown, ArrowRight, Plus, Edit, Setting } from '@element-plus/icons-vue'
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -367,17 +351,7 @@ const formVisible = ref(false)
 const formTitle = ref('新增任务')
 // 表单引用
 const formRef = ref(null)
-// 修改状态对话框可见性
-const statusDialogVisible = ref(false)
-// 修改状态表单引用
-const statusFormRef = ref(null)
-// 修改状态表单数据
-const statusFormData = reactive({
-  taskId: undefined,
-  taskName: '',
-  taskStatus: '',
-  newStatus: ''
-})
+
 // 表单数据
 const formData = reactive({
   taskId: undefined,
@@ -650,37 +624,14 @@ const handleFormClose = () => {
   resetForm()
 }
 
-// 打开修改状态对话框
-const handleChangeStatus = (task) => {
-  // 重置状态表单
-  statusFormRef.value?.resetFields()
-  // 填充表单数据
-  Object.assign(statusFormData, {
-    taskId: task.taskId,
-    newStatus: String(task.taskStatus)
-  })
-  // 打开对话框
-  statusDialogVisible.value = true
-}
-
-// 关闭修改状态对话框
-const handleStatusClose = () => {
-  statusDialogVisible.value = false
-}
-
-// 提交修改状态表单
-const handleStatusSubmit = async () => {
-  if (!statusFormRef.value) return
+// 修改任务状态
+const handleChangeStatus = async (task, newStatus) => {
   try {
-    // 表单验证
-    await statusFormRef.value.validate()
     // 调用接口修改任务状态
     await updateTaskStatus({
-      taskId: statusFormData.taskId,
-      taskStatus: statusFormData.newStatus
+      taskId: task.taskId,
+      taskStatus: newStatus
     })
-    // 关闭对话框
-    statusDialogVisible.value = false
     // 显示成功消息
     ElMessage.success('任务状态修改成功')
     // 重新加载任务列表
@@ -690,6 +641,8 @@ const handleStatusSubmit = async () => {
     console.error('任务状态修改失败:', error)
   }
 }
+
+
 
 // 提交表单
 const handleFormSubmit = async () => {
@@ -788,6 +741,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  gap: 8px;
 }
 
 .task-name {
@@ -810,16 +764,18 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.spacer {
+.expand-btn-container {
   width: 24px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .progress-container {
-  flex: 3;
+  flex: 3.6;
   margin: 0 16px 0 0;
   min-width: 200px;
-  max-width: 600px;
+  max-width: 850px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
 }
@@ -857,23 +813,6 @@ onMounted(() => {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* 按钮样式统一 */
-:deep(.expand-subtasks-btn),
-:deep(.add-subtask-btn) {
-  width: 100px !important;
-}
-
-/* 按钮颜色区分增强 */
-:deep(.expand-subtasks-btn) {
-  --el-button-primary-bg-color: #409eff;
-  --el-button-primary-border-color: #409eff;
-}
-
-:deep(.add-subtask-btn) {
-  --el-button-success-bg-color: #67c23a;
-  --el-button-success-border-color: #67c23a;
 }
 
 .task-detail {
