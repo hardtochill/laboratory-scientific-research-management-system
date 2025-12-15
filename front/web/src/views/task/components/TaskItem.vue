@@ -61,10 +61,10 @@
         <div v-else>
           <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
             :expanded-task-ids="expandedTaskIds"
-            @show-detail="$emit('show-detail', $event)"
-            @add-sub-task="$emit('add-sub-task', $event)"
-            @update-expanded="$emit('update-expanded', $event)"
-            @change-status="$emit('change-status', $event)" />
+            @show-detail="(...args) => $emit('show-detail', ...args)"
+            @add-sub-task="(...args) => $emit('add-sub-task', ...args)"
+            @update-expanded="(...args) => $emit('update-expanded', ...args)"
+            @change-status="(...args) => $emit('change-status', ...args)" />
         </div>
       </div>
     </transition>
