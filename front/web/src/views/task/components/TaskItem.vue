@@ -21,7 +21,7 @@
       <!-- 任务进度条 -->
       <div class="progress-container">
         <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
-          :status="getProgressStatus(task)" :stroke-width="8"></el-progress>
+          :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11" striped striped-flow :duration="200"></el-progress>
       </div>
       </div>
 
@@ -33,7 +33,7 @@
           </el-tooltip>
           <!-- 修改任务按钮 -->
           <el-tooltip content="任务详情" placement="top">
-            <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="Edit"></el-button>
+            <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="Edit" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
           <el-tooltip content="修改任务状态" placement="top">
