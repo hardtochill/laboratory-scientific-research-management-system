@@ -43,3 +43,11 @@ export function updateTaskStatus(data) {
   })
 }
 
+// 删除任务
+export function deleteTask(taskId) {
+  return request({
+    url: `/task/delete/${taskId}`,
+    method: 'delete'
+  })
+}
+
