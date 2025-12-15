@@ -210,14 +210,28 @@
           </el-select>
         </el-form-item>
 
-        <!-- 执行用户ID -->
-        <el-form-item label="执行用户ID" prop="executeUserId">
-          <el-input v-model="formData.executeUserId" placeholder="请输入执行用户ID" />
-        </el-form-item>
+        
 
         <!-- 执行用户昵称 -->
         <el-form-item label="执行用户昵称" prop="executeNickName">
-          <el-input v-model="formData.executeNickName" placeholder="请输入执行用户昵称" maxlength="100" show-word-limit />
+          <el-autocomplete
+            v-model="formData.executeNickName"
+            :fetch-suggestions="querySearch"
+            placeholder="请输入执行用户昵称"
+            clearable
+            :trigger-on-focus="false"
+            :remote="true"
+            @select="handleUserSelect"
+            value-key="nickName"
+            :popper-append-to-body="false"
+          >
+            <template #suffix>
+              <i class="el-icon-search el-input__icon" />
+            </template>
+            <template #default="{ item }">
+              <div class="suggestion-item">{{ item.nickName }}({{ item.userName }})</div>
+            </template>
+          </el-autocomplete>
         </el-form-item>
 
         <!-- 预期完成时间 -->
@@ -249,6 +263,7 @@
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask } from '@/api/task/task'
+import { listUser } from '@/api/system/user'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
 import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete } from '@element-plus/icons-vue'
@@ -383,9 +398,7 @@ const formRules = reactive({
   visibleType: [
     { required: true, message: '请选择可见范围', trigger: 'change' }
   ],
-  executeUserId: [
-    { required: true, message: '请输入执行用户ID', trigger: 'blur' }
-  ],
+  
   executeNickName: [
     { required: true, message: '请输入执行用户昵称', trigger: 'blur' },
     { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
@@ -709,6 +722,28 @@ const handleFormSubmit = async () => {
 const handleClose = () => {
   dialogVisible.value = false
   currentTask.value = null
+}
+
+// 远程搜索用户函数
+const querySearch = async (queryString, cb) => {
+  try {
+    const response = await listUser({
+      pageNum: 1,
+      pageSize: 10,
+      nickName: queryString
+    })
+    const users = response.rows || []
+    cb(users)
+  } catch (error) {
+    console.error('搜索用户失败:', error)
+    cb([])
+  }
+}
+
+// 处理用户选择
+const handleUserSelect = (user) => {
+  formData.executeUserId = user.userId
+  formData.executeNickName = user.nickName
 }
 
 // 新增子任务
