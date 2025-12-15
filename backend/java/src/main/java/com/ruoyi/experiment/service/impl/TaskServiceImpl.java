@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 
@@ -134,6 +135,21 @@ public class TaskServiceImpl implements TaskService {
         // todo 搁置，修改任务状态是否需要受前置任务限制
         // 3.更新任务状态
         taskMapper.updateTask(task);
+    }
+
+    @Override
+    public void deleteTask(Long taskId) {
+        // 1.获取当前任务的所有子任务
+        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+        // 2.递归删除所有子任务
+        if(!CollectionUtils.isEmpty(subTaskIds)){
+            // 递归删除子任务
+            for(Long subTaskId : subTaskIds){
+                deleteTask(subTaskId);
+            }
+        }
+        // 3.删除当前任务
+        taskMapper.deleteTask(taskId);
     }
 
     @Override

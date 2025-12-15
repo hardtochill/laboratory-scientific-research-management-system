@@ -44,4 +44,8 @@ public interface TaskService {
      * 更新任务状态
      */
     void updateTaskStatus(Task task);
+    /**
+     * 删除任务
+     */
+    void deleteTask(Long taskId);
 }

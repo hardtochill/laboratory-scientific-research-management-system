@@ -20,8 +20,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TaskController extends BaseController {
     private final TaskService taskService;
+
     /**
      * 分页获取父任务列表
+     *
      * @return 分页任务列表
      */
     @GetMapping("/list")
@@ -33,6 +35,7 @@ public class TaskController extends BaseController {
 
     /**
      * 根据父任务ID获取子任务列表
+     *
      * @param parentTaskId 父任务ID
      * @return 子任务列表
      */
@@ -44,6 +47,7 @@ public class TaskController extends BaseController {
 
     /**
      * 根据任务ID获取任务详情
+     *
      * @param taskId 任务ID
      * @return 任务详情
      */
@@ -52,28 +56,40 @@ public class TaskController extends BaseController {
         Task task = taskService.getTaskById(taskId);
         return AjaxResult.success(task);
     }
+
     /**
      * 添加或更新任务
+     *
      * @param taskDTO 任务DTO
      * @return 成功响应
      */
     @PostMapping("/addOrUpdate")
     public AjaxResult addOrUpdateTask(@Validated @RequestBody TaskDTO taskDTO) {
-        if(null==taskDTO.getTaskId()){
+        if (null == taskDTO.getTaskId()) {
             // 新增
             taskService.addTask(taskDTO);
-        }else{
+        } else {
             // 修改
             taskService.updateTask(taskDTO);
         }
         return AjaxResult.success();
     }
+
     /**
      * 更新任务状态
      */
     @PostMapping("/updateTaskStatus")
-    public AjaxResult updateTaskStatus(@RequestBody Task task){
+    public AjaxResult updateTaskStatus(@RequestBody Task task) {
         taskService.updateTaskStatus(task);
+        return AjaxResult.success();
+    }
+
+    /**
+     * 删除任务
+     */
+    @DeleteMapping("/delete/{taskId}")
+    public AjaxResult deleteTask(@PathVariable Long taskId) {
+        taskService.deleteTask(taskId);
         return AjaxResult.success();
     }
 }

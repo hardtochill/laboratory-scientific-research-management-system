@@ -49,6 +49,10 @@
               </template>
             </el-dropdown>
           </el-tooltip>
+          <!-- 删除任务按钮 -->
+          <el-tooltip content="删除任务" placement="top">
+            <el-button link type="primary" @click.stop="handleDeleteTask" :icon="Delete"></el-button>
+          </el-tooltip>
         </div>
     </div>
 
@@ -64,7 +68,8 @@
             @show-detail="(...args) => $emit('show-detail', ...args)"
             @add-sub-task="(...args) => $emit('add-sub-task', ...args)"
             @update-expanded="(...args) => $emit('update-expanded', ...args)"
-            @change-status="(...args) => $emit('change-status', ...args)" />
+            @change-status="(...args) => $emit('change-status', ...args)"
+            @delete-task="(...args) => $emit('delete-task', ...args)" />
         </div>
       </div>
     </transition>
@@ -75,7 +80,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
-import {CaretRight,CaretBottom,Plus, MoreFilled, Switch } from '@element-plus/icons-vue'
+import {CaretRight,CaretBottom,Plus, MoreFilled, Switch, Delete } from '@element-plus/icons-vue'
 
 // 组件属性
 const props = defineProps({
@@ -90,7 +95,7 @@ const props = defineProps({
 })
 
 // 组件事件
-const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status'])
+const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status', 'delete-task'])
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -204,6 +209,11 @@ const handleChangeStatus = (newStatus) => {
   emit('change-status', props.task, newStatus)
 }
 
+// 删除任务
+const handleDeleteTask = () => {
+  emit('delete-task', props.task)
+}
+
 // 加载子任务
 const loadSubTasks = async () => {
   if (!props.task.loading && props.task.subTasks.length === 0) {
@@ -257,6 +267,10 @@ const loadSubTasks = async () => {
   gap: 8px;
 }
 
+.right-buttons > .el-tooltip {
+  margin: 0;
+}
+
 .task-row:hover {
   background-color: #f0f0f0;
 }
@@ -301,7 +315,7 @@ const loadSubTasks = async () => {
   flex: 3.6;
   margin: 0 16px 0 0;
   min-width: 200px;
-  max-width: 850px;
+  max-width: 800px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
 }

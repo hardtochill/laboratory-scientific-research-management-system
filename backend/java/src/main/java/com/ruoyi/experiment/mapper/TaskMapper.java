@@ -5,10 +5,7 @@ import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -56,4 +53,15 @@ public interface TaskMapper {
      */
      @AutoFill(OperationTypeEnum.UPDATE)
     void updateTask(Task task);
+
+    /**
+     * 删除任务
+     */
+    @Delete("delete from task where task_id = #{taskId}")
+    void deleteTask(Long taskId);
+    /**
+     * 获取所有子任务Id
+     */
+    @Select("select task_id from task where parent_task_id = #{parentTaskId}")
+    List<Long> selectSubTaskIds(Long parentTaskId);
 }

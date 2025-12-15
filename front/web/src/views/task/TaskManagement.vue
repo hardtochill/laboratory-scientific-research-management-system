@@ -91,6 +91,10 @@
               </template>
             </el-dropdown>
           </el-tooltip>
+          <!-- 删除任务按钮 -->
+          <el-tooltip content="删除任务" placement="top">
+            <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
+          </el-tooltip>
         </div>
           </div>
 
@@ -105,7 +109,8 @@
                   :expanded-task-ids="expandedTaskIds"
                   @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
                   @update-expanded="handleUpdateExpanded"
-                  @change-status="handleChangeStatus" />
+                  @change-status="handleChangeStatus"
+                  @delete-task="handleDeleteTask" />
               </div>
             </div>
           </transition>
@@ -243,10 +248,10 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight,CaretBottom,Plus, MoreFilled,Switch } from '@element-plus/icons-vue'
+import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete } from '@element-plus/icons-vue'
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -571,6 +576,33 @@ const handleAdd = () => {
   formVisible.value = true
 }
 
+// 删除任务
+const handleDeleteTask = async (task) => {
+  try {
+    // 确认提示框
+    await ElMessageBox.confirm('删除该任务会级联删除所有子任务', '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    // 调用删除任务API
+    await deleteTask(task.taskId)
+    
+    // 提示删除成功
+    ElMessage.success('任务删除成功')
+    
+    // 重新加载任务列表
+    await loadParentTasks()
+  } catch (error) {
+    // 如果是用户取消删除，则不显示错误提示
+    if (error !== 'cancel') {
+      ElMessage.error('任务删除失败: ' + (error.message || '未知错误'))
+      console.error('删除任务失败:', error)
+    }
+  }
+}
+
 // 修改任务
 const handleEdit = (task) => {
   // 关闭详情对话框
@@ -775,7 +807,7 @@ onMounted(() => {
   flex: 3.6;
   margin: 0 16px 0 0;
   min-width: 200px;
-  max-width: 850px;
+  max-width: 800px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
 }
