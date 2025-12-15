@@ -49,7 +49,7 @@
               <!-- 展开/收起按钮容器 -->
           <div class="expand-btn-container">
             <el-button type="text" @click.stop="toggleSubTasks(task)"
-              :icon="task.expanded ? ArrowDown : ArrowRight" v-if="task.hasSubTasks"></el-button>
+              :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
           </div>
 
               <!-- 任务名称 -->
@@ -75,12 +75,12 @@
           </el-tooltip>
           <!-- 修改任务按钮 -->
           <el-tooltip content="任务详情" placement="top">
-            <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Edit" style="margin-left: 0px;"></el-button>
+            <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
-          <el-tooltip content="修改任务状态" placement="top">
+          <el-tooltip content="更新任务状态" placement="top">
             <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
-              <el-button link type="primary" :icon="Setting"></el-button>
+              <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="0">未开始</el-dropdown-item>
@@ -246,7 +246,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { ArrowDown, ArrowRight, Plus, Edit, Setting } from '@element-plus/icons-vue'
+import { CaretRight,CaretBottom,Plus, MoreFilled,Switch } from '@element-plus/icons-vue'
 
 // 任务状态枚举
 const TASK_STATUS = {
