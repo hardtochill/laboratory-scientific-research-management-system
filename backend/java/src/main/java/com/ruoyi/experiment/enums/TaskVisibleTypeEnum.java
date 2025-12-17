@@ -4,8 +4,8 @@ package com.ruoyi.experiment.enums;
  * 任务可见范围枚举
  */
 public enum TaskVisibleTypeEnum {
-    ONLY_SELF(0,"仅自己可见"),
-    ALL(1,"所有用户可见");
+    ONLY_SELF(1,"仅自己可见"),
+    ALL(2,"所有用户可见");
     private Integer type;
     private String description;
     TaskVisibleTypeEnum(Integer type, String description) {

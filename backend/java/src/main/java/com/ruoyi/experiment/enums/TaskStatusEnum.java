@@ -4,10 +4,10 @@ package com.ruoyi.experiment.enums;
  * 任务状态枚举
  */
 public enum TaskStatusEnum {
-    PENDING(0,"未开始"),
-    PROCESSING(1,"进行中"),
-    FINISHED(2,"已完成"),
-    SKIPPED(3,"已跳过");
+    PENDING(1,"未开始"),
+    PROCESSING(2,"进行中"),
+    FINISHED(3,"已完成"),
+    SKIPPED(4,"已跳过");
     private Integer status;
     private String description;
     TaskStatusEnum(Integer status, String description) {

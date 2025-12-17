@@ -21,6 +21,7 @@ public interface TaskMapper {
     /**
      * 获取二级及以下父任务
      */
+    @Select("select task_id,task_name,task_status from task where parent_task_id=#{parentTaskId} order by task_order asc")
     List<TaskVO> selectSubParentTasks(Long parentTaskId,Long userId);
 
     /**

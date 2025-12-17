@@ -1,11 +1,9 @@
 package com.ruoyi.experiment.pojo.dto;
 
-import com.ruoyi.experiment.enums.TaskStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -42,15 +40,11 @@ public class TaskDTO {
      * 任务状态
      */
     @NotNull
-    @Min(value = 0)
-    @Max(value = 3)
     private Integer taskStatus;
     /**
      * 任务可见范围
      */
     @NotNull
-    @Min(value = 0)
-    @Max(value = 1)
     private Integer visibleType;
     /**
      * 执行用户id

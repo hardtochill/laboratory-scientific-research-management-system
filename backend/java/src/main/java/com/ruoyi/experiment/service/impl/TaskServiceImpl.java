@@ -93,6 +93,10 @@ public class TaskServiceImpl implements TaskService {
         if(!(Objects.equals(task.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
             throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
         }
+        // 子任务跟父任务的可见范围必须保持一致
+        if(null!=parentTask && !Objects.equals(parentTask.getVisibleType(),task.getVisibleType())){
+            throw new ServiceException("子任务跟父任务的可见范围必须保持一致");
+        }
         // 6.新增
         taskMapper.insertTask(task);
     }
@@ -110,9 +114,15 @@ public class TaskServiceImpl implements TaskService {
         if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
             throw new ServiceException("执行用户不存在");
         }
-        // 3.检查任务的可见范围：如果任务的创建人!=执行人，则可见范围必须是所有人
+        // 3.检查任务的可见范围
+        // 如果任务的创建人!=执行人，则可见范围必须是所有人
         if(!(Objects.equals(originTask.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
             throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
+        }
+        // 子任务跟父任务的可见范围必须保持一致
+        Task parentTask = taskMapper.selectTaskById(task.getParentTaskId());
+        if(null!=parentTask && !Objects.equals(parentTask.getVisibleType(),task.getVisibleType())){
+            throw new ServiceException("子任务的可见范围必须保持一致");
         }
         // todo 搁置，修改任务状态是否需要受前置任务限制
 

@@ -28,10 +28,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectFirstParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
         select task_id,task_name,task_status from task
         <where>
-            parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
+            parent_task_id=#{parentTaskId}
         <if test="taskQueryDTO.taskName!=null">and task_name like concat('%',#{taskQueryDTO.taskName},'%')</if>
         <if test="taskQueryDTO.taskStatus!=null">and task_status=#{taskQueryDTO.taskStatus}</if>
-        <if test="taskQueryDTO.visibleType!=null">and visible_type=#{taskQueryDTO.visibleType}</if>
+        <if test="taskQueryDTO.visibleType==1">and visible_type=#{taskQueryDTO.visibleType} and execute_user_id=#{userId}</if>
         <if test="taskQueryDTO.executeNickName!=null">and execute_nick_name like concat('%',#{taskQueryDTO.executeNickName},'%')</if>
         <if test="taskQueryDTO.createTimeStart!=null">and create_time &gt;= #{taskQueryDTO.createTimeStart}</if>
         <if test="taskQueryDTO.createTimeEnd!=null">and create_time &lt;= #{taskQueryDTO.createTimeEnd}</if>
@@ -39,12 +39,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by create_time desc
     </select>
     
-    <select id="selectSubParentTasks" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
-        select task_id,task_name,task_status from task
-        where parent_task_id=#{parentTaskId} and (execute_user_id=#{userId} or visible_type=1)
-        order by task_order asc
-    </select>
-
     <select id="selectParentIdsWithSubTasks" resultType="java.lang.Long">
         select parent_task_id from task
         <where>
@@ -58,7 +52,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
     <select id="selectCalculatePercentage" resultType="map">
         select count(*) as totalSubTasks,
-               sum(case when task_status>=2 then 1 else 0 end) as completedSubTasks
+               sum(case when task_status>=3 then 1 else 0 end) as completedSubTasks
         from task
         where parent_task_id=#{parentTaskId}
     </select>

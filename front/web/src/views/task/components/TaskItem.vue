@@ -41,10 +41,10 @@
               <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="0">未开始</el-dropdown-item>
-                  <el-dropdown-item command="1">进行中</el-dropdown-item>
-                  <el-dropdown-item command="2">已完成</el-dropdown-item>
-                  <el-dropdown-item command="3">已跳过</el-dropdown-item>
+                  <el-dropdown-item command="1">未开始</el-dropdown-item>
+                  <el-dropdown-item command="2">进行中</el-dropdown-item>
+                  <el-dropdown-item command="3">已完成</el-dropdown-item>
+                  <el-dropdown-item command="4">已跳过</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -99,10 +99,10 @@ const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'cha
 
 // 任务状态枚举
 const TASK_STATUS = {
-  PENDING: 0,
-  PROCESSING: 1,
-  FINISHED: 2,
-  SKIPPED: 3
+  PENDING: 1,
+  PROCESSING: 2,
+  FINISHED: 3,
+  SKIPPED: 4
 }
 
 // 任务状态类型映射

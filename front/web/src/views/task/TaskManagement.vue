@@ -7,16 +7,16 @@
         </el-form-item>
         <el-form-item label="任务状态" prop="taskStatus">
           <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px">
-            <el-option label="未开始" value="0" />
-            <el-option label="进行中" value="1" />
-            <el-option label="已完成" value="2" />
-            <el-option label="已跳过" value="3" />
+            <el-option label="未开始" value="1" />
+            <el-option label="进行中" value="2" />
+            <el-option label="已完成" value="3" />
+            <el-option label="已跳过" value="4" />
           </el-select>
         </el-form-item>
         <el-form-item label="可见范围" prop="visibleType">
           <el-select v-model="queryParams.visibleType" placeholder="请选择可见范围" clearable style="width: 240px">
-            <el-option label="仅自己可见" value="0" />
-            <el-option label="所有可见" value="1" />
+            <el-option label="仅自己可见" value="1" />
+            <el-option label="所有人可见" value="2" />
           </el-select>
         </el-form-item>
         <el-form-item label="执行用户" prop="executeNickName">
@@ -83,10 +83,10 @@
               <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="0">未开始</el-dropdown-item>
-                  <el-dropdown-item command="1">进行中</el-dropdown-item>
-                  <el-dropdown-item command="2">已完成</el-dropdown-item>
-                  <el-dropdown-item command="3">已跳过</el-dropdown-item>
+                  <el-dropdown-item command="1">未开始</el-dropdown-item>
+                  <el-dropdown-item command="2">进行中</el-dropdown-item>
+                  <el-dropdown-item command="3">已完成</el-dropdown-item>
+                  <el-dropdown-item command="4">已跳过</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -146,6 +146,9 @@
               {{ getStatusText(currentTask.taskStatus) }}
             </el-tag>
           </el-descriptions-item>
+          <el-descriptions-item label="可见范围">
+            {{ currentTask.visibleType === 1 ? '仅自己可见' : '所有人可见' }}
+          </el-descriptions-item>
           <el-descriptions-item label="创建人">
             {{ currentTask.createNickName }}
           </el-descriptions-item>
@@ -195,18 +198,18 @@
         <!-- 任务状态 -->
         <el-form-item label="任务状态" prop="taskStatus">
           <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
-            <el-option label="未开始" value="0" />
-            <el-option label="进行中" value="1" />
-            <el-option label="已完成" value="2" />
-            <el-option label="已跳过" value="3" />
+            <el-option label="未开始" value="1" />
+            <el-option label="进行中" value="2" />
+            <el-option label="已完成" value="3" />
+            <el-option label="已跳过" value="4" />
           </el-select>
         </el-form-item>
 
         <!-- 可见范围 -->
         <el-form-item label="可见范围" prop="visibleType">
           <el-select v-model="formData.visibleType" placeholder="请选择可见范围" style="width: 100%;">
-            <el-option label="仅自己可见" value="0" />
-            <el-option label="所有可见" value="1" />
+            <el-option label="仅自己可见" value="1" />
+            <el-option label="所有人可见" value="2" />
           </el-select>
         </el-form-item>
 
@@ -270,10 +273,10 @@ import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete } from '@element
 
 // 任务状态枚举
 const TASK_STATUS = {
-  PENDING: 0,
-  PROCESSING: 1,
-  FINISHED: 2,
-  SKIPPED: 3
+  PENDING: 1,
+  PROCESSING: 2,
+  FINISHED: 3,
+  SKIPPED: 4
 }
 
 // 任务状态类型映射
@@ -378,8 +381,8 @@ const formData = reactive({
   parentTaskId: '0', // 默认一级任务
   taskName: '',
   taskDescription: '',
-  taskStatus: '0', // 默认未开始
-  visibleType: '0', // 默认仅自己可见
+  taskStatus: '1', // 默认未开始
+  visibleType: '1', // 默认仅自己可见
   executeUserId: '',
   executeNickName: '',
   expectedFinishTime: null,
@@ -653,8 +656,8 @@ const resetForm = () => {
     parentTaskId: '0', // 默认一级任务
     taskName: '',
     taskDescription: '',
-    taskStatus: '0',
-    visibleType: '0',
+    taskStatus: '1',
+    visibleType: '1',
     executeUserId: '',
     executeNickName: '',
     expectedFinishTime: null,
