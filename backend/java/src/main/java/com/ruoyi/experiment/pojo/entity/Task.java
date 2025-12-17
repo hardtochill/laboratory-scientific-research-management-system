@@ -1,6 +1,5 @@
 package com.ruoyi.experiment.pojo.entity;
 
-import com.ruoyi.framework.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
