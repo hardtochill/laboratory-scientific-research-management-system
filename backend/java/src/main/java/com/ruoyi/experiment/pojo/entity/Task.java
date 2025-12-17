@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.pojo.entity;
 
+import com.ruoyi.framework.web.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Task {
+public class Task extends BaseEntity {
     /**
      * 任务id
      */
@@ -63,10 +64,6 @@ public class Task {
      */
     private String executeNickName;
      /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-     /**
      * 预期完成时间
      */
     private LocalDateTime expectedFinishTime;
@@ -74,8 +71,4 @@ public class Task {
      * 实际完成时间
      */
     private LocalDateTime actualFinishTime;
-     /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }
