@@ -31,9 +31,9 @@ public class Literature extends BaseEntity {
      */
      private String journal;
       /**
-     * 文献的出版年份
+     * 文献的出版时间
      */
-     private Integer publishYear;
+     private LocalDateTime publishTime;
     /**
      * 文献摘要
      */
