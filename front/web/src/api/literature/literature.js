@@ -25,15 +25,6 @@ export function downloadLiterature(id) {
   })
 }
 
-// 批量下载文献
-export function batchDownloadLiterature(ids) {
-  return request({
-    url: '/experiment/literature/batchDownload',
-    method: 'get',
-    params: { ids: ids }
-  })
-}
-
 // 评分文献
 export function scoreLiterature(scoreDTO) {
   return request({

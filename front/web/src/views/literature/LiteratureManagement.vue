@@ -14,14 +14,12 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="warning" plain icon="Download" :disabled="multiple" @click="handleBatchDownload">批量下载</el-button>
-      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="literatureList" @selection-change="handleSelectionChange" @sort-change="handleSortChange">
-      <el-table-column type="selection" width="50" align="center" />
+      <!-- <el-table-column type="selection" width="50" align="center" /> -->
+       <el-table-column type="index" width="50" align="center" />
       <el-table-column label="文献名称" align="center" prop="title" v-if="columns[0].visible" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.title }}</span>
@@ -75,7 +73,7 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, getLiteratureDetail, downloadLiterature, batchDownloadLiterature, scoreLiterature } from "@/api/experiment/literature"
+import { listLiterature, getLiteratureDetail, downloadLiterature, scoreLiterature } from "@/api/literature/literature"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
@@ -207,19 +205,10 @@ function handleDownload(row) {
   })
 }
 
-/** 批量下载按钮操作 */
-function handleBatchDownload() {
-  proxy.$modal.confirm('是否确认批量下载选中的数据项？').then(function () {
-    return batchDownloadLiterature(ids.value)
-  }).then(() => {
-    proxy.$modal.msgSuccess("批量下载成功")
-  }).catch(() => {})
-}
-
 /** 监听表格排序 */
 function handleSortChange({ column, prop, order }) {
   queryParams.value.sortField = prop
-  queryParams.value.sortOrder = order
+  queryParams.value.sortOrder = order === "ascending" ? "asc" : "desc"
   getList()
 }
 

@@ -37,6 +37,14 @@ public class LiteratureServiceImpl implements LiteratureService {
     @Override
     public List<LiteratureVO> selectLiteratureList(LiteratureQueryDTO queryDTO) {
         queryDTO.setUserId(SecurityUtils.getUserId());
+        // 排序字段转化
+        if("publishTime".equals(queryDTO.getSortField())){
+            queryDTO.setSortField("publish_time");
+        }else if("downloadCount".equals(queryDTO.getSortField())){
+            queryDTO.setSortField("download_count");
+        }else if ("finalScore".equals(queryDTO.getSortField())){
+            queryDTO.setSortField("final_score");
+        }
         return literatureMapper.selectLiteratureList(queryDTO);
     }
     
@@ -59,19 +67,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 返回文件路径，格式为：配置的存储路径 + 文献id + .pdf
         return literaturePath + id + ".pdf";
     }
-    
-    @Override
-    public List<String> batchDownloadLiterature(List<Long> ids) {
-        List<String> filePaths = new ArrayList<>();
-        for (Long id : ids) {
-            // 更新下载数
-            literatureMapper.updateDownloadCount(id);
-            // 添加文件路径
-            filePaths.add(literaturePath + id + ".pdf");
-        }
-        return filePaths;
-    }
-    
+
     @Override
     public void scoreLiterature(LiteratureScoreDTO scoreDTO) {
         Long userId = SecurityUtils.getUserId();

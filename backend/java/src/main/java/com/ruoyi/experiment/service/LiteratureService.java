@@ -27,14 +27,7 @@ public interface LiteratureService {
      * @return 文献文件路径
      */
     String downloadLiterature(Long id);
-    
-    /**
-     * 批量下载文献
-     * @param ids 文献id列表
-     * @return 文献文件路径列表
-     */
-    List<String> batchDownloadLiterature(List<Long> ids);
-    
+
     /**
      * 评分文献
      * @param scoreDTO 评分DTO

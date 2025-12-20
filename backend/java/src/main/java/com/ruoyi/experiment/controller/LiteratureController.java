@@ -49,19 +49,8 @@ public class LiteratureController extends BaseController {
      */
     @GetMapping("/download/{id}")
     public AjaxResult download(@PathVariable("id") Long id) {
-        // todo 下载文献
         String filePath = literatureService.downloadLiterature(id);
         return AjaxResult.success("下载成功", filePath);
-    }
-
-    /**
-     * 批量下载文献
-     */
-    @GetMapping("/batchDownload")
-    public AjaxResult batchDownload(@RequestParam("ids") List<Long> ids) {
-        // todo 下载文献
-        List<String> filePaths = literatureService.batchDownloadLiterature(ids);
-        return AjaxResult.success("批量下载成功", filePaths);
     }
 
     /**
