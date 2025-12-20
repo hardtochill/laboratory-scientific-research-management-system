@@ -5,7 +5,7 @@
         <el-input v-model="queryParams.title" placeholder="请输入文献名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item label="发表时间" style="width: 308px">
-        <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+        <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -111,8 +111,6 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     title: undefined,
-    publishTimeStart: undefined,
-    publishTimeEnd: undefined,
     sortField: undefined,
     sortOrder: undefined
   },
@@ -131,7 +129,12 @@ const { queryParams, scoreForm, scoreRules } = toRefs(data)
 /** 查询文献列表 */
 function getList() {
   loading.value = true
-  listLiterature(proxy.addDateRange(queryParams.value, dateRange.value)).then(res => {
+  const params = { ...queryParams.value };
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.publishTimeStart = dateRange.value[0];
+      params.publishTimeEnd = dateRange.value[1];
+    }
+  listLiterature(params).then(res => {
     loading.value = false
     literatureList.value = res.rows
     total.value = res.total
