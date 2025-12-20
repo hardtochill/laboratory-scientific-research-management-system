@@ -468,7 +468,13 @@ const loadParentTasks = async () => {
     // 在重新加载前保存当前所有展开任务的ID
     expandedTaskIds.value = collectExpandedTaskIds(parentTasks.value)
     
-    const response = await getList(addDateRange(queryParams.value, dateRange.value))
+    // 手动添加日期范围参数，使用后端期望的参数名
+    const params = { ...queryParams.value };
+    if (dateRange.value && dateRange.value.length === 2) {
+      params.createTimeStart = dateRange.value[0];
+      params.createTimeEnd = dateRange.value[1];
+    }
+    const response = await getList(params)
     // 为每个任务添加扩展属性，添加空值检查
     parentTasks.value = (response.rows || []).map((task) => ({
       ...task,
