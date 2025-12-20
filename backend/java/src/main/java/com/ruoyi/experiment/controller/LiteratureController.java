@@ -1,13 +1,85 @@
 package com.ruoyi.experiment.controller;
 
-import com.ruoyi.experiment.service.LiteratureService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
+import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
+import com.ruoyi.experiment.pojo.vo.LiteratureVO;
+import com.ruoyi.experiment.service.LiteratureService;
+import com.ruoyi.framework.web.controller.BaseController;
+import com.ruoyi.framework.web.domain.AjaxResult;
+import com.ruoyi.framework.web.page.TableDataInfo;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 文献管理Controller
+ *
+ * @author ruoyi
+ * @date 2023-10-15
+ */
 @RestController
-@RequestMapping("/literature")
-@RequiredArgsConstructor
-public class LiteratureController {
-    private final LiteratureService literatureService;
+@RequestMapping("/experiment/literature")
+public class LiteratureController extends BaseController {
+    @Autowired
+    private LiteratureService literatureService;
+
+    /**
+     * 查询文献列表
+     */
+    @GetMapping("/list")
+    public TableDataInfo list(LiteratureQueryDTO literatureQueryDTO) {
+        startPage();
+        List<LiteratureVO> list = literatureService.selectLiteratureList(literatureQueryDTO);
+        return getDataTable(list);
+    }
+
+    /**
+     * 获取文献详情
+     */
+    @GetMapping("/detail/{id}")
+    public AjaxResult detail(@PathVariable("id") Long id) {
+        return AjaxResult.success(literatureService.selectLiteratureDetail(id));
+    }
+
+    /**
+     * 下载文献
+     */
+    @GetMapping("/download/{id}")
+    public AjaxResult download(@PathVariable("id") Long id) {
+        // todo 下载文献
+        String filePath = literatureService.downloadLiterature(id);
+        return AjaxResult.success("下载成功", filePath);
+    }
+
+    /**
+     * 批量下载文献
+     */
+    @GetMapping("/batchDownload")
+    public AjaxResult batchDownload(@RequestParam("ids") List<Long> ids) {
+        // todo 下载文献
+        List<String> filePaths = literatureService.batchDownloadLiterature(ids);
+        return AjaxResult.success("批量下载成功", filePaths);
+    }
+
+    /**
+     * 评分文献
+     */
+    @PostMapping("/score")
+    public AjaxResult score(@RequestBody LiteratureScoreDTO literatureScoreDTO) {
+        literatureService.scoreLiterature(literatureScoreDTO);
+        return AjaxResult.success("评分成功");
+    }
+
+    /**
+     * 获取用户对文献的评分
+     */
+    @GetMapping("/getUserScore/{literatureId}")
+    public AjaxResult getUserScore(@PathVariable("literatureId") Long literatureId) {
+        Long userId = SecurityUtils.getUserId();
+        Integer score = literatureService.getUserLiteratureScore(literatureId, userId);
+        return AjaxResult.success(score);
+    }
 }

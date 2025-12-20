@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * 文献
- */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,50 +19,50 @@ public class Literature extends BaseEntity {
      * 文献名称
      */
     private String title;
-     /**
-     * 文献作者
+    /**
+     * 文献作者，多个作者用逗号分隔
      */
     private String authors;
     /**
-     * 文献的期刊/会议名称
+     * 期刊/会议名称
      */
-     private String journal;
-      /**
-     * 文献的出版时间
+    private String journal;
+    /**
+     * 发表时间
      */
-     private LocalDateTime publishTime;
+    private LocalDateTime publishTime;
     /**
      * 文献摘要
      */
-     private String abstractText;
+    private String abstractText;
     /**
      * 下载次数
      */
-     private Integer downloadCount;
+    private Integer downloadCount;
     /**
-     * 教师打分平均值
+     * 教师打分均值
      */
-     private BigDecimal teacherScoreAvg;
+    private BigDecimal teacherScoreAvg;
     /**
      * 参与打分的教师数量
      */
     private Integer teacherScoreCount;
     /**
-     * 学生打分平均值
+     * 学生打分均值
      */
-     private BigDecimal studentScoreAvg;
-     /**
+    private BigDecimal studentScoreAvg;
+    /**
      * 参与打分的学生数量
      */
     private Integer studentScoreCount;
     /**
-     * 最终评分
+     * 最终得分
      */
-     private BigDecimal finalScore;
+    private BigDecimal finalScore;
     /**
-     * 上传文献的用户id
+     * 上传用户id
      */
-     private Long uploadUserId;
+    private Long uploadUserId;
     /**
      * 上传时间
      */
