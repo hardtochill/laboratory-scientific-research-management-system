@@ -2,8 +2,10 @@ package com.ruoyi.experiment.controller;
 
 
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
+import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import com.ruoyi.experiment.service.LiteratureService;
 import com.ruoyi.framework.web.controller.BaseController;
@@ -11,6 +13,7 @@ import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import javax.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
@@ -25,7 +28,7 @@ import java.util.List;
 public class LiteratureController extends BaseController {
     @Autowired
     private LiteratureService literatureService;
-
+    
     /**
      * 查询文献列表
      */
@@ -47,10 +50,9 @@ public class LiteratureController extends BaseController {
     /**
      * 下载文献
      */
-    @GetMapping("/download/{id}")
-    public AjaxResult download(@PathVariable("id") Long id) {
-        String filePath = literatureService.downloadLiterature(id);
-        return AjaxResult.success("下载成功", filePath);
+    @PostMapping("/download/{id}")
+    public void download(@PathVariable("id") Long id, HttpServletResponse response){
+        literatureService.downloadLiterature(id,response);
     }
 
     /**

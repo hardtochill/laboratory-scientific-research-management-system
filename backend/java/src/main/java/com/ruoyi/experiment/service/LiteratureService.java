@@ -2,8 +2,10 @@ package com.ruoyi.experiment.service;
 
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
+import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 public interface LiteratureService {
@@ -24,9 +26,9 @@ public interface LiteratureService {
     /**
      * 下载文献
      * @param id 文献id
-     * @return 文献文件路径
+     * @return 文献对象
      */
-    String downloadLiterature(Long id);
+    void downloadLiterature(Long id, HttpServletResponse response);
 
     /**
      * 评分文献

@@ -73,7 +73,8 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, getLiteratureDetail, downloadLiterature, scoreLiterature } from "@/api/literature/literature"
+import { listLiterature, getLiteratureDetail, scoreLiterature } from "@/api/literature/literature"
+import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
@@ -196,13 +197,7 @@ function cancelScore() {
 
 /** 下载按钮操作 */
 function handleDownload(row) {
-  downloadLiterature(row.id).then(res => {
-    if (res.code === 200) {
-      proxy.download(res.msg, {}, `${row.title}.pdf`)
-    } else {
-      proxy.$modal.msgError("下载失败")
-    }
-  })
+  download(`/experiment/literature/download/${row.id}`, {}, `${row.title}.pdf`)
 }
 
 /** 监听表格排序 */

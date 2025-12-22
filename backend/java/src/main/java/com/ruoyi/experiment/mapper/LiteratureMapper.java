@@ -9,6 +9,7 @@ import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ public interface LiteratureMapper {
     /**
      * 更新文献的下载数
      */
+    @Update("update literature set download_count = download_count + 1 where id = #{id}")
     void updateDownloadCount(@Param("id") Long id);
     
     /**

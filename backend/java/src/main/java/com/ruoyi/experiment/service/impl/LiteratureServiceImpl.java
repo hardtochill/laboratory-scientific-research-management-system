@@ -2,6 +2,7 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.experiment.mapper.LiteratureMapper;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
@@ -16,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
@@ -60,12 +63,29 @@ public class LiteratureServiceImpl implements LiteratureService {
     }
     
     @Override
-    public String downloadLiterature(Long id) {
+    public void downloadLiterature(Long id,HttpServletResponse response) {
         // 更新下载数
         literatureMapper.updateDownloadCount(id);
         
-        // 返回文件路径，格式为：配置的存储路径 + 文献id + .pdf
-        return literaturePath + id + ".pdf";
+        // 返回文献对象
+        Literature literature = literatureMapper.selectLiteratureById(id);
+        // 构建文件路径：配置的存储路径 + 文献id + .pdf
+        String filePath = literaturePath + id + ".pdf";
+        File file = new File(filePath);
+
+        // 检查文件是否存在
+        if (!file.exists()) {
+            throw new ServiceException("文件已失效，请重新上传");
+        }
+
+        // 设置响应头
+        String fileName = literature.getTitle() + ".pdf";
+        try{
+            FileUtils.setAttachmentResponseHeader(response, fileName);
+            FileUtils.writeBytes(filePath, response.getOutputStream());
+        }catch (Exception e){
+            throw new ServiceException("下载文件失败");
+        }
     }
 
     @Override

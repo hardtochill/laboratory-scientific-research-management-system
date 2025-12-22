@@ -26,12 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             order by publish_time desc
         </if>
     </select>
-    
-    <!-- 更新文献的下载数 -->
-    <update id="updateDownloadCount">
-        update literature set download_count = download_count + 1 where id = #{id}
-    </update>
-    
+
     <!-- 插入文献评分记录 -->
     <insert id="insertLiteratureScore">
         insert into literature_score(literature_id, user_id, score, create_time, update_time)
