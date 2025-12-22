@@ -64,4 +64,4 @@ coverage/
 
 # 本地文件
 *.local
-file/
+backend/file/
