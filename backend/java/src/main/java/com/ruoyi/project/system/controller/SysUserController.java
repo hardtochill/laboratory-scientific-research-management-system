@@ -65,6 +65,16 @@ public class SysUserController extends BaseController
         return getDataTable(list);
     }
 
+    /**
+     * 根据用户昵称查询用户列表
+     */
+    @GetMapping("/listByNickName")
+    public AjaxResult listByNickName(String nickName)
+    {
+        List<SysUser> list = userService.selectUserListByNickName(nickName);
+        return AjaxResult.success(list);
+    }
+
     @Log(title = "用户管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:user:export')")
     @PostMapping("/export")

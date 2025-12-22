@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.ruoyi.project.system.domain.SysUser;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 用户表 数据层
@@ -127,4 +128,13 @@ public interface SysUserMapper
      * @return 结果
      */
     public SysUser checkEmailUnique(String email);
+
+     /**
+     * 根据用户昵称查询用户列表
+     *
+     * @param nickName 昵称
+     * @return 用户列表
+     */
+     @Select("select user_id,nick_name,user_name from sys_user where nick_name like concat('%',#{nickName},'%')")
+    List<SysUser> selectUserListByNickName(String nickName);
 }

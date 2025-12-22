@@ -9,6 +9,14 @@ export function listUser(query) {
     params: query
   })
 }
+// 根据昵称查询用户列表
+export function listUserByNickName(nickName) {
+  return request({
+    url: '/system/user/listByNickName',
+    params: nickName,
+    method: 'get'
+  })
+}
 
 // 查询用户详细
 export function getUser(userId) {
