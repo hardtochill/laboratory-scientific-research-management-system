@@ -266,7 +266,7 @@
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask } from '@/api/task/task'
-import { listUser } from '@/api/system/user'
+import {listUserByNickName } from '@/api/system/user'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
 import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete } from '@element-plus/icons-vue'
@@ -736,12 +736,10 @@ const handleClose = () => {
 // 远程搜索用户函数
 const querySearch = async (queryString, cb) => {
   try {
-    const response = await listUser({
-      pageNum: 1,
-      pageSize: 10,
+    const response = await listUserByNickName({
       nickName: queryString
     })
-    const users = response.rows || []
+    const users = response.data || []
     cb(users)
   } catch (error) {
     console.error('搜索用户失败:', error)
