@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.NoteMapper">
+    <select id="selectLiteratureNoteList" parameterType="com.ruoyi.experiment.pojo.dto.LiteratureNoteQueryDTO" resultType="com.ruoyi.experiment.pojo.entity.LiteratureNote">
+        SELECT id, literature_id, user_id, user_nick_name, note_content, like_count, visible_type, create_time, update_time
+        FROM literature_note
+        <where>
+            literature_id = #{literatureId}
+        </where>
+        <if test="sortField != null and sortField != ''">
+            ORDER BY ${sortField} ${sortOrder}
+        </if>
+        <if test="sortField == null or sortField == ''">
+            ORDER BY update_time DESC
+        </if>
+    </select>
+</mapper>

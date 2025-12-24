@@ -21,7 +21,7 @@ public interface LiteratureService {
      * @param id 文献id
      * @return 文献详情
      */
-    Object selectLiteratureDetail(Long id);
+    Literature selectLiteratureDetail(Long id);
     
     /**
      * 下载文献
