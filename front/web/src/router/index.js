@@ -160,6 +160,20 @@ export const dynamicRoutes = [
         meta: { title: '修改生成配置', activeMenu: '/tool/gen' }
       }
     ]
+  },
+  {
+    path: '/literature/detail',
+    component: Layout,
+    hidden: true,
+    permissions: ['experiment:literature:detail'],
+    children: [
+      {
+        path: ':id',
+        component: () => import('@/views/literature/LiteratureDetail'),
+        name: 'LiteratureDetail',
+        meta: { title: '文献详情', activeMenu: '/literature' }
+      }
+    ]
   }
 ]
 
