@@ -57,12 +57,6 @@ public class LiteratureServiceImpl implements LiteratureService {
     }
 
     @Override
-    public Integer getUserLiteratureScore(Long literatureId, Long userId) {
-        LiteratureScore literatureScore = literatureMapper.selectLiteratureScore(literatureId, userId);
-        return literatureScore != null ? literatureScore.getScore() : null;
-    }
-    
-    @Override
     public void downloadLiterature(Long id,HttpServletResponse response) {
         // 更新下载数
         literatureMapper.updateDownloadCount(id);

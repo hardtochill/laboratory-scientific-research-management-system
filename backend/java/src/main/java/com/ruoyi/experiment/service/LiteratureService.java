@@ -36,11 +36,4 @@ public interface LiteratureService {
      */
     void scoreLiterature(LiteratureScoreDTO scoreDTO);
     
-    /**
-     * 获取用户对文献的评分
-     * @param literatureId 文献ID
-     * @param userId 用户ID
-     * @return 用户评分记录
-     */
-    Integer getUserLiteratureScore(Long literatureId, Long userId);
 }

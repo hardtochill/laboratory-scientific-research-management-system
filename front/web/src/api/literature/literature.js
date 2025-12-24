@@ -33,11 +33,3 @@ export function scoreLiterature(scoreDTO) {
     data: scoreDTO
   })
 }
-
-// 获取用户对文献的评分
-export function getUserLiteratureScore(literatureId) {
-  return request({
-    url: `/experiment/literature/getUserScore/${literatureId}`,
-    method: 'get'
-  })
-}

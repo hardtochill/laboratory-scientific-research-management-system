@@ -63,14 +63,4 @@ public class LiteratureController extends BaseController {
         literatureService.scoreLiterature(literatureScoreDTO);
         return AjaxResult.success("评分成功");
     }
-
-    /**
-     * 获取用户对文献的评分
-     */
-    @GetMapping("/getUserScore/{literatureId}")
-    public AjaxResult getUserScore(@PathVariable("literatureId") Long literatureId) {
-        Long userId = SecurityUtils.getUserId();
-        Integer score = literatureService.getUserLiteratureScore(literatureId, userId);
-        return AjaxResult.success(score);
-    }
 }
