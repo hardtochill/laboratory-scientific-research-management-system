@@ -19,11 +19,9 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.framework.aspectj.lang.annotation.DataScope;
 import com.ruoyi.project.system.domain.SysRole;
-import com.ruoyi.project.system.domain.SysRoleDept;
 import com.ruoyi.project.system.domain.SysRoleMenu;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.domain.SysUserRole;
-import com.ruoyi.project.system.mapper.SysRoleDeptMapper;
 import com.ruoyi.project.system.mapper.SysRoleMapper;
 import com.ruoyi.project.system.mapper.SysRoleMenuMapper;
 import com.ruoyi.project.system.mapper.SysUserRoleMapper;
@@ -44,8 +42,6 @@ public class SysRoleServiceImpl implements ISysRoleService
 
     private final SysUserRoleMapper userRoleMapper;
 
-    private final SysRoleDeptMapper roleDeptMapper;
-
     /**
      * 根据条件分页查询角色数据
      * 
@@ -53,7 +49,6 @@ public class SysRoleServiceImpl implements ISysRoleService
      * @return 角色数据集合信息
      */
     @Override
-    @DataScope(deptAlias = "d")
     public List<SysRole> selectRoleList(SysRole role)
     {
         return roleMapper.selectRoleList(role);
@@ -190,28 +185,7 @@ public class SysRoleServiceImpl implements ISysRoleService
         }
     }
 
-    /**
-     * 校验角色是否有数据权限
-     * 
-     * @param roleIds 角色id
-     */
-    @Override
-    public void checkRoleDataScope(Long... roleIds)
-    {
-        if (!SysUser.isAdmin(SecurityUtils.getUserId()))
-        {
-            for (Long roleId : roleIds)
-            {
-                SysRole role = new SysRole();
-                role.setRoleId(roleId);
-                List<SysRole> roles = SpringUtils.getAopProxy(this).selectRoleList(role);
-                if (StringUtils.isEmpty(roles))
-                {
-                    throw new ServiceException("没有权限访问角色数据！");
-                }
-            }
-        }
-    }
+
 
     /**
      * 通过角色ID查询角色使用数量
@@ -281,10 +255,7 @@ public class SysRoleServiceImpl implements ISysRoleService
     {
         // 修改角色信息
         roleMapper.updateRole(role);
-        // 删除角色与部门关联
-        roleDeptMapper.deleteRoleDeptByRoleId(role.getRoleId());
-        // 新增角色和部门信息（数据权限）
-        return insertRoleDept(role);
+        return 1;
     }
 
     /**
@@ -311,29 +282,7 @@ public class SysRoleServiceImpl implements ISysRoleService
         return rows;
     }
 
-    /**
-     * 新增角色部门信息(数据权限)
-     *
-     * @param role 角色对象
-     */
-    public int insertRoleDept(SysRole role)
-    {
-        int rows = 1;
-        // 新增角色与部门（数据权限）管理
-        List<SysRoleDept> list = new ArrayList<SysRoleDept>();
-        for (Long deptId : role.getDeptIds())
-        {
-            SysRoleDept rd = new SysRoleDept();
-            rd.setRoleId(role.getRoleId());
-            rd.setDeptId(deptId);
-            list.add(rd);
-        }
-        if (list.size() > 0)
-        {
-            rows = roleDeptMapper.batchRoleDept(list);
-        }
-        return rows;
-    }
+
 
     /**
      * 通过角色ID删除角色
@@ -347,8 +296,6 @@ public class SysRoleServiceImpl implements ISysRoleService
     {
         // 删除角色与菜单关联
         roleMenuMapper.deleteRoleMenuByRoleId(roleId);
-        // 删除角色与部门关联
-        roleDeptMapper.deleteRoleDeptByRoleId(roleId);
         return roleMapper.deleteRoleById(roleId);
     }
 
@@ -365,7 +312,6 @@ public class SysRoleServiceImpl implements ISysRoleService
         for (Long roleId : roleIds)
         {
             checkRoleAllowed(new SysRole(roleId));
-            checkRoleDataScope(roleId);
             SysRole role = selectRoleById(roleId);
             if (countUserRoleByRoleId(roleId) > 0)
             {
@@ -374,8 +320,6 @@ public class SysRoleServiceImpl implements ISysRoleService
         }
         // 删除角色与菜单关联
         roleMenuMapper.deleteRoleMenu(roleIds);
-        // 删除角色与部门关联
-        roleDeptMapper.deleteRoleDept(roleIds);
         return roleMapper.deleteRoleByIds(roleIds);
     }
 
