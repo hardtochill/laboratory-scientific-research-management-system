@@ -1,7 +1,7 @@
 package com.ruoyi.experiment.service;
 
 import com.ruoyi.experiment.pojo.dto.LiteratureNoteQueryDTO;
-import com.ruoyi.experiment.pojo.entity.LiteratureNote;
+import com.ruoyi.experiment.pojo.vo.LiteratureNoteVO;
 
 import java.util.List;
 
@@ -12,5 +12,10 @@ public interface NoteService {
     /**
      * 查询文献心得列表
      */
-    List<LiteratureNote> selectLiteratureNoteList(LiteratureNoteQueryDTO literatureNoteQueryDTO);
+    List<LiteratureNoteVO> selectLiteratureNoteList(LiteratureNoteQueryDTO literatureNoteQueryDTO);
+    
+    /**
+     * 切换心得点赞状态
+     */
+    boolean toggleNoteLike(Long noteId);
 }

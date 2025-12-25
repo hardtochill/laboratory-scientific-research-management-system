@@ -62,7 +62,14 @@
                         {{ note.noteContent }}
                     </div>
                     <div class="note-footer">
-                        <span class="like-count">点赞数：{{ note.likeCount }}</span>
+                        <el-button type="text" @click.stop="toggleLike(note.id)">
+                            <svg-icon 
+                                :icon-class="note.likeFlag ? 'thumbs-up' : 'thumbs-o-up'"
+                                :class-name="'like-icon'"
+                                :style="note.likeFlag ? { color: '#f56c6c' } : { color: '#909399' }"
+                            />
+                        </el-button>
+                        <span class="like-count">{{ note.likeCount }}</span>
                     </div>
                 </div>
             </div>
@@ -87,7 +94,8 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
-import { getDetail, getNoteList } from '@/api/experiment/literature'
+import SvgIcon from '@/components/SvgIcon'
+import { getDetail, getNoteList, toggleNoteLike } from '@/api/experiment/literature'
 
 const router = useRouter()
 const route = useRoute()
@@ -185,6 +193,26 @@ function handleSortChange() {
     // 排序变更时重置到第一页
     pagination.value.currentPage = 1
     getLiteratureNotes()
+}
+
+/** 切换心得点赞状态 */
+async function toggleLike(noteId) {
+    try {
+        const res = await toggleNoteLike(noteId)
+        const newLikeStatus = res.data
+        
+        // 更新对应心得的点赞状态和点赞数
+        const note = notes.value.find(n => n.id === noteId)
+        if (note) {
+            note.likeFlag = newLikeStatus
+            note.likeCount = newLikeStatus ? note.likeCount + 1 : note.likeCount - 1
+        }
+        
+        ElMessage.success(newLikeStatus ? '点赞成功' : '取消点赞成功')
+    } catch (error) {
+        ElMessage.error('操作失败')
+        console.error('点赞操作失败:', error)
+    }
 }
 
 /** 页面加载时获取数据 */
@@ -327,11 +355,27 @@ onMounted(() => {
 .note-footer {
     text-align: right;
     color: #666;
-    font-size: 14px;
+    font-size: 13px;
+}
+
+.like-button {
+    padding: 0;
+    margin: 0;
+    height: auto;
+    line-height: normal;
+    color: #909399;
+}
+
+.like-icon {
+    font-size: 18px;
+    margin-right: 4px;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: color 0.3s;
 }
 
 .like-count {
-    margin-right: 10px;
+    vertical-align: middle;
 }
 
 /* 分页 */

@@ -16,4 +16,33 @@
             ORDER BY create_time DESC
         </if>
     </select>
+    
+    <select id="selectUserLikedNoteIds" parameterType="map" resultType="java.lang.Long">
+        SELECT note_id
+        FROM literature_note_like
+        WHERE user_id = #{userId}
+        <if test="noteIds != null and noteIds.size() > 0">
+            AND note_id IN
+            <foreach item="noteId" collection="noteIds" open="(" separator="," close=")">
+                #{noteId}
+            </foreach>
+        </if>
+    </select>
+    
+    <insert id="addNoteLike" parameterType="map">
+        INSERT INTO literature_note_like (user_id, note_id)
+        VALUES (#{userId}, #{noteId})
+        ON DUPLICATE KEY UPDATE create_time = NOW()
+    </insert>
+    
+    <delete id="deleteNoteLike" parameterType="map">
+        DELETE FROM literature_note_like
+        WHERE user_id = #{userId} AND note_id = #{noteId}
+    </delete>
+    
+    <update id="updateNoteLikeCount" parameterType="map">
+        UPDATE literature_note
+        SET like_count = like_count + #{delta}
+        WHERE id = #{noteId}
+    </update>
 </mapper>

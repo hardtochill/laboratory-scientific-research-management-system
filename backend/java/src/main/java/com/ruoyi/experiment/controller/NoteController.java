@@ -6,9 +6,7 @@ import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/experiment/note")
@@ -23,5 +21,14 @@ public class NoteController extends BaseController {
     public TableDataInfo list(LiteratureNoteQueryDTO literatureNoteQueryDTO) {
         startPage();
         return getDataTable(noteService.selectLiteratureNoteList(literatureNoteQueryDTO));
+    }
+    
+    /**
+     * 切换心得点赞状态
+     */
+    @PostMapping("/toggle-like/{noteId}")
+    public AjaxResult toggleLike(@PathVariable("noteId") Long noteId) {
+        boolean newLikeStatus = noteService.toggleNoteLike(noteId);
+        return success(newLikeStatus);
     }
 }

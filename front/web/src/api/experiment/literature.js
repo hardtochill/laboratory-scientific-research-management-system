@@ -34,3 +34,11 @@ export function scoreLiterature(data) {
     data
   })
 }
+
+// 切换心得点赞状态
+export function toggleNoteLike(noteId) {
+  return request({
+    url: `/experiment/note/toggle-like/${noteId}`,
+    method: 'post'
+  })
+}
