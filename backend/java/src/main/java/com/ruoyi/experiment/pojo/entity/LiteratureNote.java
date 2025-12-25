@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 文献心得
  */
@@ -39,4 +41,8 @@ public class LiteratureNote extends BaseEntity {
      * 可见范围
      */
     private Integer visibleType;
+    /**
+     * 发表时间
+     */
+     private LocalDateTime publishTime;
 }

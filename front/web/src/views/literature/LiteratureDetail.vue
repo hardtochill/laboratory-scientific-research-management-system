@@ -37,7 +37,7 @@
                 <h2 class="section-title">文献心得</h2>
                 <div class="sort-controls">
                     <el-select v-model="sortField" placeholder="选择排序字段" size="small" @change="handleSortChange">
-                        <el-option label="更新时间" value="updateTime"></el-option>
+                        <el-option label="发表时间" value="publishTime"></el-option>
                         <el-option label="点赞数" value="likeCount"></el-option>
                     </el-select>
                     <el-select v-model="sortOrder" placeholder="选择排序方式" size="small" @change="handleSortChange">
@@ -52,7 +52,7 @@
                 <div v-for="note in notes" :key="note.id" class="note-item">
                     <div class="note-header">
                         <span class="user-nickname">{{ note.userNickName }}</span>
-                        <span class="update-time">{{ formatDate(note.updateTime) }}</span>
+                        <span class="publish-time">{{ formatDate(note.publishTime) }}</span>
                     </div>
                     <div class="note-content">
                         {{ note.noteContent }}
@@ -103,7 +103,7 @@ const pagination = ref({
 })
 
 // 排序数据
-const sortField = ref('updateTime')
+const sortField = ref('publishTime')
 const sortOrder = ref('desc')
 
 /** 返回列表 */
@@ -306,7 +306,7 @@ onMounted(() => {
     color: #333;
 }
 
-.update-time {
+.publish-time {
     color: #999;
 }
 
