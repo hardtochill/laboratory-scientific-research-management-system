@@ -28,6 +28,10 @@
                     <span class="label">评分：</span>
                     <span>{{ literature.finalScore }}</span>
                 </div>
+                <div class="info-item">
+                    <span class="label">上传用户：</span>
+                    <span>{{ literature.uploadUserNickName }}</span>
+                </div>
             </div>
         </div>
         
@@ -83,7 +87,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
-import { Top, Bottom } from '@element-plus/icons-vue'
 import { getDetail, getNoteList } from '@/api/experiment/literature'
 
 const router = useRouter()

@@ -64,6 +64,10 @@ public class Literature extends BaseEntity {
      */
     private Long uploadUserId;
     /**
+     * 上传用户昵称
+     */
+    private String uploadUserNickName;
+    /**
      * 上传时间
      */
     private LocalDateTime uploadTime;
