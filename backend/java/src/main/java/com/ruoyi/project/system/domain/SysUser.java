@@ -39,6 +39,10 @@ public class SysUser extends BaseEntity
     @Excel(name = "用户邮箱")
     private String email;
 
+    /** 是否毕业（1:未毕业, 2:已毕业） */
+    @Excel(name = "是否毕业", readConverterExp = "1=未毕业,2=已毕业")
+    private Integer graduateFlag;
+
     /** 手机号码 */
     @Excel(name = "手机号码", cellType = ColumnType.TEXT)
     private String phonenumber;
@@ -145,6 +149,16 @@ public class SysUser extends BaseEntity
     public void setEmail(String email)
     {
         this.email = email;
+    }
+
+    public Integer getGraduateFlag()
+    {
+        return graduateFlag;
+    }
+
+    public void setGraduateFlag(Integer graduateFlag)
+    {
+        this.graduateFlag = graduateFlag;
     }
 
     @Size(min = 0, max = 11, message = "手机号码长度不能超过11个字符")
@@ -275,6 +289,7 @@ public class SysUser extends BaseEntity
             .append("userName", getUserName())
             .append("nickName", getNickName())
             .append("email", getEmail())
+            .append("graduateFlag", getGraduateFlag())
             .append("phonenumber", getPhonenumber())
             .append("sex", getSex())
             .append("avatar", getAvatar())

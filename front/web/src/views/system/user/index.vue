@@ -15,6 +15,12 @@
                   <el-option v-for="dict in sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
                 </el-select>
               </el-form-item>
+              <el-form-item label="是否毕业">
+                <el-select v-model="queryParams.graduateFlag" placeholder="是否毕业" clearable style="width: 240px">
+                  <el-option label="未毕业" :value="1"></el-option>
+                  <el-option label="已毕业" :value="2"></el-option>
+                </el-select>
+              </el-form-item>
               <el-form-item label="创建时间" style="width: 308px">
                 <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
               </el-form-item>
@@ -59,7 +65,12 @@
                   ></el-switch>
                 </template>
               </el-table-column>
-              <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[5].visible" width="160">
+              <el-table-column label="是否毕业" align="center" key="graduateFlag" v-if="columns[5].visible" width="100">
+                <template #default="scope">
+                  <span>{{ scope.row.graduateFlag == 1 ? '未毕业' : (scope.row.graduateFlag == 2 ? '已毕业' : '-') }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column label="创建时间" align="center" prop="createTime" v-if="columns[6].visible" width="160">
                 <template #default="scope">
                   <span>{{ parseTime(scope.row.createTime) }}</span>
                 </template>
@@ -139,6 +150,16 @@
               <el-radio-group v-model="form.status">
                 <el-radio v-for="dict in sys_normal_disable" :key="dict.value" :value="dict.value">{{ dict.label }}</el-radio>
               </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+       <el-row>
+          <el-col :span="12">
+            <el-form-item label="是否毕业">
+              <el-select v-model="form.graduateFlag" placeholder="请选择" clearable>
+                <el-option label="未毕业" :value="1"></el-option>
+                <el-option label="已毕业" :value="2"></el-option>
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
@@ -225,10 +246,10 @@ const columns = ref([
   { key: 0, label: `用户编号`, visible: true },
   { key: 1, label: `用户名称`, visible: true },
   { key: 2, label: `用户昵称`, visible: true },
-
   { key: 3, label: `手机号码`, visible: true },
   { key: 4, label: `状态`, visible: true },
-  { key: 5, label: `创建时间`, visible: true }
+  { key: 5, label: `是否毕业`, visible: true },
+  { key: 6, label: `创建时间`, visible: true }
 ])
 
 const data = reactive({
@@ -238,7 +259,8 @@ const data = reactive({
     pageSize: 10,
     userName: undefined,
     phonenumber: undefined,
-    status: undefined
+    status: undefined,
+    graduateFlag: undefined
   },
   rules: {
     userName: [{ required: true, message: "用户名称不能为空", trigger: "blur" }, { min: 2, max: 20, message: "用户名称长度必须介于 2 和 20 之间", trigger: "blur" }],
@@ -395,6 +417,7 @@ function reset() {
     email: undefined,
     sex: undefined,
     status: "0",
+    graduateFlag: undefined,
     remark: undefined,
     roleIds: []
   }
@@ -424,6 +447,10 @@ function handleUpdate(row) {
   const userId = row.userId || ids.value
   getUser(userId).then(response => {
     form.value = response.data
+    // 确保graduateFlag字段类型正确
+    if (form.value.graduateFlag !== null && form.value.graduateFlag !== undefined) {
+      form.value.graduateFlag = parseInt(form.value.graduateFlag)
+    }
     roleOptions.value = response.roles
     form.value.roleIds = response.roleIds
     open.value = true
