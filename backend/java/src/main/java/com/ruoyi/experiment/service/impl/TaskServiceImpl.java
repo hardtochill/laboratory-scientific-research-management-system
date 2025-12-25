@@ -190,12 +190,12 @@ public class TaskServiceImpl implements TaskService {
                     }
                 }else {
                     // 有子任务&&状态不为PROCESSING
-                    task.setPercentage(100);
+                    task.setPercentage(task.getTaskStatus()>=TaskStatusEnum.FINISHED.getStatus()?100:0);
                 }
             }else{
                 task.setHasSubTasks(false);
                 // 没有子任务，进度条拉满
-                task.setPercentage(100);
+                task.setPercentage(task.getTaskStatus()>=TaskStatusEnum.FINISHED.getStatus()?100:0);
             }
         }
     }
