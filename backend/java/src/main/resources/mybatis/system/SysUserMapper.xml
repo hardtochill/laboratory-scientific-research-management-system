@@ -126,6 +126,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="graduateFlag != null">and graduate_flag = #{graduateFlag}</if>
 			<if test="nickName != null">and nick_name like concat('%',#{nickName},'%')</if>
 		</where>
+		order by user_id asc
 	</select>
 	<select id="selectUserIdsByIds" resultType="java.lang.Long">
 		select user_id from sys_user where user_id in

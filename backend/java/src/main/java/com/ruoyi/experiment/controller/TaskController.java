@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.controller;
 
+import com.ruoyi.experiment.annotations.CheckTeacher;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
@@ -58,27 +59,29 @@ public class TaskController extends BaseController {
     }
 
     /**
-     * 添加或更新任务
-     *
-     * @param taskDTO 任务DTO
-     * @return 成功响应
+     * 添加任务
      */
-    @PostMapping("/addOrUpdate")
-    public AjaxResult addOrUpdateTask(@Validated @RequestBody TaskDTO taskDTO) {
-        if (null == taskDTO.getTaskId()) {
-            // 新增
-            taskService.addTask(taskDTO);
-        } else {
-            // 修改
-            taskService.updateTask(taskDTO);
-        }
+    @PostMapping("/add")
+    @CheckTeacher
+    public AjaxResult addTask(@Validated @RequestBody TaskDTO taskDTO) {
+        taskService.addTask(taskDTO);
         return AjaxResult.success();
     }
+    /**
+     * 更新任务
+     */
+    @PostMapping("/update")
+    public AjaxResult updateTask(@Validated @RequestBody TaskDTO taskDTO) {
+        taskService.updateTask(taskDTO);
+        return AjaxResult.success();
+    }
+
 
     /**
      * 更新任务状态
      */
     @PostMapping("/updateStatus")
+    @CheckTeacher
     public AjaxResult updateTaskStatus(@RequestBody Task task) {
         taskService.updateTaskStatus(task);
         return AjaxResult.success();
@@ -88,6 +91,7 @@ public class TaskController extends BaseController {
      * 删除任务
      */
     @DeleteMapping("/delete/{taskId}")
+    @CheckTeacher
     public AjaxResult deleteTask(@PathVariable Long taskId) {
         taskService.deleteTask(taskId);
         return AjaxResult.success();

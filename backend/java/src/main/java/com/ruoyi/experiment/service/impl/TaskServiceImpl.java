@@ -14,6 +14,7 @@ import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
+import com.ruoyi.framework.web.domain.R;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +105,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateTask(TaskDTO taskDTO) {
-        // todo 修改任务拆成两个接口，学生端和教师端，在controller中添加角色校验切面
         // 1.查出原任务
         Task originTask = taskMapper.selectTaskById(taskDTO.getTaskId());
         if(null==originTask){
@@ -113,7 +113,7 @@ public class TaskServiceImpl implements TaskService {
         // 2.只有教师才能修改任务状态
         boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
         if(!isTeacher && !taskDTO.getTaskStatus().equals(originTask.getTaskStatus())){
-            throw new ServiceException("只有教师才能修改任务状态");
+            throw new ServiceException("非教师角色，无权限操作");
         }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
@@ -134,7 +134,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void updateTaskStatus(Task task) {
         log.info("更新任务状态：task={}",task);
-        // todo 在controller中添加教师角色校验
         // 1.检查任务是否存在
         Task originTask = taskMapper.selectTaskById(task.getTaskId());
         if(null==originTask){
@@ -177,7 +176,16 @@ public class TaskServiceImpl implements TaskService {
         }
         return task;
     }
+    @Override
+    public List<SysUser> getParticipantUsersByTaskId(Long taskId) {
+        return taskUserMapper.selectUsersByTaskId(taskId);
+    }
 
+    @Override
+    public List<SysUser> getSelectableUsers(String nickName) {
+        // 查询未毕业的用户（支持模糊匹配）
+        return sysUserMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
+    }
     /**
      * 计算任务的进度条及是否有子任务
      * @param tasks
@@ -208,6 +216,27 @@ public class TaskServiceImpl implements TaskService {
                 task.setHasSubTasks(false);
                 task.setPercentage(task.getTaskStatus()>=TaskStatusEnum.FINISHED.getStatus()?100:0);
             }
+        }
+    }
+    /**
+     * 处理任务用户关联
+     * @param taskId 任务ID
+     * @param userIds 用户ID列表
+     */
+    private void handleTaskUserAssociation(Long taskId, List<Long> userIds) {
+        // 1.递归更改子任务的任务关联
+        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+        if(!CollectionUtils.isEmpty(subTaskIds)){
+            // 递归更改子任务的任务关联
+            for(Long subTaskId : subTaskIds){
+                handleTaskUserAssociation(subTaskId,userIds);
+            }
+        }
+        // 2.删除旧的用户关联
+        taskUserMapper.deleteTaskUsers(taskId);
+        // 3.添加新的用户关联
+        if (!CollectionUtils.isEmpty(userIds)) {
+            taskUserMapper.insertTaskUserBatch(taskId,userIds);
         }
     }
     /**
@@ -243,39 +272,5 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         return 0;
-    }
-    
-    /**
-     * 处理任务用户关联
-     * @param taskId 任务ID
-     * @param userIds 用户ID列表
-     */
-    private void handleTaskUserAssociation(Long taskId, List<Long> userIds) {
-        // 1.递归更改子任务的任务关联
-        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
-        if(!CollectionUtils.isEmpty(subTaskIds)){
-            // 递归更改子任务的任务关联
-            for(Long subTaskId : subTaskIds){
-                handleTaskUserAssociation(subTaskId,userIds);
-            }
-        }
-        // 2.删除旧的用户关联
-        taskUserMapper.deleteTaskUsers(taskId);
-        // 3.添加新的用户关联
-        if (!CollectionUtils.isEmpty(userIds)) {
-            taskUserMapper.insertTaskUserBatch(taskId,userIds);
-        }
-    }
-    
-    @Override
-    public List<SysUser> getParticipantUsersByTaskId(Long taskId) {
-        List<SysUser> users = taskUserMapper.selectUsersByTaskId(taskId);
-        return users;
-    }
-    
-    @Override
-    public List<SysUser> getSelectableUsers(String nickName) {
-        // 查询未毕业的用户（支持模糊匹配）
-        return sysUserMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
     }
 }

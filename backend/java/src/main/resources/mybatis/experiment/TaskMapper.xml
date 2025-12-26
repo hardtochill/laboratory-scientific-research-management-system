@@ -34,17 +34,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by create_time desc
     </select>
     <select id="selectFirstParentTasksForStudent" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
-        select task_id,task_name,task_status from task
+        select task.task_id,task_name,task_status from task
         inner join task_user on task.task_id = task_user.task_id
         <where>
             task_user.user_id=#{userId}
             and parent_task_id=#{parentTaskId}
             <if test="taskQueryDTO.taskName!=null">and task_name like concat('%',#{taskQueryDTO.taskName},'%')</if>
             <if test="taskQueryDTO.taskStatus!=null">and task_status=#{taskQueryDTO.taskStatus}</if>
-            <if test="taskQueryDTO.createTimeStart!=null">and create_time &gt;= #{taskQueryDTO.createTimeStart}</if>
-            <if test="taskQueryDTO.createTimeEnd!=null">and create_time &lt;= #{taskQueryDTO.createTimeEnd}</if>
+            <if test="taskQueryDTO.createTimeStart!=null">and task.create_time &gt;= #{taskQueryDTO.createTimeStart}</if>
+            <if test="taskQueryDTO.createTimeEnd!=null">and task.create_time &lt;= #{taskQueryDTO.createTimeEnd}</if>
         </where>
-        order by create_time desc
+        order by task.create_time desc
     </select>
     
     <select id="selectParentIdsHaveSubTasks" resultType="java.lang.Long">

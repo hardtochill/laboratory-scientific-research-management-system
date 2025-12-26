@@ -25,10 +25,18 @@ export function getTaskDetail(taskId) {
   })
 }
 
-// 新增或修改任务
-export function addOrUpdateTask(data) {
+// 新增任务
+export function addTask(data) {
   return request({
-    url: '/task/addOrUpdate',
+    url: '/task/add',
+    method: 'post',
+    data
+  })
+}
+// 修改任务
+export function updateTask(data){
+  return request({
+    url: '/task/update',
     method: 'post',
     data
   })

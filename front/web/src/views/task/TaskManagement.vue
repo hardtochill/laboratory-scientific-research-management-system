@@ -257,11 +257,11 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers, getSelectableUsers } from '@/api/task/task'
-import request from '@/utils/request'
+import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers, getSelectableUsers } from '@/api/task/task'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
 import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete, InfoFilled } from '@element-plus/icons-vue'
+import useUserStore from '@/store/modules/user'
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -759,7 +759,13 @@ const handleFormSubmit = async () => {
       parentTaskId: formData.parentTaskId === '0' ? 0 : formData.parentTaskId
     }
     // 调用API
-    await addOrUpdateTask(submitData)
+    if (formData.taskId) {
+      // 修改任务
+      await updateTask(submitData)
+    } else {
+      // 新增任务
+      await addTask(submitData)
+    }
     ElMessage.success('保存成功')
     // 关闭表单
     formVisible.value = false
@@ -815,6 +821,7 @@ const handleAddSubTask = async (parentTask) => {
 onMounted(async () => {
   loadParentTasks()
   await initUserList()
+  console.log(useUserStore().roles)
 })
 </script>
 

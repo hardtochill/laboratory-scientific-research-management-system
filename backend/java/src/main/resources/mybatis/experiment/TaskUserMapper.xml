@@ -16,5 +16,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select sys_user.user_id,sys_user.nick_name,sys_user.user_name
         from task_user inner join sys_user on task_user.user_id = sys_user.user_id
         where task_user.task_id = #{taskId}
+        order by sys_user.user_id asc
     </select>
 </mapper>
