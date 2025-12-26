@@ -35,16 +35,7 @@ public class SysPermissionService
      */
     public Set<String> getRolePermission(SysUser user)
     {
-        Set<String> roles = new HashSet<String>();
-        // 管理员拥有所有权限
-        if (user.isAdmin())
-        {
-            roles.add("admin");
-        }
-        else
-        {
-            roles.addAll(roleService.selectRolePermissionByUserId(user.getUserId()));
-        }
+        Set<String> roles = new HashSet<String>(roleService.selectRolePermissionByUserId(user.getUserId()));
         return roles;
     }
 

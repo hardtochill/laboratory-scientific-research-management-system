@@ -28,7 +28,7 @@
       <!-- 右侧按钮区域 -->
         <div class="right-buttons">
           <!-- 新增子任务按钮 -->
-          <el-tooltip content="新增子任务" placement="top">
+          <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
             <el-button link type="primary" @click.stop="handleAddSubTask" :icon="Plus"></el-button>
           </el-tooltip>
           <!-- 修改任务按钮 -->
@@ -36,7 +36,7 @@
             <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
-          <el-tooltip content="更新任务状态" placement="top">
+          <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
             <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(newStatus)">
               <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
@@ -50,7 +50,7 @@
             </el-dropdown>
           </el-tooltip>
           <!-- 删除任务按钮 -->
-          <el-tooltip content="删除任务" placement="top">
+          <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
             <el-button link type="primary" @click.stop="handleDeleteTask" :icon="Delete"></el-button>
           </el-tooltip>
         </div>
@@ -65,6 +65,7 @@
         <div v-else>
           <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
             :expanded-task-ids="expandedTaskIds"
+            :is-has-teacher-role="isHasTeacherRole"
             @show-detail="(...args) => $emit('show-detail', ...args)"
             @add-sub-task="(...args) => $emit('add-sub-task', ...args)"
             @update-expanded="(...args) => $emit('update-expanded', ...args)"
@@ -91,6 +92,10 @@ const props = defineProps({
   expandedTaskIds: {
     type: Object,
     required: true
+  },
+  isHasTeacherRole: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -107,7 +112,9 @@ const TASK_STATUS = {
 
 // 任务状态类型映射
 const getStatusType = (status) => {
-  switch (status) {
+  // 将状态转换为数字类型进行比较
+  const numStatus = parseInt(status)
+  switch (numStatus) {
     case TASK_STATUS.PENDING:
       return 'info'
     case TASK_STATUS.PROCESSING:
@@ -123,7 +130,9 @@ const getStatusType = (status) => {
 
 // 任务状态文本映射
 const getStatusText = (status) => {
-  switch (status) {
+  // 将状态转换为数字类型进行比较
+  const numStatus = parseInt(status)
+  switch (numStatus) {
     case TASK_STATUS.PENDING:
       return '未开始'
     case TASK_STATUS.PROCESSING:

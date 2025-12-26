@@ -27,7 +27,7 @@
       <template #header>
         <div class="card-header">
           <span>任务列表</span>
-          <el-button type="primary" @click="handleAdd">
+          <el-button type="primary" @click="handleAdd" v-if="isHasTeacherRole">
             <el-icon-plus /> 新增任务
           </el-button>
         </div>
@@ -63,7 +63,7 @@
             <!-- 右侧按钮区域 -->
         <div class="right-buttons">
           <!-- 新增子任务按钮 -->
-          <el-tooltip content="新增子任务" placement="top">
+          <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
             <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
           </el-tooltip>
           <!-- 修改任务按钮 -->
@@ -71,7 +71,7 @@
             <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
-          <el-tooltip content="更新任务状态" placement="top">
+          <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
             <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
               <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
@@ -85,7 +85,7 @@
             </el-dropdown>
           </el-tooltip>
           <!-- 删除任务按钮 -->
-          <el-tooltip content="删除任务" placement="top">
+          <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
             <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
           </el-tooltip>
         </div>
@@ -100,6 +100,7 @@
               <div v-else>
                 <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
                   :expanded-task-ids="expandedTaskIds"
+                  :is-has-teacher-role="isHasTeacherRole"
                   @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
                   @update-expanded="handleUpdateExpanded"
                   @change-status="handleChangeStatus"
@@ -191,20 +192,31 @@
 
         <!-- 任务状态 -->
         <el-form-item label="任务状态" prop="taskStatus">
-          <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
+          <!-- 对于teacher角色用户显示可编辑的下拉框 -->
+          <el-select v-if="isHasTeacherRole" v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
             <el-option label="未开始" value="1" />
             <el-option label="进行中" value="2" />
             <el-option label="已完成" value="3" />
             <el-option label="已跳过" value="4" />
           </el-select>
+          <!-- 对于非teacher角色用户显示只读标签 -->
+          <el-tag v-else :type="getStatusType(formData.taskStatus)">
+            {{ getStatusText(formData.taskStatus) }}
+          </el-tag>
         </el-form-item>
 
         <!-- 执行用户组 -->
         <el-form-item label="执行用户组" prop="participantUserIds">
-          <div v-if="isReadOnlyUserGroup" style="margin-bottom: 8px;">
+          <div v-if="isReadOnlyUserGroup || !isHasTeacherRole" style="margin-bottom: 8px;">
             <el-tag type="info" size="small">
               <el-icon><InfoFilled /></el-icon>
-              该任务继承父任务的用户组，不可修改
+              <span v-if="!isHasTeacherRole">
+                <span v-if="!isChildTask">无权修改执行用户</span>
+                <span v-else>该任务继承父任务的用户组，不可修改</span>
+              </span>
+              <span v-else>
+                <span v-if="isChildTask">该任务继承父任务的用户组，不可修改</span>
+              </span>
             </el-tag>
           </div>
           <el-select 
@@ -217,7 +229,7 @@
             style="width: 100%;"
             :remote-method="querySelectableUsers"
             :loading="userLoading"
-            :disabled="isReadOnlyUserGroup"
+            :disabled="isReadOnlyUserGroup || !isHasTeacherRole"
             @focus="handleSelectFocus"
           >
             <el-option
@@ -273,7 +285,9 @@ const TASK_STATUS = {
 
 // 任务状态类型映射
 const getStatusType = (status) => {
-  switch (status) {
+  // 将状态转换为数字类型进行比较
+  const numStatus = parseInt(status)
+  switch (numStatus) {
     case TASK_STATUS.PENDING:
       return 'info'
     case TASK_STATUS.PROCESSING:
@@ -289,7 +303,9 @@ const getStatusType = (status) => {
 
 // 任务状态文本映射
 const getStatusText = (status) => {
-  switch (status) {
+  // 将状态转换为数字类型进行比较
+  const numStatus = parseInt(status)
+  switch (numStatus) {
     case TASK_STATUS.PENDING:
       return '未开始'
     case TASK_STATUS.PROCESSING:
@@ -356,6 +372,24 @@ const parentTasks = ref([])
 const dialogVisible = ref(false)
 // 当前选中的任务
 const currentTask = ref(null)
+
+// 用户角色信息
+const userStore = useUserStore()
+const userRoles = ref([])
+const isHasTeacherRole = ref(false)
+
+// 检查用户是否含有teacher角色
+const checkUserRoles = () => {
+  userRoles.value = userStore.roles || []
+  isHasTeacherRole.value = userRoles.value.some(role => 
+    role === 'teacher' || 
+    role.includes('teacher') || 
+    role.roleName === 'teacher' ||
+    role.roleKey === 'teacher'
+  )
+  console.log('用户角色:', userRoles.value)
+  console.log('是否含有teacher角色:', isHasTeacherRole.value)
+}
 // 加载状态
 const loading = ref(true)
 // 日期范围
@@ -821,7 +855,7 @@ const handleAddSubTask = async (parentTask) => {
 onMounted(async () => {
   loadParentTasks()
   await initUserList()
-  console.log(useUserStore().roles)
+  checkUserRoles() // 检查用户角色权限
 })
 </script>
 
