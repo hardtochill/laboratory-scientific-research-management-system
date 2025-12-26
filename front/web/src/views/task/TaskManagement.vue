@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="task-management">
     <!-- 查询表单 -->
       <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
@@ -13,15 +13,8 @@
             <el-option label="已跳过" value="4" />
           </el-select>
         </el-form-item>
-        <el-form-item label="可见范围" prop="visibleType">
-          <el-select v-model="queryParams.visibleType" placeholder="请选择可见范围" clearable style="width: 240px">
-            <el-option label="仅自己可见" value="1" />
-            <el-option label="所有人可见" value="2" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="执行用户" prop="executeNickName">
-          <el-input v-model="queryParams.executeNickName" placeholder="请输入执行用户名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
-        </el-form-item>
+
+
         <el-form-item label="创建时间" style="width: 308px">
           <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
         </el-form-item>
@@ -146,14 +139,15 @@
               {{ getStatusText(currentTask.taskStatus) }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="可见范围">
-            {{ currentTask.visibleType === 1 ? '仅自己可见' : '所有人可见' }}
-          </el-descriptions-item>
+
           <el-descriptions-item label="创建人">
             {{ currentTask.createNickName }}
           </el-descriptions-item>
-          <el-descriptions-item label="执行人">
-            {{ currentTask.executeNickName }}
+          <el-descriptions-item label="参与用户">
+            <span v-if="currentTask.participantUsers && currentTask.participantUsers.length > 0">
+              {{ currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ') }}
+            </span>
+            <span v-else>-</span>
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ parseTime(currentTask.createTime) }}
@@ -205,36 +199,34 @@
           </el-select>
         </el-form-item>
 
-        <!-- 可见范围 -->
-        <el-form-item label="可见范围" prop="visibleType">
-          <el-select v-model="formData.visibleType" placeholder="请选择可见范围" style="width: 100%;">
-            <el-option label="仅自己可见" value="1" />
-            <el-option label="所有人可见" value="2" />
-          </el-select>
-        </el-form-item>
-
-        
-
-        <!-- 执行用户昵称 -->
-        <el-form-item label="执行用户昵称" prop="executeNickName">
-          <el-autocomplete
-            v-model="formData.executeNickName"
-            :fetch-suggestions="querySearch"
-            placeholder="请输入执行用户昵称"
-            clearable
-            :trigger-on-focus="false"
-            :remote="true"
-            @select="handleUserSelect"
-            value-key="nickName"
-            :popper-append-to-body="false"
+        <!-- 执行用户组 -->
+        <el-form-item label="执行用户组" prop="participantUserIds">
+          <div v-if="isReadOnlyUserGroup" style="margin-bottom: 8px;">
+            <el-tag type="info" size="small">
+              <el-icon><InfoFilled /></el-icon>
+              该任务继承父任务的用户组，不可修改
+            </el-tag>
+          </div>
+          <el-select 
+            v-model="formData.participantUserIds" 
+            multiple 
+            filterable 
+            remote 
+            reserve-keyword
+            placeholder="请选择执行用户组" 
+            style="width: 100%;"
+            :remote-method="queryUngraduatedUsers"
+            :loading="userLoading"
+            :disabled="isReadOnlyUserGroup"
+            @focus="handleSelectFocus"
           >
-            <template #suffix>
-              <i class="el-icon-search el-input__icon" />
-            </template>
-            <template #default="{ item }">
-              <div class="suggestion-item">{{ item.nickName }}({{ item.userName }})</div>
-            </template>
-          </el-autocomplete>
+            <el-option
+              v-for="user in ungraduatedUsers"
+              :key="user.userId"
+              :label="`${user.nickName}(${user.userName})`"
+              :value="user.userId"
+            />
+          </el-select>
         </el-form-item>
 
         <!-- 预期完成时间 -->
@@ -266,10 +258,10 @@
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask } from '@/api/task/task'
-import {listUserByNickName } from '@/api/system/user'
+import request from '@/utils/request'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete } from '@element-plus/icons-vue'
+import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete, InfoFilled } from '@element-plus/icons-vue'
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -374,6 +366,16 @@ const formVisible = ref(false)
 const formTitle = ref('新增任务')
 // 表单引用
 const formRef = ref(null)
+// 是否为子任务
+const isChildTask = ref(false)
+// 用户组字段是否为只读（非一级父任务）
+const isReadOnlyUserGroup = ref(false)
+// 父任务ID
+const parentTaskId = ref(0)
+// 未毕业用户列表
+const ungraduatedUsers = ref([])
+// 用户加载状态
+const userLoading = ref(false)
 
 // 表单数据
 const formData = reactive({
@@ -382,9 +384,7 @@ const formData = reactive({
   taskName: '',
   taskDescription: '',
   taskStatus: '1', // 默认未开始
-  visibleType: '1', // 默认仅自己可见
-  executeUserId: '',
-  executeNickName: '',
+  participantUserIds: [], // 参与用户ID列表
   expectedFinishTime: null,
   actualFinishTime: null,
   taskRemark: ''
@@ -398,14 +398,7 @@ const formRules = reactive({
   taskStatus: [
     { required: true, message: '请选择任务状态', trigger: 'change' }
   ],
-  visibleType: [
-    { required: true, message: '请选择可见范围', trigger: 'change' }
-  ],
-  
-  executeNickName: [
-    { required: true, message: '请输入执行用户昵称', trigger: 'blur' },
-    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
-  ]
+  participantUserIds: []
 })
 
 // 响应式数据
@@ -414,9 +407,7 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     taskName: undefined,
-    taskStatus: undefined,
-    visibleType: undefined,
-    executeNickName: undefined
+    taskStatus: undefined
   },
   total: 0
 })
@@ -517,6 +508,43 @@ const resetQuery = () => {
   handleQuery()
 }
 
+// 查询未毕业用户（支持模糊匹配）
+const queryUngraduatedUsers = async (query) => {
+  userLoading.value = true
+  try {
+    const response = await request({
+      url: '/task/ungraduated-users',
+      method: 'get',
+      params: {
+        nickName: query
+      }
+    })
+    ungraduatedUsers.value = response.data || []
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+  } finally {
+    userLoading.value = false
+  }
+}
+
+// 处理下拉框获取焦点事件（加载所有未毕业用户）
+const handleSelectFocus = async () => {
+  await queryUngraduatedUsers('')
+}
+
+// 初始化用户列表
+const initUserList = async () => {
+  try {
+    const response = await request({
+      url: '/task/ungraduated-users',
+      method: 'get'
+    })
+    ungraduatedUsers.value = response.data || []
+  } catch (error) {
+    console.error('初始化用户列表失败:', error)
+  }
+}
+
 // 分页变化处理
 const handleSizeChange = (newSize) => {
   queryParams.value.pageSize = newSize
@@ -594,6 +622,10 @@ const handleAdd = () => {
   resetForm()
   // 设置表单标题
   formTitle.value = '新增任务'
+  // 设置为一级任务
+  isChildTask.value = false
+  isReadOnlyUserGroup.value = false // 一级任务的用户组字段可编辑
+  parentTaskId.value = 0
   // 打开表单
   formVisible.value = true
 }
@@ -633,22 +665,46 @@ const handleEdit = (task) => {
   resetForm()
   // 设置表单标题
   formTitle.value = '修改任务'
+  
+  // 判断是否为子任务（非一级父任务）
+  const isSubTask = task.parentTaskId && task.parentTaskId !== '0'
+  isChildTask.value = isSubTask
+  
+  // 非一级父任务（深度>1）的用户组字段为只读
+  isReadOnlyUserGroup.value = isSubTask
+  
   // 填充表单数据
   Object.assign(formData, {
     taskId: task.taskId,
-    parentTaskId: task.parentTaskId || '0', // 如果没有父任务ID，则设为0
+    parentTaskId: task.parentTaskId || '0',
     taskName: task.taskName,
     taskDescription: task.taskDescription,
     taskStatus: String(task.taskStatus), 
-    visibleType: String(task.visibleType), 
-    executeUserId: task.executeUserId,
-    executeNickName: task.executeNickName,
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark
   })
+  
+  // 加载任务的参与用户组
+  loadTaskParticipantUsers(task.taskId)
+  
   // 打开表单
   formVisible.value = true
+}
+
+// 加载任务的参与用户组
+const loadTaskParticipantUsers = async (taskId) => {
+  try {
+    const response = await request({
+      url: `/task/participant-users/${taskId}`,
+      method: 'get'
+    })
+    const participantUsers = response.data || []
+    // 设置已选择的用户组
+    formData.participantUserIds = participantUsers.map(user => user.userId)
+  } catch (error) {
+    console.error('加载任务参与用户组失败:', error)
+  }
 }
 
 // 重置表单
@@ -663,13 +719,15 @@ const resetForm = () => {
     taskName: '',
     taskDescription: '',
     taskStatus: '1',
-    visibleType: '1',
-    executeUserId: '',
-    executeNickName: '',
+    participantUserIds: [],
     expectedFinishTime: null,
     actualFinishTime: null,
     taskRemark: ''
   })
+  // 重置用户组相关状态
+  isChildTask.value = false
+  isReadOnlyUserGroup.value = false
+  parentTaskId.value = 0
 }
 
 // 关闭表单
@@ -733,41 +791,43 @@ const handleClose = () => {
   currentTask.value = null
 }
 
-// 远程搜索用户函数
-const querySearch = async (queryString, cb) => {
-  try {
-    const response = await listUserByNickName({
-      nickName: queryString
-    })
-    const users = response.data || []
-    cb(users)
-  } catch (error) {
-    console.error('搜索用户失败:', error)
-    cb([])
-  }
-}
 
-// 处理用户选择
-const handleUserSelect = (user) => {
-  formData.executeUserId = user.userId
-  formData.executeNickName = user.nickName
-}
 
 // 新增子任务
-const handleAddSubTask = (parentTask) => {
+const handleAddSubTask = async (parentTask) => {
   // 重置表单
   resetForm()
   // 设置表单标题
   formTitle.value = '新增子任务'
+  // 设置为子任务
+  isChildTask.value = true
+  isReadOnlyUserGroup.value = true // 子任务的用户组字段为只读
+  parentTaskId.value = parentTask.taskId
   // 设置父任务ID
   formData.parentTaskId = parentTask.taskId
+  
+  try {
+    // 加载父任务的参与用户组
+    const response = await request({
+      url: `/task/parent-participant-users/${parentTask.taskId}`,
+      method: 'get'
+    })
+    const participantUsers = response.data || []
+    // 设置子任务继承父任务的用户组
+    formData.participantUserIds = participantUsers.map(user => user.userId)
+  } catch (error) {
+    ElMessage.error('加载父任务用户组失败')
+    console.error('加载父任务用户组失败:', error)
+  }
+  
   // 打开表单
   formVisible.value = true
 }
 
 // 页面加载时初始化数据
-onMounted(() => {
+onMounted(async () => {
   loadParentTasks()
+  await initUserList()
 })
 </script>
 

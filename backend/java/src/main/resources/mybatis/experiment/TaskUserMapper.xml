@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.TaskUserMapper">
+
+
+    <insert id="insertTaskUserBatch">
+        insert into task_user (task_id, user_id)
+        value
+        <foreach collection="userIds" item="userId" separator=",">
+            (#{taskId}, #{userId})
+        </foreach>
+    </insert>
+    <select id="selectUsersByTaskId" resultType="com.ruoyi.project.system.domain.SysUser">
+        select sys_user.user_id,sys_user.nick_name,sys_user.user_name
+        from task_user inner join sys_user on task_user.user_id = sys_user.user_id
+        where task_user.task_id = #{taskId}
+    </select>
+</mapper>

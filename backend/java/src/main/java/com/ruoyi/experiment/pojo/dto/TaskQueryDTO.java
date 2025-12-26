@@ -20,16 +20,6 @@ public class TaskQueryDTO {
     private Integer taskStatus;
 
     /**
-     * 任务可见范围
-     */
-    private Integer visibleType;
-
-    /**
-     * 执行用户名称
-     */
-    private String executeNickName;
-
-    /**
      * 创建时间开始
      */
     private LocalDateTime createTimeStart;

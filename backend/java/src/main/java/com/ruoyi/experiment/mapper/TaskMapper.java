@@ -6,7 +6,6 @@ import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import org.apache.ibatis.annotations.*;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -14,15 +13,17 @@ import java.util.Map;
 @Mapper
 public interface TaskMapper {
     /**
-     * 获取一级父任务
+     * 获取一级父任务-教师端
      */
-    List<TaskVO> selectFirstParentTasks(Long parentTaskId, Long userId, TaskQueryDTO taskQueryDTO);
-    
+    List<TaskVO> selectFirstParentTasksForTeacher(Long parentTaskId, TaskQueryDTO taskQueryDTO);
+
+    List<TaskVO> selectFirstParentTasksForStudent(Long parentTaskId,Long userId,TaskQueryDTO taskQueryDTO);
+
     /**
      * 获取二级及以下父任务
      */
     @Select("select task_id,task_name,task_status from task where parent_task_id=#{parentTaskId} order by task_order asc")
-    List<TaskVO> selectSubParentTasks(Long parentTaskId,Long userId);
+    List<TaskVO> selectSubParentTasks(Long parentTaskId);
 
     /**
      * 计算子任务的完成情况
@@ -31,7 +32,7 @@ public interface TaskMapper {
     /**
      * 过滤出存在子任务的parentIds
      */
-    List<Long> selectParentIdsWithSubTasks(List<Long> parentIds);
+    List<Long> selectParentIdsHaveSubTasks(List<Long> parentIds);
     /**
      * 根据任务ID获取任务详情
      */
@@ -65,4 +66,5 @@ public interface TaskMapper {
      */
     @Select("select task_id from task where parent_task_id = #{parentTaskId}")
     List<Long> selectSubTaskIds(Long parentTaskId);
+
 }

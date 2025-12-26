@@ -4,26 +4,26 @@ import com.ruoyi.experiment.constant.TaskConstants;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
+import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.TaskStatusEnum;
-import com.ruoyi.experiment.enums.TaskVisibleTypeEnum;
+import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.TaskMapper;
+import com.ruoyi.experiment.mapper.TaskUserMapper;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
-import com.ruoyi.framework.web.exception.GlobalExceptionHandler;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,26 +35,31 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final SysUserMapper sysUserMapper;
+    private final TaskUserMapper taskUserMapper;
     @Override
     public List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
-        // 获取仅自己可见+所有可见的任务
-        Long userId = SecurityUtils.getUserId();
-        // 一级父任务条件查询，按创建时间倒序
-        List<TaskVO> tasks = taskMapper.selectFirstParentTasks(TaskConstants.FIRST_PARENT_TASK_ID,userId, taskQueryDTO);
+        // 1.获取角色，对不同角色查询不同任务
+        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        List<TaskVO> tasks;
+        if (isTeacher){ // 对教师：获取所有任务
+            tasks = taskMapper.selectFirstParentTasksForTeacher(TaskConstants.FIRST_PARENT_TASK_ID,taskQueryDTO);
+        }else{ // 对学生：获取所有自己参与的任务
+            tasks = taskMapper.selectFirstParentTasksForStudent(TaskConstants.FIRST_PARENT_TASK_ID, SecurityUtils.getUserId(),taskQueryDTO);
+        }
+        // 2.计算子任务状态
         calculateTaskList(tasks);
         return tasks;
     }
 
     @Override
     public List<TaskVO> selectSubTaskList(Long parentTaskId) {
-        // 获取仅自己可见+所有可见的任务
-        Long userId = SecurityUtils.getUserId();
         // 二级及以下父任务，按任务顺序排序
-        List<TaskVO> tasks = taskMapper.selectSubParentTasks(parentTaskId,userId);
+        List<TaskVO> tasks = taskMapper.selectSubParentTasks(parentTaskId);
         calculateTaskList(tasks);
         return tasks;
     }
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void addTask(TaskDTO taskDTO) {
         // 1.查出父任务
         Task parentTask = taskMapper.selectTaskById(taskDTO.getParentTaskId());
@@ -80,59 +85,57 @@ public class TaskServiceImpl implements TaskService {
             task.setTaskDepth(1);
             task.setTaskOrder(1);
         }
-        // 3.检查用户的执行人
-        if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
-            throw new ServiceException("执行用户不存在");
+        // 3.验证参与用户组
+        if (!CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())) {
+            List<Long> userIds = sysUserMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
+            if(null==userIds || userIds.size()!=taskDTO.getParticipantUserIds().size()){
+                throw new ServiceException("参与用户不存在");
+            }
         }
         // 4.设置任务的创建人信息
         SysUser user = SecurityUtils.getLoginUser().getUser();
         task.setCreateUserId(user.getUserId());
         task.setCreateNickName(user.getNickName());
-        // 5.检查任务的可见范围
-        // 如果任务的创建人!=执行人，则可见范围必须是所有人
-        if(!(Objects.equals(task.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
-            throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
-        }
-        // 子任务跟父任务的可见范围必须保持一致
-        if(null!=parentTask && !Objects.equals(parentTask.getVisibleType(),task.getVisibleType())){
-            throw new ServiceException("子任务跟父任务的可见范围必须保持一致");
-        }
-        // 6.新增
+        // 5.新增任务
         taskMapper.insertTask(task);
+        // 6.处理用户组关联
+        handleTaskUserAssociation(task.getTaskId(), taskDTO.getParticipantUserIds());
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateTask(TaskDTO taskDTO) {
+        // todo 修改任务拆成两个接口，学生端和教师端，在controller中添加角色校验切面
         // 1.查出原任务
         Task originTask = taskMapper.selectTaskById(taskDTO.getTaskId());
         if(null==originTask){
             throw new ServiceException("任务不存在");
         }
+        // 2.只有教师才能修改任务状态
+        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        if(!isTeacher && !taskDTO.getTaskStatus().equals(originTask.getTaskStatus())){
+            throw new ServiceException("只有教师才能修改任务状态");
+        }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
-        // 2.检查用户的执行人
-        if(null==sysUserMapper.selectUserById(task.getExecuteUserId())){
-            throw new ServiceException("执行用户不存在");
+        // 3.验证参与用户组
+        if (!CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())) {
+            List<Long> userIds = sysUserMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
+            if(null==userIds || userIds.size()!=taskDTO.getParticipantUserIds().size()){
+                throw new ServiceException("参与用户不存在");
+            }
         }
-        // 3.检查任务的可见范围
-        // 如果任务的创建人!=执行人，则可见范围必须是所有人
-        if(!(Objects.equals(originTask.getCreateUserId(),task.getExecuteUserId())) && TaskVisibleTypeEnum.ONLY_SELF.getType().equals(task.getVisibleType())){
-            throw new ServiceException("若任务的创建人不为执行人，则可见范围必须是：所有人可见");
-        }
-        // 子任务跟父任务的可见范围必须保持一致
-        Task parentTask = taskMapper.selectTaskById(task.getParentTaskId());
-        if(null!=parentTask && !Objects.equals(parentTask.getVisibleType(),task.getVisibleType())){
-            throw new ServiceException("子任务的可见范围必须保持一致");
-        }
-        // todo 搁置，修改任务状态是否需要受前置任务限制
-
-        // 4.修改
+        // todo 修改任务状态是否需要受前置任务限制
+        // 4.修改任务
         taskMapper.updateTask(task);
+        // 5.处理用户组关联
+        handleTaskUserAssociation(task.getTaskId(), taskDTO.getParticipantUserIds());
     }
 
     @Override
     public void updateTaskStatus(Task task) {
         log.info("更新任务状态：task={}",task);
+        // todo 在controller中添加教师角色校验
         // 1.检查任务是否存在
         Task originTask = taskMapper.selectTaskById(task.getTaskId());
         if(null==originTask){
@@ -142,12 +145,13 @@ public class TaskServiceImpl implements TaskService {
         if(null == TaskStatusEnum.getByStatus(task.getTaskStatus())){
             throw new ServiceException("任务状态不合法");
         }
-        // todo 搁置，修改任务状态是否需要受前置任务限制
+        // todo 修改任务状态是否需要受前置任务限制
         // 3.更新任务状态
         taskMapper.updateTask(task);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteTask(Long taskId) {
         // 1.获取当前任务的所有子任务
         List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
@@ -160,11 +164,19 @@ public class TaskServiceImpl implements TaskService {
         }
         // 3.删除当前任务
         taskMapper.deleteTask(taskId);
+        // 4.删除任务用户关联
+        taskUserMapper.deleteTaskUsers(taskId);
     }
 
     @Override
     public Task getTaskById(Long taskId) {
-        return taskMapper.selectTaskById(taskId);
+        // 1.查询任务信息
+        Task task = taskMapper.selectTaskById(taskId);
+        // 2.查询任务参与用户
+        if(null!=task){
+            task.setParticipantUsers(taskUserMapper.selectUsersByTaskId(taskId));
+        }
+        return task;
     }
 
     /**
@@ -173,10 +185,10 @@ public class TaskServiceImpl implements TaskService {
      */
     private void calculateTaskList(List<TaskVO> tasks){
         // 过滤出存在子任务的父任务id列表
-        List<Long> parentIdsWithSubTasks = taskMapper.selectParentIdsWithSubTasks(tasks.stream().map(TaskVO::getTaskId).collect(Collectors.toList()));
+        List<Long> parentIdsHaveSubTasks = taskMapper.selectParentIdsHaveSubTasks(tasks.stream().map(TaskVO::getTaskId).collect(Collectors.toList()));
         // 对于PROCESSING的任务，需要计算完成进度
         for (TaskVO task : tasks) {
-            if(parentIdsWithSubTasks.contains(task.getTaskId())){
+            if(parentIdsHaveSubTasks.contains(task.getTaskId())){
                 task.setHasSubTasks(true);
                 // 有子任务&&状态为PROCESSING
                 if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
@@ -193,8 +205,8 @@ public class TaskServiceImpl implements TaskService {
                     task.setPercentage(task.getTaskStatus()>=TaskStatusEnum.FINISHED.getStatus()?100:0);
                 }
             }else{
+                // 没有子任务
                 task.setHasSubTasks(false);
-                // 没有子任务，进度条拉满
                 task.setPercentage(task.getTaskStatus()>=TaskStatusEnum.FINISHED.getStatus()?100:0);
             }
         }
@@ -232,5 +244,36 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         return 0;
+    }
+    
+    /**
+     * 处理任务用户关联
+     * @param taskId 任务ID
+     * @param userIds 用户ID列表
+     */
+    private void handleTaskUserAssociation(Long taskId, List<Long> userIds) {
+        // 删除旧的用户关联
+        taskUserMapper.deleteTaskUsers(taskId);
+        // 添加新的用户关联
+        if (!CollectionUtils.isEmpty(userIds)) {
+            taskUserMapper.insertTaskUserBatch(taskId,userIds);
+        }
+    }
+    
+    @Override
+    public List<SysUser> getParticipantUsersByTaskId(Long taskId) {
+        List<SysUser> users = taskUserMapper.selectUsersByTaskId(taskId);
+        return users;
+    }
+    
+    @Override
+    public List<SysUser> getParticipantUsersByParentTaskId(Long parentTaskId) {
+        return getParticipantUsersByTaskId(parentTaskId);
+    }
+    
+    @Override
+    public List<SysUser> selectUngraduatedUsers(String nickName) {
+        // 查询未毕业的用户（支持模糊匹配）
+        return sysUserMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
     }
 }

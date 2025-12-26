@@ -4,6 +4,7 @@ import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
+import com.ruoyi.project.system.domain.SysUser;
 
 import java.util.List;
 
@@ -48,4 +49,23 @@ public interface TaskService {
      * 删除任务
      */
     void deleteTask(Long taskId);
+    
+    /**
+     * 根据任务ID获取参与用户组
+     * @param taskId 任务ID
+     * @return 参与用户列表
+     */
+    List<SysUser> getParticipantUsersByTaskId(Long taskId);
+    
+    /**
+     * 根据父任务ID获取参与用户组（用于子任务继承）
+     * @param parentTaskId 父任务ID
+     * @return 参与用户列表
+     */
+    List<SysUser> getParticipantUsersByParentTaskId(Long parentTaskId);
+    
+    /**
+     * 查询未毕业的用户（用于前端用户选择）
+     */
+    List<SysUser> selectUngraduatedUsers(String nickName);
 }

@@ -8,6 +8,7 @@ import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
+import com.ruoyi.project.system.domain.SysUser;
 import io.swagger.models.auth.In;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -91,5 +92,32 @@ public class TaskController extends BaseController {
     public AjaxResult deleteTask(@PathVariable Long taskId) {
         taskService.deleteTask(taskId);
         return AjaxResult.success();
+    }
+
+    /**
+     * 根据任务ID获取参与用户组
+     */
+    @GetMapping("/participant-users/{taskId}")
+    public AjaxResult getParticipantUsers(@PathVariable Long taskId) {
+        List<SysUser> users = taskService.getParticipantUsersByTaskId(taskId);
+        return AjaxResult.success(users);
+    }
+
+    /**
+     * 根据父任务ID获取参与用户组（用于子任务继承）
+     */
+    @GetMapping("/parent-participant-users/{parentTaskId}")
+    public AjaxResult getParentParticipantUsers(@PathVariable Long parentTaskId) {
+        List<SysUser> users = taskService.getParticipantUsersByParentTaskId(parentTaskId);
+        return AjaxResult.success(users);
+    }
+
+    /**
+     * 获取未毕业用户列表（用于前端用户选择）
+     */
+    @GetMapping("/ungraduated-users")
+    public AjaxResult getUngraduatedUsers(String nickName) {
+        List<SysUser> users = taskService.selectUngraduatedUsers(nickName);
+        return AjaxResult.success(users);
     }
 }

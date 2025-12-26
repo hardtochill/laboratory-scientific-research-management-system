@@ -1,8 +1,11 @@
 package com.ruoyi.experiment.pojo.vo;
 
+import com.ruoyi.project.system.domain.SysUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -19,4 +22,8 @@ public class TaskVO {
      * 任务进度
      */
     private Integer percentage;
+    /**
+     * 参与用户组
+     */
+    private List<SysUser> participantUsers;
 }

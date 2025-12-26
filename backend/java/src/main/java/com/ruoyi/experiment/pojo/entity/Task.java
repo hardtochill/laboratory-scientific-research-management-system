@@ -1,10 +1,12 @@
 package com.ruoyi.experiment.pojo.entity;
 
+import com.ruoyi.project.system.domain.SysUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -43,10 +45,6 @@ public class Task extends BaseEntity {
      */
     private Integer taskStatus;
      /**
-     * 任务可见范围
-     */
-    private Integer visibleType;
-     /**
      * 创建用户id
      */
     private Long createUserId;
@@ -55,14 +53,6 @@ public class Task extends BaseEntity {
      */
     private String createNickName;
      /**
-     * 执行用户id
-     */
-    private Long executeUserId;
-     /**
-     * 执行用户昵称
-     */
-    private String executeNickName;
-     /**
      * 预期完成时间
      */
     private LocalDateTime expectedFinishTime;
@@ -70,4 +60,8 @@ public class Task extends BaseEntity {
      * 实际完成时间
      */
     private LocalDateTime actualFinishTime;
+     /**
+     * 参与用户组
+     */
+    private List<SysUser> participantUsers;
 }

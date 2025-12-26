@@ -119,7 +119,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="checkEmailUnique" parameterType="String" resultMap="SysUserResult">
 		select user_id, email from sys_user where email = #{email} and del_flag = '0' limit 1
 	</select>
-	
+	<select id="selectUsersByGraduateFlagAndNickName" resultType="com.ruoyi.project.system.domain.SysUser">
+		select user_id,nick_name,user_name
+		from sys_user
+		<where>
+			<if test="graduateFlag != null">and graduate_flag = #{graduateFlag}</if>
+			<if test="nickName != null">and nick_name like concat('%',#{nickName},'%')</if>
+		</where>
+	</select>
+	<select id="selectUserIdsByIds" resultType="java.lang.Long">
+		select user_id from sys_user where user_id in
+		<foreach collection="userIds" item="userId" open="(" close=")" separator=",">
+			#{userId}
+		</foreach>
+	</select>
 	<insert id="insertUser" parameterType="SysUser" useGeneratedKeys="true" keyProperty="userId">
  		insert into sys_user(
  			<if test="userId != null and userId != 0">user_id,</if>

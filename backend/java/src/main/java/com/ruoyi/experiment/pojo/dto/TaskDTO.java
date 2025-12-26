@@ -8,6 +8,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -42,20 +43,9 @@ public class TaskDTO {
     @NotNull
     private Integer taskStatus;
     /**
-     * 任务可见范围
+     * 参与用户ID列表
      */
-    @NotNull
-    private Integer visibleType;
-    /**
-     * 执行用户id
-     */
-    @NotNull
-    private Long executeUserId;
-    /**
-     * 执行用户昵称
-     */
-    @NotBlank
-    private String executeNickName;
+    private List<Long> participantUserIds;
     /**
      * 预期完成时间
      */
