@@ -98,7 +98,9 @@
                 <el-skeleton :rows="3" animated />
               </div>
               <div v-else>
-                <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
+                <TaskItem v-for="(subTask, subTaskIndex) in task.subTasks" :key="subTask.taskId" :task="subTask"
+                  :task-index="subTaskIndex"
+                  :is-first-level-task="false"
                   :expanded-task-ids="expandedTaskIds"
                   :is-has-teacher-role="isHasTeacherRole"
                   @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"

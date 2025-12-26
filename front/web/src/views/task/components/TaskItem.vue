@@ -10,8 +10,11 @@
             :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
         </div>
 
+        <!-- 子任务序号 -->
+        <span v-if="!isFirstLevelTask" class="task-number" style="margin-right: 0px;">{{ taskIndex + 1 }}.</span>
+        
         <!-- 任务名称 -->
-      <span class="task-name">{{ task.taskName }}</span>
+        <span class="task-name">{{ task.taskName }}</span>
 
       <!-- 任务状态 -->
       <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
@@ -63,7 +66,9 @@
           <el-skeleton :rows="3" animated />
         </div>
         <div v-else>
-          <TaskItem v-for="subTask in task.subTasks" :key="subTask.taskId" :task="subTask"
+          <TaskItem v-for="(subTask, subTaskIndex) in task.subTasks" :key="subTask.taskId" :task="subTask"
+            :task-index="subTaskIndex"
+            :is-first-level-task="false"
             :expanded-task-ids="expandedTaskIds"
             :is-has-teacher-role="isHasTeacherRole"
             @show-detail="(...args) => $emit('show-detail', ...args)"
@@ -88,6 +93,14 @@ const props = defineProps({
   task: {
     type: Object,
     required: true
+  },
+  taskIndex: {
+    type: Number,
+    default: 0
+  },
+  isFirstLevelTask: {
+    type: Boolean,
+    default: true
   },
   expandedTaskIds: {
     type: Object,
@@ -286,7 +299,7 @@ const loadSubTasks = async () => {
 
 .task-name {
   flex: 0 1 auto;
-  margin: 0 16px 0 0;
+  margin: 0 16px 0 8px;
   font-weight: 600;
   font-size: 16px;
   color: #2c3e50;
@@ -295,6 +308,16 @@ const loadSubTasks = async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.task-number {
+  flex: 0 0 auto;
+  margin: 0 8px 0 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #606266;
+  min-width: 20px;
+  text-align: center;
 }
 
 .task-status {
