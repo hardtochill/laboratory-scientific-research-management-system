@@ -56,16 +56,9 @@ public interface TaskService {
      * @return 参与用户列表
      */
     List<SysUser> getParticipantUsersByTaskId(Long taskId);
-    
+
     /**
-     * 根据父任务ID获取参与用户组（用于子任务继承）
-     * @param parentTaskId 父任务ID
-     * @return 参与用户列表
+     * 查询可参与任务的用户（用于前端用户选择）
      */
-    List<SysUser> getParticipantUsersByParentTaskId(Long parentTaskId);
-    
-    /**
-     * 查询未毕业的用户（用于前端用户选择）
-     */
-    List<SysUser> selectUngraduatedUsers(String nickName);
+    List<SysUser> getSelectableUsers(String nickName);
 }

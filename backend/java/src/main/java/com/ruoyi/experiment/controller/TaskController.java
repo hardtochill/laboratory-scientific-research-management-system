@@ -9,7 +9,6 @@ import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import com.ruoyi.project.system.domain.SysUser;
-import io.swagger.models.auth.In;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +26,8 @@ public class TaskController extends BaseController {
      *
      * @return 分页任务列表
      */
-    @GetMapping("/list")
-    public TableDataInfo getTaskList(TaskQueryDTO taskQueryDTO) {
+    @GetMapping("/listParents")
+    public TableDataInfo getParentTaskList(TaskQueryDTO taskQueryDTO) {
         startPage();
         List<TaskVO> list = taskService.selectParentTaskList(taskQueryDTO);
         return getDataTable(list);
@@ -40,8 +39,8 @@ public class TaskController extends BaseController {
      * @param parentTaskId 父任务ID
      * @return 子任务列表
      */
-    @GetMapping("/sub-tasks/{parentTaskId}")
-    public AjaxResult getSubTasks(@PathVariable Long parentTaskId) {
+    @GetMapping("/listSubs/{parentTaskId}")
+    public AjaxResult getSubTaskList(@PathVariable Long parentTaskId) {
         List<TaskVO> subTasks = taskService.selectSubTaskList(parentTaskId);
         return AjaxResult.success(subTasks);
     }
@@ -52,7 +51,7 @@ public class TaskController extends BaseController {
      * @param taskId 任务ID
      * @return 任务详情
      */
-    @GetMapping("/{taskId}")
+    @GetMapping("/getDetail/{taskId}")
     public AjaxResult getTaskDetail(@PathVariable Long taskId) {
         Task task = taskService.getTaskById(taskId);
         return AjaxResult.success(task);
@@ -79,7 +78,7 @@ public class TaskController extends BaseController {
     /**
      * 更新任务状态
      */
-    @PostMapping("/updateTaskStatus")
+    @PostMapping("/updateStatus")
     public AjaxResult updateTaskStatus(@RequestBody Task task) {
         taskService.updateTaskStatus(task);
         return AjaxResult.success();
@@ -97,27 +96,18 @@ public class TaskController extends BaseController {
     /**
      * 根据任务ID获取参与用户组
      */
-    @GetMapping("/participant-users/{taskId}")
+    @GetMapping("/getParticipantUsers/{taskId}")
     public AjaxResult getParticipantUsers(@PathVariable Long taskId) {
         List<SysUser> users = taskService.getParticipantUsersByTaskId(taskId);
         return AjaxResult.success(users);
     }
 
     /**
-     * 根据父任务ID获取参与用户组（用于子任务继承）
-     */
-    @GetMapping("/parent-participant-users/{parentTaskId}")
-    public AjaxResult getParentParticipantUsers(@PathVariable Long parentTaskId) {
-        List<SysUser> users = taskService.getParticipantUsersByParentTaskId(parentTaskId);
-        return AjaxResult.success(users);
-    }
-
-    /**
      * 获取未毕业用户列表（用于前端用户选择）
      */
-    @GetMapping("/ungraduated-users")
-    public AjaxResult getUngraduatedUsers(String nickName) {
-        List<SysUser> users = taskService.selectUngraduatedUsers(nickName);
+    @GetMapping("/listSelectableUsers")
+    public AjaxResult getSelectableUsers(String nickName) {
+        List<SysUser> users = taskService.getSelectableUsers(nickName);
         return AjaxResult.success(users);
     }
 }

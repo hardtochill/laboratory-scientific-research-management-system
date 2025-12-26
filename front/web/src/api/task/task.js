@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询任务列表（带分页和查询条件）
 export function getList(params) {
   return request({
-    url: '/task/list',
+    url: '/task/listParents',
     method: 'get',
     params
   })
@@ -12,7 +12,7 @@ export function getList(params) {
 // 查询子任务列表
 export function getSubTasks(parentTaskId) {
   return request({
-    url: `/task/sub-tasks/${parentTaskId}`,
+    url: `/task/listSubs/${parentTaskId}`,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getSubTasks(parentTaskId) {
 // 查询任务详情
 export function getTaskDetail(taskId) {
   return request({
-    url: `/task/${taskId}`,
+    url: `/task/getDetail/${taskId}`,
     method: 'get'
   })
 }
@@ -37,7 +37,7 @@ export function addOrUpdateTask(data) {
 // 更新任务状态
 export function updateTaskStatus(data) {
   return request({
-    url: '/task/updateTaskStatus',
+    url: '/task/updateStatus',
     method: 'post',
     data
   })
@@ -51,3 +51,19 @@ export function deleteTask(taskId) {
   })
 }
 
+// 获取任务参与用户组
+export function getTaskParticipantUsers(taskId) {
+  return request({
+    url: `/task/getParticipantUsers/${taskId}`,
+    method: 'get'
+  })
+}
+
+// 获取可供选择的用户列表
+export function getSelectableUsers(params) {
+  return request({
+    url: '/task/listSelectableUsers',
+    method: 'get',
+    params
+  })
+}

@@ -215,7 +215,7 @@
             reserve-keyword
             placeholder="请选择执行用户组" 
             style="width: 100%;"
-            :remote-method="queryUngraduatedUsers"
+            :remote-method="querySelectableUsers"
             :loading="userLoading"
             :disabled="isReadOnlyUserGroup"
             @focus="handleSelectFocus"
@@ -257,7 +257,7 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail, addOrUpdateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers, getSelectableUsers } from '@/api/task/task'
 import request from '@/utils/request'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
@@ -508,16 +508,12 @@ const resetQuery = () => {
   handleQuery()
 }
 
-// 查询未毕业用户（支持模糊匹配）
-const queryUngraduatedUsers = async (query) => {
+// 获取可供选择的用户列表
+const querySelectableUsers = async (query) => {
   userLoading.value = true
   try {
-    const response = await request({
-      url: '/task/ungraduated-users',
-      method: 'get',
-      params: {
-        nickName: query
-      }
+    const response = await getSelectableUsers({
+      nickName: query
     })
     ungraduatedUsers.value = response.data || []
   } catch (error) {
@@ -529,16 +525,13 @@ const queryUngraduatedUsers = async (query) => {
 
 // 处理下拉框获取焦点事件（加载所有未毕业用户）
 const handleSelectFocus = async () => {
-  await queryUngraduatedUsers('')
+  await querySelectableUsers('')
 }
 
 // 初始化用户列表
 const initUserList = async () => {
   try {
-    const response = await request({
-      url: '/task/ungraduated-users',
-      method: 'get'
-    })
+    const response = await getSelectableUsers()
     ungraduatedUsers.value = response.data || []
   } catch (error) {
     console.error('初始化用户列表失败:', error)
@@ -695,10 +688,7 @@ const handleEdit = (task) => {
 // 加载任务的参与用户组
 const loadTaskParticipantUsers = async (taskId) => {
   try {
-    const response = await request({
-      url: `/task/participant-users/${taskId}`,
-      method: 'get'
-    })
+    const response = await getTaskParticipantUsers(taskId)
     const participantUsers = response.data || []
     // 设置已选择的用户组
     formData.participantUserIds = participantUsers.map(user => user.userId)
@@ -808,10 +798,7 @@ const handleAddSubTask = async (parentTask) => {
   
   try {
     // 加载父任务的参与用户组
-    const response = await request({
-      url: `/task/parent-participant-users/${parentTask.taskId}`,
-      method: 'get'
-    })
+    const response = await getTaskParticipantUsers(parentTask.taskId)
     const participantUsers = response.data || []
     // 设置子任务继承父任务的用户组
     formData.participantUserIds = participantUsers.map(user => user.userId)

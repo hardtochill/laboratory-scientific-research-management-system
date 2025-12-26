@@ -17,13 +17,16 @@ public interface TaskMapper {
      */
     List<TaskVO> selectFirstParentTasksForTeacher(Long parentTaskId, TaskQueryDTO taskQueryDTO);
 
+    /**
+     * 获取一级父任务-学生端
+     */
     List<TaskVO> selectFirstParentTasksForStudent(Long parentTaskId,Long userId,TaskQueryDTO taskQueryDTO);
 
     /**
-     * 获取二级及以下父任务
+     * 获取二级及以下任务
      */
     @Select("select task_id,task_name,task_status from task where parent_task_id=#{parentTaskId} order by task_order asc")
-    List<TaskVO> selectSubParentTasks(Long parentTaskId);
+    List<TaskVO> selectSubTasks(Long parentTaskId);
 
     /**
      * 计算子任务的完成情况

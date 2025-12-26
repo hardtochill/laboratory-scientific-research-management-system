@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,7 +53,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskVO> selectSubTaskList(Long parentTaskId) {
         // 二级及以下父任务，按任务顺序排序
-        List<TaskVO> tasks = taskMapper.selectSubParentTasks(parentTaskId);
+        List<TaskVO> tasks = taskMapper.selectSubTasks(parentTaskId);
         calculateTaskList(tasks);
         return tasks;
     }
@@ -252,9 +251,17 @@ public class TaskServiceImpl implements TaskService {
      * @param userIds 用户ID列表
      */
     private void handleTaskUserAssociation(Long taskId, List<Long> userIds) {
-        // 删除旧的用户关联
+        // 1.递归更改子任务的任务关联
+        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+        if(!CollectionUtils.isEmpty(subTaskIds)){
+            // 递归更改子任务的任务关联
+            for(Long subTaskId : subTaskIds){
+                handleTaskUserAssociation(subTaskId,userIds);
+            }
+        }
+        // 2.删除旧的用户关联
         taskUserMapper.deleteTaskUsers(taskId);
-        // 添加新的用户关联
+        // 3.添加新的用户关联
         if (!CollectionUtils.isEmpty(userIds)) {
             taskUserMapper.insertTaskUserBatch(taskId,userIds);
         }
@@ -267,12 +274,7 @@ public class TaskServiceImpl implements TaskService {
     }
     
     @Override
-    public List<SysUser> getParticipantUsersByParentTaskId(Long parentTaskId) {
-        return getParticipantUsersByTaskId(parentTaskId);
-    }
-    
-    @Override
-    public List<SysUser> selectUngraduatedUsers(String nickName) {
+    public List<SysUser> getSelectableUsers(String nickName) {
         // 查询未毕业的用户（支持模糊匹配）
         return sysUserMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
     }
