@@ -34,9 +34,13 @@
           <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
             <el-button link type="primary" @click.stop="handleAddSubTask" :icon="Plus"></el-button>
           </el-tooltip>
-          <!-- 修改任务按钮 -->
+          <!-- 任务详情按钮 -->
           <el-tooltip content="任务详情" placement="top">
             <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
+          </el-tooltip>
+          <!-- 文件信息按钮 -->
+          <el-tooltip content="文件信息" placement="top">
+            <el-button link type="primary" @click.stop="handleShowFiles" :icon="Document" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
           <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
@@ -75,7 +79,8 @@
             @add-sub-task="(...args) => $emit('add-sub-task', ...args)"
             @update-expanded="(...args) => $emit('update-expanded', ...args)"
             @change-status="(...args) => $emit('change-status', ...args)"
-            @delete-task="(...args) => $emit('delete-task', ...args)" />
+            @delete-task="(...args) => $emit('delete-task', ...args)"
+            @show-files="(...args) => $emit('show-files', ...args)" />
         </div>
       </div>
     </transition>
@@ -86,7 +91,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
-import {CaretRight,CaretBottom,Plus, MoreFilled, Switch, Delete } from '@element-plus/icons-vue'
+import {CaretRight,CaretBottom,Plus, MoreFilled, Switch, Delete, Document } from '@element-plus/icons-vue'
 
 // 组件属性
 const props = defineProps({
@@ -113,7 +118,7 @@ const props = defineProps({
 })
 
 // 组件事件
-const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status', 'delete-task'])
+const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status', 'delete-task', 'show-files'])
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -234,6 +239,11 @@ const handleChangeStatus = (newStatus) => {
 // 删除任务
 const handleDeleteTask = () => {
   emit('delete-task', props.task)
+}
+
+// 显示文件信息
+const handleShowFiles = () => {
+  emit('show-files', props.task)
 }
 
 // 加载子任务

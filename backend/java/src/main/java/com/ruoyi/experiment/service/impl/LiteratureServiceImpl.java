@@ -62,7 +62,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 返回文献对象
         Literature literature = literatureMapper.selectLiteratureById(id);
         // 构建文件路径：配置的存储路径 + 文献id + .pdf
-        String filePath = experimentConfig.getLiteraturePath() + id + ".pdf";
+        String filePath = experimentConfig.getLiteraturePath() + File.separator + id + ".pdf";
         File file = new File(filePath);
 
         // 检查文件是否存在

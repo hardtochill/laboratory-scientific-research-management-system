@@ -1,28 +1,30 @@
 <template>
   <div class="task-management">
     <!-- 查询表单 -->
-      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
-        <el-form-item label="任务名称" prop="taskName">
-          <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
-        </el-form-item>
-        <el-form-item label="任务状态" prop="taskStatus">
-          <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px">
-            <el-option label="未开始" :value="1" />
-            <el-option label="进行中" :value="2" />
-            <el-option label="已完成" :value="3" />
-            <el-option label="已跳过" :value="4" />
-          </el-select>
-        </el-form-item>
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+      <el-form-item label="任务名称" prop="taskName">
+        <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
+          @keyup.enter="handleQuery" />
+      </el-form-item>
+      <el-form-item label="任务状态" prop="taskStatus">
+        <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px">
+          <el-option label="未开始" :value="1" />
+          <el-option label="进行中" :value="2" />
+          <el-option label="已完成" :value="3" />
+          <el-option label="已跳过" :value="4" />
+        </el-select>
+      </el-form-item>
 
 
-        <el-form-item label="创建时间" style="width: 308px">
-          <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <el-form-item label="创建时间" style="width: 308px">
+        <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+      </el-form-item>
+    </el-form>
 
     <!-- 统计面板 -->
     <div class="statistics-panel" v-if="taskStatistics">
@@ -71,10 +73,10 @@
             <!-- 左侧内容区域 -->
             <div class="left-content">
               <!-- 展开/收起按钮容器 -->
-          <div class="expand-btn-container">
-            <el-button type="text" @click.stop="toggleSubTasks(task)"
-              :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
-          </div>
+              <div class="expand-btn-container">
+                <el-button type="text" @click.stop="toggleSubTasks(task)"
+                  :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
+              </div>
 
               <!-- 任务名称 -->
               <span class="task-name">{{ task.taskName }}</span>
@@ -87,39 +89,45 @@
               <!-- 任务进度条 -->
               <div class="progress-container">
                 <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
-                  :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11" striped striped-flow :duration="200"></el-progress>
+                  :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11"
+                  striped striped-flow :duration="200"></el-progress>
               </div>
             </div>
 
             <!-- 右侧按钮区域 -->
-        <div class="right-buttons">
-          <!-- 新增子任务按钮 -->
-          <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
-            <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
-          </el-tooltip>
-          <!-- 修改任务按钮 -->
-          <el-tooltip content="任务详情" placement="top">
-            <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
-          </el-tooltip>
-          <!-- 修改状态下拉菜单 -->
-          <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
-            <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
-              <el-button link type="primary" :icon="Switch"></el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="1">未开始</el-dropdown-item>
-                  <el-dropdown-item command="2">进行中</el-dropdown-item>
-                  <el-dropdown-item command="3">已完成</el-dropdown-item>
-                  <el-dropdown-item command="4">已跳过</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </el-tooltip>
-          <!-- 删除任务按钮 -->
-          <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
-            <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
-          </el-tooltip>
-        </div>
+            <div class="right-buttons">
+              <!-- 新增子任务按钮 -->
+              <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
+                <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
+              </el-tooltip>
+              <!-- 任务详情按钮 -->
+              <el-tooltip content="任务详情" placement="top">
+                <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="MoreFilled"
+                  style="margin-left: 0px;"></el-button>
+              </el-tooltip>
+              <!-- 文件信息按钮 -->
+              <el-tooltip content="文件信息" placement="top">
+                <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Document" style="margin-left: 0px;"></el-button>
+              </el-tooltip>
+              <!-- 修改状态下拉菜单 -->
+              <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
+                <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
+                  <el-button link type="primary" :icon="Switch"></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="1">未开始</el-dropdown-item>
+                      <el-dropdown-item command="2">进行中</el-dropdown-item>
+                      <el-dropdown-item command="3">已完成</el-dropdown-item>
+                      <el-dropdown-item command="4">已跳过</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </el-tooltip>
+              <!-- 删除任务按钮 -->
+              <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
+                <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
+              </el-tooltip>
+            </div>
           </div>
 
           <!-- 子任务列表（带动画效果） -->
@@ -130,31 +138,21 @@
               </div>
               <div v-else>
                 <TaskItem v-for="(subTask, subTaskIndex) in task.subTasks" :key="subTask.taskId" :task="subTask"
-                  :task-index="subTaskIndex"
-                  :is-first-level-task="false"
-                  :expanded-task-ids="expandedTaskIds"
-                  :is-has-teacher-role="isHasTeacherRole"
-                  @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
-                  @update-expanded="handleUpdateExpanded"
-                  @change-status="handleChangeStatus"
-                  @delete-task="handleDeleteTask" />
+                  :task-index="subTaskIndex" :is-first-level-task="false" :expanded-task-ids="expandedTaskIds"
+                  :is-has-teacher-role="isHasTeacherRole" @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
+                  @update-expanded="handleUpdateExpanded" @change-status="handleChangeStatus"
+                  @delete-task="handleDeleteTask" @show-files="showFileManagement" />
               </div>
             </div>
           </transition>
         </div>
       </div>
-      
+
       <!-- 分页控件 -->
       <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="queryParams.pageNum"
-          v-model:page-size="queryParams.pageSize"
-          :page-sizes="[5, 10, 20, 50]"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
+        <el-pagination v-model:current-page="queryParams.pageNum" v-model:page-size="queryParams.pageSize"
+          :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" :total="total"
+          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
       </div>
     </el-card>
 
@@ -179,7 +177,7 @@
           </el-descriptions-item>
           <el-descriptions-item label="参与用户">
             <span v-if="currentTask.participantUsers && currentTask.participantUsers.length > 0">
-              {{ currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ') }}
+              {{currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ')}}
             </span>
             <span v-else>-</span>
           </el-descriptions-item>
@@ -220,7 +218,8 @@
 
         <!-- 任务描述 -->
         <el-form-item label="任务描述" prop="taskDescription">
-          <el-input v-model="formData.taskDescription" type="textarea" placeholder="请输入任务描述" :rows="3" maxlength="255" show-word-limit />
+          <el-input v-model="formData.taskDescription" type="textarea" placeholder="请输入任务描述" :rows="3" maxlength="255"
+            show-word-limit />
         </el-form-item>
 
         <!-- 任务状态 -->
@@ -242,7 +241,9 @@
         <el-form-item label="执行用户组" prop="participantUserIds">
           <div v-if="isReadOnlyUserGroup || !isHasTeacherRole" style="margin-bottom: 8px;">
             <el-tag type="info" size="small">
-              <el-icon><InfoFilled /></el-icon>
+              <el-icon>
+                <InfoFilled />
+              </el-icon>
               <span v-if="!isHasTeacherRole">
                 <span v-if="!isChildTask">无权修改执行用户</span>
                 <span v-else>该任务继承父任务的用户组，不可修改</span>
@@ -252,61 +253,126 @@
               </span>
             </el-tag>
           </div>
-          <el-select 
-            v-model="formData.participantUserIds" 
-            multiple 
-            filterable 
-            remote 
-            reserve-keyword
-            placeholder="请选择执行用户组" 
-            style="width: 100%;"
-            :remote-method="querySelectableUsers"
-            :loading="userLoading"
-            :disabled="isReadOnlyUserGroup || !isHasTeacherRole"
-            @focus="handleSelectFocus"
-          >
-            <el-option
-              v-for="user in ungraduatedUsers"
-              :key="user.userId"
-              :label="`${user.nickName}(${user.userName})`"
-              :value="user.userId"
-            />
+          <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
+            placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+            :disabled="isReadOnlyUserGroup || !isHasTeacherRole" @focus="handleSelectFocus">
+            <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
+              :value="user.userId" />
           </el-select>
         </el-form-item>
 
         <!-- 预期完成时间 -->
         <el-form-item label="预期完成时间" prop="expectedFinishTime">
-          <el-date-picker v-model="formData.expectedFinishTime" type="datetime" placeholder="请选择预期完成时间" style="width: 100%;" />
+          <el-date-picker v-model="formData.expectedFinishTime" type="datetime" placeholder="请选择预期完成时间"
+            style="width: 100%;" />
         </el-form-item>
 
         <!-- 实际完成时间 -->
         <el-form-item label="实际完成时间" prop="actualFinishTime">
-          <el-date-picker v-model="formData.actualFinishTime" type="datetime" placeholder="请选择实际完成时间" style="width: 100%;" />
+          <el-date-picker v-model="formData.actualFinishTime" type="datetime" placeholder="请选择实际完成时间"
+            style="width: 100%;" />
         </el-form-item>
 
         <!-- 任务备注 -->
         <el-form-item label="备注" prop="taskRemark">
-          <el-input v-model="formData.taskRemark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255" show-word-limit />
+          <el-input v-model="formData.taskRemark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255"
+            show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleFormClose">取消</el-button>
           <el-button type="primary" @click="handleFormSubmit">保存</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 文件管理对话框 -->
+    <el-dialog v-model="fileDialogVisible" title="任务文件管理" width="800px" height="500px" :before-close="handleFileDialogClose">
+      <div v-if="currentTaskForFile" class="file-management">
+        <div class="task-info">
+          <h4>任务：{{ currentTaskForFile.taskName }}</h4>
+        </div>
+
+        <!-- 文件上传区域 -->
+        <div class="upload-section">
+          <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
+            :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+            <el-icon class="el-icon--upload">
+              <UploadFilled />
+            </el-icon>
+            <div class="el-upload__text">
+              将文件拖到此处，或<em>点击上传</em>
+            </div>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
+              </div>
+            </template>
+          </el-upload>
+          <div class="upload-actions">
+            <el-button type="primary" @click="handleUploadFiles" :loading="uploading" :disabled="fileList.length === 0">
+              {{ uploading ? '上传中...' : '上传文件' }}
+            </el-button>
+          </div>
+        </div>
+
+        <!-- 文件列表 -->
+        <div class="file-list-section">
+          <h4>已上传文件</h4>
+          <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading">
+            <el-table-column prop="fileName" label="文件名" min-width="200">
+              <template #default="{ row }">
+                <span class="file-name">{{ row.fileName }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="fileSize" label="文件大小" width="120">
+              <template #default="{ row }">
+                {{ formatFileSize(row.fileSize) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="userNickName" label="上传者" width="120" />
+            <el-table-column prop="uploadTime" label="上传时间" width="160">
+              <template #default="{ row }">
+                {{ parseTime(row.uploadTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="200" fixed="right">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="handleDownloadFile(row)" :icon="Download">
+                  下载
+                </el-button>
+                <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete">
+                  删除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div v-if="taskFileList.length === 0 && !fileLoading" class="no-files">
+            <el-empty description="暂无文件" />
+          </div>
+        </div>
       </div>
-    </template>
-  </el-dialog>
-</div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleFileDialogClose">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers, getSelectableUsers } from '@/api/task/task'
+import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight,CaretBottom,Plus, MoreFilled,Switch, Delete, InfoFilled } from '@element-plus/icons-vue'
+import { CaretRight, CaretBottom, Plus, MoreFilled, Switch, Delete, InfoFilled, UploadFilled, Download, Document } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
+import { download } from "@/utils/request"
 
 // 任务状态枚举
 const TASK_STATUS = {
@@ -356,7 +422,7 @@ const getStatusText = (status) => {
 const getProgressPercentage = (task) => {
   // 确保task对象有效
   if (!task) return 0
-  
+
   // 使用后端返回的percentage字段，如果不存在则默认为0%
   return task.percentage !== undefined ? task.percentage : 0
 }
@@ -365,7 +431,7 @@ const getProgressPercentage = (task) => {
 const getProgressColor = (task) => {
   // 确保task对象有效
   if (!task) return '#909399'
-  
+
   // 根据任务状态决定颜色
   switch (task.taskStatus) {
     case TASK_STATUS.PENDING:
@@ -385,7 +451,7 @@ const getProgressColor = (task) => {
 const getProgressStatus = (task) => {
   // 确保task对象有效
   if (!task) return 'normal'
-  
+
   // 根据任务状态决定进度条状态
   switch (task.taskStatus) {
     case TASK_STATUS.FINISHED:
@@ -416,9 +482,9 @@ const isHasTeacherRole = ref(false)
 // 检查用户是否含有teacher角色
 const checkUserRoles = () => {
   userRoles.value = userStore.roles || []
-  isHasTeacherRole.value = userRoles.value.some(role => 
-    role === 'teacher' || 
-    role.includes('teacher') || 
+  isHasTeacherRole.value = userRoles.value.some(role =>
+    role === 'teacher' ||
+    role.includes('teacher') ||
     role.roleName === 'teacher' ||
     role.roleKey === 'teacher'
   )
@@ -445,6 +511,15 @@ const parentTaskId = ref(0)
 const ungraduatedUsers = ref([])
 // 用户加载状态
 const userLoading = ref(false)
+
+// 文件管理相关状态
+const fileDialogVisible = ref(false)
+const currentTaskForFile = ref(null)
+const taskFileList = ref([])
+const fileList = ref([]) // 待上传文件列表
+const fileLoading = ref(false)
+const uploading = ref(false)
+const uploadRef = ref(null)
 
 // 表单数据
 const formData = reactive({
@@ -489,7 +564,7 @@ const expandedTaskIds = ref(new Set())
 // 收集所有展开任务的ID（递归）
 const collectExpandedTaskIds = (tasks) => {
   const ids = new Set()
-  
+
   const traverse = (taskList) => {
     taskList.forEach(task => {
       if (task.expanded) {
@@ -501,7 +576,7 @@ const collectExpandedTaskIds = (tasks) => {
       }
     })
   }
-  
+
   traverse(tasks)
   return ids
 }
@@ -527,7 +602,7 @@ const loadParentTasks = async () => {
   try {
     // 在重新加载前保存当前所有展开任务的ID
     expandedTaskIds.value = collectExpandedTaskIds(parentTasks.value)
-    
+
     // 手动添加日期范围参数，使用后端期望的参数名
     const params = { ...queryParams.value };
     if (dateRange.value && dateRange.value.length === 2) {
@@ -535,22 +610,22 @@ const loadParentTasks = async () => {
       params.createTimeEnd = dateRange.value[1];
     }
     const response = await getList(params)
-    
+
     // 验证响应数据结构
     if (!response) {
       throw new Error('响应数据为空')
     }
-    
+
     if (!response.data) {
       throw new Error('响应数据格式错误')
     }
-    
+
     // 获取实际的统计数据对象
     const statisticsData = response.data.data || response.data
     if (!statisticsData) {
       throw new Error('统计数据为空')
     }
-    
+
     // 为每个任务添加扩展属性，添加空值检查
     parentTasks.value = (statisticsData.list || []).map((task) => ({
       ...task,
@@ -560,13 +635,13 @@ const loadParentTasks = async () => {
       hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false,
       subTasks: []
     }))
-    
+
     // 保存统计数据
     taskStatistics.value = statisticsData
-    
+
     // 更新总条数
     total.value = statisticsData.total || 0
-    
+
     // 恢复之前展开的任务状态
     await restoreExpandedStatus(parentTasks.value)
   } catch (error) {
@@ -645,7 +720,7 @@ const toggleSubTasks = async (task) => {
     await loadSubTasks(task)
   }
   task.expanded = !task.expanded
-  
+
   // 实时更新展开任务ID集合
   if (task.expanded) {
     expandedTaskIds.value.add(task.taskId)
@@ -721,13 +796,13 @@ const handleDeleteTask = async (task) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    
+
     // 调用删除任务API
     await deleteTask(task.taskId)
-    
+
     // 提示删除成功
     ElMessage.success('任务删除成功')
-    
+
     // 重新加载任务列表
     await loadParentTasks()
   } catch (error) {
@@ -747,29 +822,29 @@ const handleEdit = (task) => {
   resetForm()
   // 设置表单标题
   formTitle.value = '修改任务'
-  
+
   // 判断是否为子任务（非一级父任务）
   const isSubTask = task.parentTaskId && task.parentTaskId !== '0'
   isChildTask.value = isSubTask
-  
+
   // 非一级父任务（深度>1）的用户组字段为只读
   isReadOnlyUserGroup.value = isSubTask
-  
+
   // 填充表单数据
   Object.assign(formData, {
     taskId: task.taskId,
     parentTaskId: task.parentTaskId || '0',
     taskName: task.taskName,
     taskDescription: task.taskDescription,
-    taskStatus: String(task.taskStatus), 
+    taskStatus: String(task.taskStatus),
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark
   })
-  
+
   // 加载任务的参与用户组
   loadTaskParticipantUsers(task.taskId)
-  
+
   // 打开表单
   formVisible.value = true
 }
@@ -890,7 +965,7 @@ const handleAddSubTask = async (parentTask) => {
   parentTaskId.value = parentTask.taskId
   // 设置父任务ID
   formData.parentTaskId = parentTask.taskId
-  
+
   try {
     // 加载父任务的参与用户组
     const response = await getTaskParticipantUsers(parentTask.taskId)
@@ -901,9 +976,154 @@ const handleAddSubTask = async (parentTask) => {
     ElMessage.error('加载父任务用户组失败')
     console.error('加载父任务用户组失败:', error)
   }
-  
+
   // 打开表单
   formVisible.value = true
+}
+
+// 显示文件管理对话框
+const showFileManagement = async (task) => {
+  currentTaskForFile.value = task
+  fileDialogVisible.value = true
+  // 加载文件列表
+  await loadTaskFileList(task.taskId)
+}
+
+// 加载任务文件列表
+const loadTaskFileList = async (taskId) => {
+  fileLoading.value = true
+  try {
+    const response = await getTaskFileList(taskId)
+    taskFileList.value = response.data || []
+  } catch (error) {
+    ElMessage.error('加载文件列表失败')
+    console.error('加载文件列表失败:', error)
+  } finally {
+    fileLoading.value = false
+  }
+}
+
+// 文件选择变化
+const handleFileChange = (file, fileListParam) => {
+  fileList.value = fileListParam
+}
+
+// 文件移除
+const handleFileRemove = (file, fileListParam) => {
+  fileList.value = fileListParam
+}
+
+// 上传前验证
+const beforeUpload = (file) => {
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isLt10M) {
+    ElMessage.error('文件大小不能超过10MB')
+    return false
+  }
+  return true
+}
+
+// 上传文件
+const handleUploadFiles = async () => {
+  if (fileList.value.length === 0) {
+    ElMessage.warning('请选择要上传的文件')
+    return
+  }
+
+  uploading.value = true
+  let successCount = 0
+  let failCount = 0
+  
+  try {
+    // 逐个上传文件
+    for (let i = 0; i < fileList.value.length; i++) {
+      const fileItem = fileList.value[i]
+      const formData = new FormData()
+      formData.append('file', fileItem.raw)
+
+      try {
+        await uploadTaskFile(currentTaskForFile.value.taskId, formData)
+        successCount++
+        ElMessage.info(`正在上传文件 ${i + 1}/${fileList.value.length}：${fileItem.name}`)
+      } catch (error) {
+        failCount++
+        console.error(`文件 ${fileItem.name} 上传失败:`, error)
+        ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+      }
+    }
+
+    // 显示总体结果
+    if (successCount > 0 && failCount === 0) {
+      ElMessage.success(`所有文件上传成功 (${successCount}/${fileList.value.length})`)
+    } else if (successCount > 0 && failCount > 0) {
+      ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
+    } else {
+      ElMessage.error(`文件上传失败 (${failCount}/${fileList.value.length})`)
+    }
+    
+    // 清空文件列表
+    fileList.value = []
+    
+    // 如果有文件上传成功，重新加载文件列表
+    if (successCount > 0) {
+      await loadTaskFileList(currentTaskForFile.value.taskId)
+    }
+  } catch (error) {
+    ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
+    console.error('文件上传过程出现错误:', error)
+  } finally {
+    uploading.value = false
+  }
+}
+
+// 下载文件
+const handleDownloadFile = async (file) => {
+  download(`/taskFile/download/${file.id}`, {}, file.fileName)
+}
+
+// 删除文件
+const handleDeleteFile = async (file) => {
+  try {
+    await ElMessageBox.confirm('确定要删除该文件吗？', '删除确认', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+
+    await deleteTaskFile(file.id)
+    ElMessage.success('文件删除成功')
+    // 重新加载文件列表
+    await loadTaskFileList(currentTaskForFile.value.taskId)
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('文件删除失败')
+      console.error('文件删除失败:', error)
+    }
+  }
+}
+
+
+// 格式化文件大小
+const formatFileSize = (size) => {
+  if (!size) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  let unitIndex = 0
+  let fileSize = size
+
+  while (fileSize >= 1024 && unitIndex < units.length - 1) {
+    fileSize /= 1024
+    unitIndex++
+  }
+
+  return `${fileSize.toFixed(1)} ${units[unitIndex]}`
+}
+
+// 关闭文件管理对话框
+const handleFileDialogClose = () => {
+  fileDialogVisible.value = false
+  currentTaskForFile.value = null
+  taskFileList.value = []
+  fileList.value = []
 }
 
 // 页面加载时初始化数据
@@ -1026,6 +1246,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1043,6 +1264,118 @@ onMounted(async () => {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 文件管理对话框样式 */
+.file-management {
+  padding: 10px 0;
+}
+
+.task-info {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #409eff;
+}
+
+.task-info h4 {
+  margin: 0;
+  color: #303133;
+  font-weight: 600;
+}
+
+.upload-section {
+  margin-bottom: 24px;
+}
+
+.upload-actions {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.file-list-section {
+  margin-top: 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.file-list-section h4 {
+  margin-bottom: 16px;
+  color: #303133;
+  font-weight: 600;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #409eff;
+}
+
+.no-permission {
+  color: #909399;
+  font-size: 13px;
+}
+
+.no-files {
+  padding: 40px 0;
+  text-align: center;
+}
+
+/* 上传区域样式 */
+:deep(.el-upload-dragger) {
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  width: 100%;
+  height: 180px;
+  transition: border-color 0.3s;
+}
+
+:deep(.el-upload-dragger:hover) {
+  border-color: #409eff;
+}
+
+:deep(.el-icon--upload) {
+  font-size: 48px;
+  color: #c0c4cc;
+  margin-bottom: 16px;
+}
+
+:deep(.el-upload__text) {
+  color: #606266;
+  font-size: 14px;
+}
+
+:deep(.el-upload__text em) {
+  color: #409eff;
+  font-style: normal;
+}
+
+:deep(.el-upload__tip) {
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* 文件列表表格样式 */
+:deep(.el-table) {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+:deep(.el-table th) {
+  background-color: #fafafa;
+  color: #606266;
+  font-weight: 600;
+}
+
+:deep(.el-table td) {
+  padding: 12px 0;
+}
+
+/* 文件操作按钮样式 */
+:deep(.el-button--link) {
+  padding: 4px 8px;
+  font-size: 13px;
 }
 
 .statistics-grid {
@@ -1125,11 +1458,11 @@ onMounted(async () => {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
+
   .stat-card {
     padding: 16px;
   }
-  
+
   .stat-number {
     font-size: 24px;
   }

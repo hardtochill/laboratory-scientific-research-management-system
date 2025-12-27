@@ -17,10 +17,10 @@ ruoyi:
 experiment:
   #任务文件存储路径
   task:
-    path: ${ruoyi.profile}/task/
+    baseDir: ${ruoyi.profile}/task
   # 文献存储路径
   literature:
-    path: ${ruoyi.profile}/literature/
+    path: ${ruoyi.profile}/literature
 
 # 开发环境配置
 server:

@@ -1,0 +1,57 @@
+package com.ruoyi.experiment.utils;
+
+import com.ruoyi.common.exception.file.FileNameLengthLimitExceededException;
+import com.ruoyi.common.utils.file.FileUploadUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.Objects;
+
+public class FileUtils {
+    // 任务文件允许的扩展名
+    public static final String[] TASK_ALLOWED_EXTENSION = {
+            // 图片
+            "gif", "jpg", "jpeg", "png",
+            // word excel powerpoint
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx","txt",
+            // 压缩文件
+            "rar", "zip",".gz",".bz2",
+            // pdf
+            "pdf" };
+    /**
+     * 上传任务文件
+     */
+    public static final String uploadTaskFile(String baseDir,MultipartFile file) throws Exception{
+        // 文件名称长度校验
+        int fileNameLength = Objects.requireNonNull(file.getOriginalFilename()).length();
+        if (fileNameLength > FileUploadUtils.DEFAULT_FILE_NAME_LENGTH) {
+            throw new FileNameLengthLimitExceededException(FileUploadUtils.DEFAULT_FILE_NAME_LENGTH);
+        }
+        // 文件大小和格式校验
+        FileUploadUtils.assertAllowed(file, TASK_ALLOWED_EXTENSION);
+        // 文件相对路径使用日期+uuid
+        String filePath = FileUploadUtils.uuidFilename(file);
+        // 写入本地
+       String absPath = FileUploadUtils.getAbsoluteFile(baseDir, filePath).getAbsolutePath();
+        file.transferTo(Paths.get(absPath));
+        // 数据库存储相对路径
+        return filePath;
+    }
+
+    /**
+     * 下载任务文件
+     * @param baseDir 任务文件存储目录
+     * @param filePath 任务文件相对路径
+     */
+    public static final void downloadTaskFile(String baseDir, String filePath, HttpServletResponse response)throws Exception{
+        String absPath = getTaskFileAbsolutePath(baseDir, filePath);
+        com.ruoyi.common.utils.file.FileUtils.setAttachmentResponseHeader(response, absPath);
+        com.ruoyi.common.utils.file.FileUtils.writeBytes(absPath, response.getOutputStream());
+    }
+
+    public static final String getTaskFileAbsolutePath(String baseDir, String filePath){
+        return baseDir + File.separator + filePath;
+    }
+}

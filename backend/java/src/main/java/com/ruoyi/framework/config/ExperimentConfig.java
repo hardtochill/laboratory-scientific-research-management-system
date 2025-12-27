@@ -12,8 +12,8 @@ public class ExperimentConfig {
     /**
      * 任务文件存储路径
      */
-    @Value("${experiment.task.path}")
-    private String taskPath;
+    @Value("${experiment.task.baseDir}")
+    private String taskBaseDir;
     /**
      * 文献存储路径
      */

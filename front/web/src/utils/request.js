@@ -36,7 +36,10 @@ service.interceptors.request.use(config => {
         config.params = {}
         config.url = url
     }
-    if (!isRepeatSubmit && (config.method === 'post' || config.method === 'put')) {
+    // 为文件上传请求跳过防重复提交检查
+    const isFileUpload = config.headers && config.headers['Content-Type'] === 'multipart/form-data'
+    
+    if (!isRepeatSubmit && (config.method === 'post' || config.method === 'put') && !isFileUpload) {
         const requestObj = {
             url: config.url,
             data: typeof config.data === 'object' ? JSON.stringify(config.data) : config.data,
