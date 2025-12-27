@@ -10,6 +10,7 @@ import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.entity.LiteratureScore;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import com.ruoyi.experiment.service.LiteratureService;
+import com.ruoyi.framework.config.ExperimentConfig;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
@@ -32,10 +33,7 @@ import java.util.Objects;
 @Slf4j
 public class LiteratureServiceImpl implements LiteratureService {
     private final LiteratureMapper literatureMapper;
-
-    // 从配置文件中获取文献存储路径
-    @Value("${experiment.literature.path}")
-    private String literaturePath;
+    private final ExperimentConfig experimentConfig;
     
     @Override
     public List<LiteratureVO> selectLiteratureList(LiteratureQueryDTO queryDTO) {
@@ -64,7 +62,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 返回文献对象
         Literature literature = literatureMapper.selectLiteratureById(id);
         // 构建文件路径：配置的存储路径 + 文献id + .pdf
-        String filePath = literaturePath + id + ".pdf";
+        String filePath = experimentConfig.getLiteraturePath() + id + ".pdf";
         File file = new File(filePath);
 
         // 检查文件是否存在

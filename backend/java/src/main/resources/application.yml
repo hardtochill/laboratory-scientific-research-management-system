@@ -15,6 +15,9 @@ ruoyi:
 
 # 实验管理配置
 experiment:
+  #任务文件存储路径
+  task:
+    path: ${ruoyi.profile}/task/
   # 文献存储路径
   literature:
     path: ${ruoyi.profile}/literature/
