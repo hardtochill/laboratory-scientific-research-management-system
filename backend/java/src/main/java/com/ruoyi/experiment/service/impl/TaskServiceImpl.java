@@ -49,19 +49,14 @@ public class TaskServiceImpl implements TaskService {
         Long skippedCount = 0L;
         
         for (TaskVO task : tasks) {
-            switch (task.getTaskStatus()) {
-                case 1: // 未开始
-                    pendingCount++;
-                    break;
-                case 2: // 进行中
-                    processingCount++;
-                    break;
-                case 3: // 已完成
-                    finishedCount++;
-                    break;
-                case 4: // 已跳过
-                    skippedCount++;
-                    break;
+            if(TaskStatusEnum.PENDING.getStatus().equals(task.getTaskStatus())){
+                pendingCount++;
+            }else if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
+                processingCount++;
+            }else if(TaskStatusEnum.FINISHED.getStatus().equals(task.getTaskStatus())){
+                finishedCount++;
+            }else if(TaskStatusEnum.SKIPPED.getStatus().equals(task.getTaskStatus())){
+                skippedCount++;
             }
         }
         
