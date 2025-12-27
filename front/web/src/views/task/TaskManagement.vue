@@ -23,6 +23,37 @@
           <el-button icon="Refresh" @click="resetQuery">重置</el-button>
         </el-form-item>
       </el-form>
+
+    <!-- 统计面板 -->
+    <div class="statistics-panel" v-if="taskStatistics">
+      <div class="statistics-grid">
+        <div class="stat-card pending">
+          <div class="stat-content">
+            <div class="stat-number">{{ taskStatistics.pendingCount || 0 }}</div>
+            <div class="stat-label">未开始</div>
+          </div>
+        </div>
+        <div class="stat-card processing">
+          <div class="stat-content">
+            <div class="stat-number">{{ taskStatistics.processingCount || 0 }}</div>
+            <div class="stat-label">进行中</div>
+          </div>
+        </div>
+        <div class="stat-card finished">
+          <div class="stat-content">
+            <div class="stat-number">{{ taskStatistics.finishedCount || 0 }}</div>
+            <div class="stat-label">已完成</div>
+          </div>
+        </div>
+        <div class="stat-card skipped">
+          <div class="stat-content">
+            <div class="stat-number">{{ taskStatistics.skippedCount || 0 }}</div>
+            <div class="stat-label">已跳过</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <el-card>
       <template #header>
         <div class="card-header">
@@ -374,6 +405,8 @@ const parentTasks = ref([])
 const dialogVisible = ref(false)
 // 当前选中的任务
 const currentTask = ref(null)
+// 任务统计数据
+const taskStatistics = ref(null)
 
 // 用户角色信息
 const userStore = useUserStore()
@@ -488,7 +521,7 @@ const restoreExpandedStatus = async (tasks) => {
   }
 }
 
-// 加载父任务列表（带分页）
+// 加载父任务列表（带分页和统计数据）
 const loadParentTasks = async () => {
   loading.value = true
   try {
@@ -502,8 +535,24 @@ const loadParentTasks = async () => {
       params.createTimeEnd = dateRange.value[1];
     }
     const response = await getList(params)
+    
+    // 验证响应数据结构
+    if (!response) {
+      throw new Error('响应数据为空')
+    }
+    
+    if (!response.data) {
+      throw new Error('响应数据格式错误')
+    }
+    
+    // 获取实际的统计数据对象
+    const statisticsData = response.data.data || response.data
+    if (!statisticsData) {
+      throw new Error('统计数据为空')
+    }
+    
     // 为每个任务添加扩展属性，添加空值检查
-    parentTasks.value = (response.rows || []).map((task) => ({
+    parentTasks.value = (statisticsData.list || []).map((task) => ({
       ...task,
       expanded: false,
       loading: false,
@@ -511,8 +560,12 @@ const loadParentTasks = async () => {
       hasSubTasks: task.hasSubTasks !== undefined ? task.hasSubTasks : false,
       subTasks: []
     }))
+    
+    // 保存统计数据
+    taskStatistics.value = statisticsData
+    
     // 更新总条数
-    total.value = response.total || 0
+    total.value = statisticsData.total || 0
     
     // 恢复之前展开的任务状态
     await restoreExpandedStatus(parentTasks.value)
@@ -981,5 +1034,110 @@ onMounted(async () => {
 
 .task-detail {
   padding: 10px 0;
+}
+
+/* 统计面板样式 */
+.statistics-panel {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.pending {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+}
+
+.stat-card.processing {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
+  border: 1px solid #ffb74d;
+}
+
+.stat-card.finished {
+  background: linear-gradient(135deg, #e8f5e8 0%, #a5d6a7 100%);
+  border: 1px solid #81c784;
+}
+
+.stat-card.skipped {
+  background: linear-gradient(135deg, #ffebee 0%, #ef9a9a 100%);
+  border: 1px solid #e57373;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.stat-card.pending .stat-number {
+  color: #1976d2;
+}
+
+.stat-card.processing .stat-number {
+  color: #f57c00;
+}
+
+.stat-card.finished .stat-number {
+  color: #388e3c;
+}
+
+.stat-card.skipped .stat-number {
+  color: #d32f2f;
+}
+
+.stat-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .statistics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-number {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

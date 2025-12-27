@@ -12,6 +12,7 @@ import com.ruoyi.experiment.mapper.TaskUserMapper;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.framework.web.domain.R;
@@ -36,6 +37,46 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final SysUserMapper sysUserMapper;
     private final TaskUserMapper taskUserMapper;
+    @Override
+    public TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO) {
+        // 1.获取分页的任务列表
+        List<TaskVO> tasks = selectParentTaskList(taskQueryDTO);
+        
+        // 2.统计各状态任务个数
+        Long pendingCount = 0L;
+        Long processingCount = 0L;
+        Long finishedCount = 0L;
+        Long skippedCount = 0L;
+        
+        for (TaskVO task : tasks) {
+            switch (task.getTaskStatus()) {
+                case 1: // 未开始
+                    pendingCount++;
+                    break;
+                case 2: // 进行中
+                    processingCount++;
+                    break;
+                case 3: // 已完成
+                    finishedCount++;
+                    break;
+                case 4: // 已跳过
+                    skippedCount++;
+                    break;
+            }
+        }
+        
+        // 3.创建返回结果
+        TaskStatisticsVO result = new TaskStatisticsVO();
+        result.setList(tasks);
+        result.setPendingCount(pendingCount);
+        result.setProcessingCount(processingCount);
+        result.setFinishedCount(finishedCount);
+        result.setSkippedCount(skippedCount);
+        result.setTotal((long) tasks.size());
+        
+        return result;
+    }
+    
     @Override
     public List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
         // 1.获取角色，对不同角色查询不同任务

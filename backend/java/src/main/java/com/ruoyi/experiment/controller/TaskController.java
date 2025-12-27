@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.CheckTeacher;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.framework.web.controller.BaseController;
@@ -23,15 +24,14 @@ public class TaskController extends BaseController {
     private final TaskService taskService;
 
     /**
-     * 分页获取父任务列表
+     * 分页获取父任务列表（包含统计数据）
      *
      * @return 分页任务列表
      */
     @GetMapping("/listParents")
-    public TableDataInfo getParentTaskList(TaskQueryDTO taskQueryDTO) {
-        startPage();
-        List<TaskVO> list = taskService.selectParentTaskList(taskQueryDTO);
-        return getDataTable(list);
+    public AjaxResult getParentTaskList(TaskQueryDTO taskQueryDTO) {
+        TaskStatisticsVO result = taskService.selectParentTaskListWithStatistics(taskQueryDTO);
+        return AjaxResult.success(result);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.ruoyi.experiment.service;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.project.system.domain.SysUser;
 
@@ -11,7 +12,14 @@ import java.util.List;
 public interface TaskService {
 
     /**
-     * 根据条件查询父任务列表
+     * 根据条件查询父任务列表和统计数据
+     * @param taskQueryDTO 查询条件
+     * @return 包含统计数据的任务列表
+     */
+    TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO);
+    
+    /**
+     * 根据条件查询父任务列表（兼容旧版本）
      * @param taskQueryDTO 查询条件
      * @return 父任务列表
      */
