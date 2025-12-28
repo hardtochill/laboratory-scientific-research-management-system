@@ -67,4 +67,10 @@ public interface LiteratureMapper {
      */
     Integer selectMaxDownloadCount();
 
+    /**
+     * 根据文献id查询文献路径
+     */
+    @Select("select file_path from literature where id = #{id}")
+    String selectFilePathById(Long id);
+
 }

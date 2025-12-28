@@ -17,6 +17,6 @@ public class ExperimentConfig {
     /**
      * 文献存储路径
      */
-    @Value("${experiment.literature.path}")
-    private String literaturePath;
+    @Value("${experiment.literature.baseDir}")
+    private String literatureBaseDir;
 }

@@ -72,7 +72,7 @@ public class TaskFileServiceImpl implements TaskFileService {
             throw new ServiceException("文件不存在");
         }
         try{
-            FileUtils.downloadTaskFile(experimentConfig.getTaskBaseDir(), filePath, response);
+            FileUtils.downloadFile(experimentConfig.getTaskBaseDir(), filePath, response);
         }catch (Exception e){
             log.error("文件下载失败", e);
             throw new ServiceException("文件下载失败");
@@ -97,7 +97,7 @@ public class TaskFileServiceImpl implements TaskFileService {
         taskFileMapper.deleteById(fileId);
 
         // 3.删除物理文件
-        Path filePath = Paths.get(FileUtils.getTaskFileAbsolutePath(experimentConfig.getTaskBaseDir(),taskFile.getFilePath()));
+        Path filePath = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getTaskBaseDir(),taskFile.getFilePath()));
         try{
             if (Files.exists(filePath)) {
                 Files.delete(filePath);

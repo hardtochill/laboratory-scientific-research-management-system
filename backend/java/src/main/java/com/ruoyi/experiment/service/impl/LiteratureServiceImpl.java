@@ -2,7 +2,6 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
-import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.experiment.mapper.KeywordMapper;
 import com.ruoyi.experiment.mapper.LiteratureKeywordMapper;
 import com.ruoyi.experiment.mapper.LiteratureMapper;
@@ -15,6 +14,7 @@ import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import com.ruoyi.experiment.pojo.vo.KeywordVO;
 import com.ruoyi.experiment.service.LiteratureService;
+import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,26 +77,15 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 更新下载数
         literatureMapper.updateDownloadCount(id);
 
-        // todo 重构下载逻辑
-
-        // 返回文献对象
-        Literature literature = literatureMapper.selectLiteratureById(id);
-        // 构建文件路径：配置的存储路径 + 文献id + .pdf
-        String filePath = experimentConfig.getLiteraturePath() + File.separator + id + ".pdf";
-        File file = new File(filePath);
-
-        // 检查文件是否存在
-        if (!file.exists()) {
-            throw new ServiceException("文件已失效，请重新上传");
+        String filePath = literatureMapper.selectFilePathById(id);
+        if(null==filePath){
+            throw new ServiceException("文献不存在");
         }
-
-        // 设置响应头
-        String fileName = literature.getTitle() + ".pdf";
         try{
-            FileUtils.setAttachmentResponseHeader(response, fileName);
-            FileUtils.writeBytes(filePath, response.getOutputStream());
+            FileUtils.downloadFile(experimentConfig.getLiteratureBaseDir(), filePath, response);
         }catch (Exception e){
-            throw new ServiceException("下载文件失败");
+            log.error("文献下载失败", e);
+            throw new ServiceException("文献下载失败");
         }
     }
 
@@ -136,7 +125,6 @@ public class LiteratureServiceImpl implements LiteratureService {
         calculateFinalScore(literatureId);
     }
 
-    @Override
     @Transactional
     public void updateLiteratureKeywords(Long literatureId, List<Long> keywordIds) {
         // 首先移除所有现有的关键词关联

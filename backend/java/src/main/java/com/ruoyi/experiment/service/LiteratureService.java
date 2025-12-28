@@ -37,10 +37,4 @@ public interface LiteratureService {
      */
     void scoreLiterature(LiteratureScoreDTO scoreDTO);
     
-    /**
-     * 更新文献的关键词关联
-     * @param literatureId 文献ID
-     * @param keywordIds 关键词ID列表
-     */
-    void updateLiteratureKeywords(Long literatureId, List<Long> keywordIds);
 }

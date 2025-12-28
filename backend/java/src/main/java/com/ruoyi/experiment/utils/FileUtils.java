@@ -40,18 +40,13 @@ public class FileUtils {
         return filePath;
     }
 
-    /**
-     * 下载任务文件
-     * @param baseDir 任务文件存储目录
-     * @param filePath 任务文件相对路径
-     */
-    public static final void downloadTaskFile(String baseDir, String filePath, HttpServletResponse response)throws Exception{
-        String absPath = getTaskFileAbsolutePath(baseDir, filePath);
+    public static void downloadFile(String baseDir,String filePath,HttpServletResponse response)throws Exception{
+        String absPath = getFileAbsolutePath(baseDir, filePath);
         com.ruoyi.common.utils.file.FileUtils.setAttachmentResponseHeader(response, absPath);
         com.ruoyi.common.utils.file.FileUtils.writeBytes(absPath, response.getOutputStream());
     }
 
-    public static final String getTaskFileAbsolutePath(String baseDir, String filePath){
+    public static final String getFileAbsolutePath(String baseDir, String filePath){
         return baseDir + File.separator + filePath;
     }
 }
