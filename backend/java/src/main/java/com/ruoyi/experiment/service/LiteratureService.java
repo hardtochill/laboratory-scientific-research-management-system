@@ -3,6 +3,7 @@ package com.ruoyi.experiment.service;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
+import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -21,7 +22,7 @@ public interface LiteratureService {
      * @param id 文献id
      * @return 文献详情
      */
-    Literature selectLiteratureDetail(Long id);
+    LiteratureDetailVO selectLiteratureDetail(Long id);
     
     /**
      * 下载文献
@@ -36,4 +37,10 @@ public interface LiteratureService {
      */
     void scoreLiterature(LiteratureScoreDTO scoreDTO);
     
+    /**
+     * 更新文献的关键词关联
+     * @param literatureId 文献ID
+     * @param keywordIds 关键词ID列表
+     */
+    void updateLiteratureKeywords(Long literatureId, List<Long> keywordIds);
 }

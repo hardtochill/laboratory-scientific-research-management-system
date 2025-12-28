@@ -80,6 +80,19 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/literature/detail',
+    component: Layout,
+    hidden: true,
+    children: [
+      {
+        path: ':id',
+        component: () => import('@/views/literature/LiteratureDetail'),
+        name: 'LiteratureDetail',
+        meta: { title: '文献详情', activeMenu: '/literature/read' }
+      }
+    ]
+  },
   // :patchMatch是一个命名参数；(.*) 匹配任意字符，包括路径分隔符/，*匹配0个或多个字符
   // /:pathMatch(.*)*的含义是匹配所有未被前面路由定义匹配的路径
   {
@@ -161,20 +174,6 @@ export const dynamicRoutes = [
       }
     ]
   },
-  {
-    path: '/literature/detail',
-    component: Layout,
-    hidden: true,
-    permissions: ['experiment:literature:detail'],
-    children: [
-      {
-        path: ':id',
-        component: () => import('@/views/literature/LiteratureDetail'),
-        name: 'LiteratureDetail',
-        meta: { title: '文献详情', activeMenu: '/literature' }
-      }
-    ]
-  }
 ]
 
 const router = createRouter({

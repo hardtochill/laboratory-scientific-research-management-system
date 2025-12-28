@@ -21,6 +21,12 @@
                     <div class="abstract-text">{{ literature.abstractText }}</div>
                 </div>
                 <div class="info-item">
+                    <span class="label">关键词：</span>
+                    <div class="keyword-tags">
+                        <el-tag v-for="keyword in literature.keywords" :key="keyword.id" size="small" style="margin-right: 4px">{{ keyword.keywordName }}</el-tag>
+                    </div>
+                </div>
+                <div class="info-item">
                     <span class="label">下载数：</span>
                     <span>{{ literature.downloadCount }}</span>
                 </div>
@@ -119,7 +125,7 @@ const sortOrder = ref('desc')
 
 /** 返回列表 */
 function goBack() {
-    router.push("/literature")
+    router.push("/literature/read")
 }
 
 /** 格式化日期 */

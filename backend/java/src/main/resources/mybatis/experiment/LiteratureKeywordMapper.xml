@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.LiteratureKeywordMapper">
+
+    <insert id="insertBatch">
+        insert into literature_keyword(literature_id, keyword_id, create_time, update_time)
+        values
+        <foreach collection="keywordIds" item="keywordId" separator=",">
+            (#{literatureId}, #{keywordId}, now(), now())
+        </foreach>
+    </insert>
+</mapper>

@@ -5,6 +5,8 @@ import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.entity.LiteratureScore;
+import com.ruoyi.experiment.pojo.vo.KeywordVO;
+import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -24,6 +26,11 @@ public interface LiteratureMapper {
     /**
      * 根据文献id查询文献详情
      */
+    LiteratureDetailVO selectLiteratureDetail(@Param("id") Long id);
+    
+    /**
+     * 根据文献id查询文献对象
+     */
     @Select("select * from literature where id = #{id}")
     Literature selectLiteratureById(@Param("id") Long id);
     
@@ -32,24 +39,13 @@ public interface LiteratureMapper {
      */
     @Update("update literature set download_count = download_count + 1 where id = #{id}")
     void updateDownloadCount(@Param("id") Long id);
-    
-    /**
-     * 插入文献评分记录
-     */
-    @AutoFill(OperationTypeEnum.INSERT)
-    void insertLiteratureScore(LiteratureScore literatureScore);
-    
-    /**
-     * 更新文献的评分记录
-     */
-    @AutoFill(OperationTypeEnum.UPDATE)
-    void updateLiteratureScore(LiteratureScore literatureScore);
+
     
     /**
      * 查询用户对某文献的评分记录
      */
     @Select("select * from literature_score where literature_id = #{literatureId} and user_id = #{userId}")
-    LiteratureScore selectLiteratureScore(@Param("literatureId") Long literatureId, @Param("userId") Long userId);
+    LiteratureScore selectLiteratureScore(Long literatureId, Long userId);
     
     /**
      * 更新文献的教师评分均值和数量
@@ -70,19 +66,5 @@ public interface LiteratureMapper {
      * 查询系统内所有文献的最大下载数
      */
     Integer selectMaxDownloadCount();
-    
-    /**
-     * 根据文献id列表查询文献信息
-     */
-    List<Literature> selectLiteratureByIds(@Param("ids") List<Long> ids);
-    
-    /**
-     * 查询文献的教师评分统计
-     */
-    Map<String, Object> selectTeacherScoreStatistics(@Param("literatureId") Long literatureId);
-    
-    /**
-     * 查询文献的学生评分统计
-     */
-    Map<String, Object> selectStudentScoreStatistics(@Param("literatureId") Long literatureId);
+
 }

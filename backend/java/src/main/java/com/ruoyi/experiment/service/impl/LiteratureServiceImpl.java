@@ -3,36 +3,39 @@ package com.ruoyi.experiment.service.impl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUtils;
+import com.ruoyi.experiment.mapper.KeywordMapper;
+import com.ruoyi.experiment.mapper.LiteratureKeywordMapper;
 import com.ruoyi.experiment.mapper.LiteratureMapper;
+import com.ruoyi.experiment.mapper.LiteratureScoreMapper;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.entity.LiteratureScore;
+import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
+import com.ruoyi.experiment.pojo.vo.KeywordVO;
 import com.ruoyi.experiment.service.LiteratureService;
 import com.ruoyi.framework.config.ExperimentConfig;
-import com.ruoyi.project.system.domain.SysUser;
-import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class LiteratureServiceImpl implements LiteratureService {
     private final LiteratureMapper literatureMapper;
+    private final LiteratureKeywordMapper literatureKeywordMapper;
+    private final LiteratureScoreMapper literatureScoreMapper;
+    private final KeywordMapper keywordMapper;
     private final ExperimentConfig experimentConfig;
     
     @Override
@@ -50,15 +53,32 @@ public class LiteratureServiceImpl implements LiteratureService {
     }
     
     @Override
-    public Literature selectLiteratureDetail(Long id) {
-        return literatureMapper.selectLiteratureById(id);
+    public LiteratureDetailVO selectLiteratureDetail(Long id) {
+        // 查询文献基本信息
+        LiteratureDetailVO literatureDetail = literatureMapper.selectLiteratureDetail(id);
+        if (literatureDetail == null) {
+            return null;
+        }
+        
+        // 查询关键词列表
+        List<KeywordVO> keywords = keywordMapper.selectKeywordsByLiteratureId(id);
+        literatureDetail.setKeywords(keywords);
+        
+        // 查询用户评分
+        Long userId = SecurityUtils.getUserId();
+        Integer userScore = literatureScoreMapper.selectUserScore(id, userId);
+        literatureDetail.setUserScore(userScore);
+        
+        return literatureDetail;
     }
 
     @Override
     public void downloadLiterature(Long id,HttpServletResponse response) {
         // 更新下载数
         literatureMapper.updateDownloadCount(id);
-        
+
+        // todo 重构下载逻辑
+
         // 返回文献对象
         Literature literature = literatureMapper.selectLiteratureById(id);
         // 构建文件路径：配置的存储路径 + 文献id + .pdf
@@ -100,11 +120,11 @@ public class LiteratureServiceImpl implements LiteratureService {
             literatureScore.setLiteratureId(literatureId);
             literatureScore.setUserId(userId);
             literatureScore.setScore(score);
-            literatureMapper.insertLiteratureScore(literatureScore);
+            literatureScoreMapper.insertLiteratureScore(literatureScore);
         } else {
             // 更新评分记录
             literatureScore.setScore(score);
-            literatureMapper.updateLiteratureScore(literatureScore);
+            literatureScoreMapper.updateLiteratureScore(literatureScore);
         }
 
         boolean isTeacher = SecurityUtils.hasRole("teacher");
@@ -115,14 +135,38 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 重新计算最终评分
         calculateFinalScore(literatureId);
     }
-    
+
+    @Override
+    @Transactional
+    public void updateLiteratureKeywords(Long literatureId, List<Long> keywordIds) {
+        // 首先移除所有现有的关键词关联
+        removeKeywordsFromLiterature(literatureId,keywordIds);
+
+        // 然后添加新的关键词关联
+        if (!CollectionUtils.isEmpty(keywordIds)) {
+            addKeywordsToLiterature(literatureId, keywordIds);
+        }
+    }
+    private void removeKeywordsFromLiterature(Long literatureId, List<Long> keywordIds) {
+        // 批量移除关键词关联
+        literatureKeywordMapper.deleteBatch(literatureId);
+        // 批量更新关键词的使用次数
+        keywordMapper.updateUsageCountBatch(keywordIds,-1);
+    }
+    private void addKeywordsToLiterature(Long literatureId, List<Long> keywordIds) {
+        // 批量添加关键词关联
+        literatureKeywordMapper.insertBatch(literatureId, keywordIds);
+        // 批量更新关键词的使用次数
+        keywordMapper.updateUsageCountBatch(keywordIds,1);
+    }
+
     /**
      * 更新文献的评分统计信息
      */
     private void updateLiteratureScoreStatistics(Long literatureId, boolean isTeacher) {
         if (isTeacher) {
             // 更新教师评分统计
-            Map<String, Object> statistics = literatureMapper.selectTeacherScoreStatistics(literatureId);
+            Map<String, Object> statistics = literatureScoreMapper.selectTeacherScoreStatistics(literatureId);
             if (statistics != null) {
                 Double avgScore = statistics.get("avgScore") != null ? Double.parseDouble(statistics.get("avgScore").toString()) : 0.0;
                 Integer count = statistics.get("count") != null ? Integer.parseInt(statistics.get("count").toString()) : 0;
@@ -130,7 +174,7 @@ public class LiteratureServiceImpl implements LiteratureService {
             }
         } else {
             // 更新学生评分统计
-            Map<String, Object> statistics = literatureMapper.selectStudentScoreStatistics(literatureId);
+            Map<String, Object> statistics = literatureScoreMapper.selectStudentScoreStatistics(literatureId);
             if (statistics != null) {
                 Double avgScore = statistics.get("avgScore") != null ? Double.parseDouble(statistics.get("avgScore").toString()) : 0.0;
                 Integer count = statistics.get("count") != null ? Integer.parseInt(statistics.get("count").toString()) : 0;
@@ -148,28 +192,28 @@ public class LiteratureServiceImpl implements LiteratureService {
         if (literature == null) {
             return;
         }
-        
+
         // 获取各维度的评分
-        Double teacherScoreAvg = literature.getTeacherScoreAvg() != null ? literature.getTeacherScoreAvg().doubleValue() : 0;
-        Integer teacherScoreCount = literature.getTeacherScoreCount() != null ? literature.getTeacherScoreCount() : 0;
-        
-        Double studentScoreAvg = literature.getStudentScoreAvg() != null ? literature.getStudentScoreAvg().doubleValue() : 0;
-        Integer studentScoreCount = literature.getStudentScoreCount() != null ? literature.getStudentScoreCount() : 0;
-        
-        Integer downloadCount = literature.getDownloadCount() != null ? literature.getDownloadCount() : 0;
-        
+        double teacherScoreAvg = literature.getTeacherScoreAvg() != null ? literature.getTeacherScoreAvg().doubleValue() : 0;
+        int teacherScoreCount = literature.getTeacherScoreCount() != null ? literature.getTeacherScoreCount() : 0;
+
+        double studentScoreAvg = literature.getStudentScoreAvg() != null ? literature.getStudentScoreAvg().doubleValue() : 0;
+        int studentScoreCount = literature.getStudentScoreCount() != null ? literature.getStudentScoreCount() : 0;
+
+        int downloadCount = literature.getDownloadCount() != null ? literature.getDownloadCount() : 0;
+
         // 计算下载数归一化得分
         Integer maxDownloadCount = literatureMapper.selectMaxDownloadCount();
         if (maxDownloadCount == null) {
             maxDownloadCount = 1; // 避免分母为0
         }
-        Double dScore = (double) downloadCount / maxDownloadCount * 10;
-        
+        double dScore = (double) downloadCount / maxDownloadCount * 10;
+
         // 计算各维度的权重
         double teacherWeight = 0.6;
         double studentWeight = 0.3;
         double downloadWeight = 0.1;
-        
+
         // 调整权重（如果某维度无数据，将该维度权重按比例分配给其他维度）
         double totalWeight = 0;
         if (teacherScoreCount > 0) {
@@ -181,7 +225,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         if (downloadCount > 0) {
             totalWeight += downloadWeight;
         }
-        
+
         double finalScore = 0;
         if (totalWeight > 0) {
             if (teacherScoreCount > 0) {
@@ -194,11 +238,11 @@ public class LiteratureServiceImpl implements LiteratureService {
                 finalScore += dScore * (downloadWeight / totalWeight);
             }
         }
-        
+
         // 保留1位小数
         DecimalFormat df = new DecimalFormat("#.#");
         finalScore = Double.parseDouble(df.format(finalScore));
-        
+
         // 更新文献的最终得分
         literatureMapper.updateFinalScore(literatureId, finalScore);
     }

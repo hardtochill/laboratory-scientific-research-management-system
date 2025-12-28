@@ -4,6 +4,11 @@
       <el-form-item label="文献名称" prop="title">
         <el-input v-model="queryParams.title" placeholder="请输入文献名称" clearable style="width: 240px" @keyup.enter="handleQuery" />
       </el-form-item>
+      <el-form-item label="关键词">
+        <el-select v-model="selectedKeywords" multiple filterable remote placeholder="请选择关键词" :remote-method="remoteMethod" :loading="keywordLoading" style="width: 240px">
+          <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="发表时间" style="width: 308px">
         <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
       </el-form-item>
@@ -25,15 +30,22 @@
           <span>{{ scope.row.title }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="作者" align="center" prop="authors" v-if="columns[1].visible" width="150" :show-overflow-tooltip="true" />
-      <el-table-column label="来源" align="center" prop="journal" v-if="columns[2].visible" width="150" :show-overflow-tooltip="true" />
-      <el-table-column label="发表时间" align="center" prop="publishTime" v-if="columns[3].visible" width="160" :sortable="true">
+      <el-table-column label="关键词" align="center" v-if="columns[1].visible" width="200" :show-overflow-tooltip="true">
+        <template #default="scope">
+          <div class="keyword-tags">
+            <el-tag v-for="keyword in scope.row.keywords" :key="keyword.id" size="small" style="margin-right: 4px">{{ keyword.keywordName }}</el-tag>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="作者" align="center" prop="authors" v-if="columns[2].visible" width="150" :show-overflow-tooltip="true" />
+      <el-table-column label="来源" align="center" prop="journal" v-if="columns[3].visible" width="150" :show-overflow-tooltip="true" />
+      <el-table-column label="发表时间" align="center" prop="publishTime" v-if="columns[4].visible" width="160" :sortable="true">
         <template #default="scope">
           <span>{{ parseTime(scope.row.publishTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="下载数" align="center" prop="downloadCount" v-if="columns[4].visible" width="100" :sortable="true" />
-      <el-table-column label="评分" align="center" prop="finalScore" v-if="columns[5].visible" width="100" :sortable="true">
+      <el-table-column label="下载数" align="center" prop="downloadCount" v-if="columns[5].visible" width="100" :sortable="true" />
+      <el-table-column label="评分" align="center" prop="finalScore" v-if="columns[6].visible" width="100" :sortable="true">
         <template #default="scope">
           <span>{{ scope.row.finalScore }}</span>
         </template>
@@ -79,6 +91,7 @@ import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
 import { getCurrentInstance } from "vue"
+import { listKeyword } from "@/api/keyword/keyword"
 
 const router = useRouter()
 const { proxy } = getCurrentInstance()
@@ -94,15 +107,19 @@ const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
 const dateRange = ref([])
+const keywordOptions = ref([])
+const selectedKeywords = ref([])
+const keywordLoading = ref(false)
 
 // 列显隐信息
 const columns = ref([
   { key: 0, label: `文献名称`, visible: true },
-  { key: 1, label: `作者`, visible: true },
-  { key: 2, label: `来源`, visible: true },
-  { key: 3, label: `发表时间`, visible: true },
-  { key: 4, label: `下载数`, visible: true },
-  { key: 5, label: `评分`, visible: true }
+  { key: 1, label: `关键词`, visible: true },
+  { key: 2, label: `作者`, visible: true },
+  { key: 3, label: `来源`, visible: true },
+  { key: 4, label: `发表时间`, visible: true },
+  { key: 5, label: `下载数`, visible: true },
+  { key: 6, label: `评分`, visible: true }
 ])
 
 const data = reactive({
@@ -110,6 +127,7 @@ const data = reactive({
     pageNum: 1,
     pageSize: 10,
     title: undefined,
+    keywordIds: [],
     sortField: undefined,
     sortOrder: undefined
   },
@@ -133,6 +151,9 @@ function getList() {
       params.publishTimeStart = dateRange.value[0];
       params.publishTimeEnd = dateRange.value[1];
     }
+    if (selectedKeywords.value && selectedKeywords.value.length > 0) {
+      params.keywordIds = selectedKeywords.value;
+    }
   listLiterature(params).then(res => {
     loading.value = false
     literatureList.value = res.rows
@@ -149,6 +170,8 @@ function handleQuery() {
 /** 重置按钮操作 */
 function resetQuery() {
   dateRange.value = []
+  selectedKeywords.value = []
+  keywordOptions.value = []
   proxy.resetForm("queryRef")
   handleQuery()
 }
@@ -205,6 +228,15 @@ function handleSortChange({ column, prop, order }) {
   queryParams.value.sortField = prop
   queryParams.value.sortOrder = order === "ascending" ? "asc" : "desc"
   getList()
+}
+
+/** 关键词远程搜索 */
+function remoteMethod(query) {
+  keywordLoading.value = true
+  listKeyword({ keywordName: query }).then(res => {
+    keywordLoading.value = false
+    keywordOptions.value = res.rows
+  })
 }
 
 /** 初始化 */

@@ -6,14 +6,15 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
- * 文献展示VO
+ * 文献详情VO
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LiteratureVO {
+public class LiteratureDetailVO {
     /**
      * 文献id
      */
@@ -23,7 +24,7 @@ public class LiteratureVO {
      */
     private String title;
     /**
-     * 文献作者
+     * 文献作者，多个作者用逗号分隔
      */
     private String authors;
     /**
@@ -35,6 +36,10 @@ public class LiteratureVO {
      */
     private LocalDateTime publishTime;
     /**
+     * 文献摘要
+     */
+    private String abstractText;
+    /**
      * 下载次数
      */
     private Integer downloadCount;
@@ -43,11 +48,23 @@ public class LiteratureVO {
      */
     private BigDecimal finalScore;
     /**
+     * 上传用户id
+     */
+    private Long uploadUserId;
+    /**
+     * 上传用户昵称
+     */
+    private String uploadUserNickName;
+    /**
+     * 上传时间
+     */
+    private LocalDateTime uploadTime;
+    /**
+     * 关键词列表
+     */
+    private List<KeywordVO> keywords;
+    /**
      * 用户评分
      */
-    private Integer score;
-    /**
-     * 关键词列表（以逗号分隔的字符串）
-     */
-    private String keywords;
+    private Integer userScore;
 }
