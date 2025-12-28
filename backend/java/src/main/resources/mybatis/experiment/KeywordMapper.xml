@@ -3,5 +3,52 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.KeywordMapper">
-
+    <select id="selectKeywordList" resultType="com.ruoyi.experiment.pojo.entity.Keyword">
+        select * from keyword
+        <where>
+            <if test="keywordName != null">
+                keyword_name like concat('%', #{keywordName}, '%')
+            </if>
+        </where>
+        order by usage_count desc, keyword_name asc
+    </select>
+    <insert id="insertKeyword">
+        insert into keyword (keyword_name, description, usage_count, create_time, update_time)
+            values
+                (#{keywordName}, #{description}, #{usageCount}, #{createTime}, #{updateTime})
+    </insert>
+    <update id="updateKeyword">
+        update keyword
+        <set>
+            <if test="keywordName != null">
+                keyword_name = #{keywordName},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+            <if test="usageCount != null">
+                usage_count = #{usageCount},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateUsageCountBatch">
+        update keyword
+        set usage_count = usage_count + #{value}
+        where id in
+        <foreach collection="keywordIds" item="keywordId" open="(" close=")" separator=",">
+            #{keywordId}
+        </foreach>
+    </update>
+    <!-- 根据文献id查询关键词列表 -->
+    <select id="selectKeywordsByLiteratureId" resultType="com.ruoyi.experiment.pojo.vo.KeywordVO">
+        select k.id, k.keyword_name as keywordName, k.description, k.usage_count as usageCount
+        from keyword k
+                 inner join literature_keyword lk on k.id = lk.keyword_id
+        where lk.literature_id = #{literatureId}
+        order by k.usage_count desc, k.keyword_name asc
+    </select>
 </mapper>
