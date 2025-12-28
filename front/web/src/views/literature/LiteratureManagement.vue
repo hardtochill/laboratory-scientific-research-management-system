@@ -73,7 +73,7 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, getLiteratureDetail, scoreLiterature } from "@/api/literature/literature"
+import { listLiterature, getLiteratureDetail, scoreLiterature } from "@/api/literature/literatureManagement"
 import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"

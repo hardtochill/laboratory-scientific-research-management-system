@@ -95,7 +95,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import SvgIcon from '@/components/SvgIcon'
-import { getDetail, getNoteList, toggleNoteLike } from '@/api/experiment/literature'
+import { getDetail, getNoteList, toggleNoteLike } from '@/api/literature/literature'
 
 const router = useRouter()
 const route = useRoute()
