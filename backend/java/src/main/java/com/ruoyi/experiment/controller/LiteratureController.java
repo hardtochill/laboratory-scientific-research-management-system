@@ -24,7 +24,7 @@ import java.util.List;
  * @date 2023-10-15
  */
 @RestController
-@RequestMapping("/experiment/literature")
+@RequestMapping("/literature")
 public class LiteratureController extends BaseController {
     @Autowired
     private LiteratureService literatureService;

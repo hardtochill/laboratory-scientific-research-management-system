@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取文献详情
 export function getDetail(id) {
   return request({
-    url: `/experiment/literature/detail/${id}`,
+    url: `/literature/detail/${id}`,
     method: 'get'
   })
 }
@@ -11,7 +11,7 @@ export function getDetail(id) {
 // 获取文献心得列表
 export function getNoteList(params) {
   return request({
-    url: '/experiment/note/list',
+    url: '/note/list',
     method: 'get',
     params
   })
@@ -20,7 +20,7 @@ export function getNoteList(params) {
 // 下载文献
 export function downloadLiterature(id) {
   return request({
-    url: `/experiment/literature/download/${id}`,
+    url: `/literature/download/${id}`,
     method: 'post',
     responseType: 'blob'
   })
@@ -29,7 +29,7 @@ export function downloadLiterature(id) {
 // 评分文献
 export function scoreLiterature(data) {
   return request({
-    url: '/experiment/literature/score',
+    url: '/literature/score',
     method: 'post',
     data
   })
@@ -38,7 +38,7 @@ export function scoreLiterature(data) {
 // 切换心得点赞状态
 export function toggleNoteLike(noteId) {
   return request({
-    url: `/experiment/note/toggle-like/${noteId}`,
+    url: `/note/toggle-like/${noteId}`,
     method: 'post'
   })
 }

@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/experiment/note")
+@RequestMapping("/note")
 @RequiredArgsConstructor
 public class NoteController extends BaseController {
     private final NoteService noteService;
