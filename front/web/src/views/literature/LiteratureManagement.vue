@@ -54,13 +54,16 @@
           <span>{{ scope.row.finalScore }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-tooltip content="详情" placement="top">
             <el-button link type="primary" icon="Document" @click="handleDetail(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip content="评分" placement="top">
             <el-button link type="primary" icon="Star" @click="handleScore(scope.row)"></el-button>
+          </el-tooltip>
+          <el-tooltip content="修改文献信息" placement="top">
+            <el-button link type="primary" icon="Edit" @click="handleEdit(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip content="下载" placement="top">
             <el-button link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
@@ -82,6 +85,38 @@
         <div class="dialog-footer">
           <el-button type="primary" @click="submitScore">确 定</el-button>
           <el-button @click="cancelScore">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑文献对话框 -->
+    <el-dialog :title="'编辑文献：' + editForm.title" v-model="editOpen" width="600px" append-to-body>
+      <el-form :model="editForm" :rules="editRules" ref="editRef" label-width="100px">
+        <el-form-item label="文献名称" prop="title">
+          <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="255" show-word-limit />
+        </el-form-item>
+        <el-form-item label="文献作者" prop="authors">
+          <el-input v-model="editForm.authors" placeholder="多个作者请用逗号分隔" maxlength="255" show-word-limit />
+        </el-form-item>
+        <el-form-item label="文献来源" prop="journal">
+          <el-input v-model="editForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
+        </el-form-item>
+        <el-form-item label="发表时间" prop="publishTime">
+          <el-date-picker v-model="editForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="文献摘要" prop="abstract">
+          <el-input v-model="editForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000" show-word-limit />
+        </el-form-item>
+        <el-form-item label="关键词" prop="keywordIds">
+          <el-select v-model="editForm.keywordIds" multiple filterable remote placeholder="请选择关键词" :remote-method="remoteMethod" :loading="keywordLoading" style="width: 100%">
+            <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitEdit">确 定</el-button>
+          <el-button @click="cancelEdit">取 消</el-button>
         </div>
       </template>
     </el-dialog>
@@ -136,7 +171,7 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, addLiterature, scoreLiterature } from "@/api/literature/literatureManagement"
+import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail } from "@/api/literature/literatureManagement"
 import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
@@ -149,9 +184,10 @@ const router = useRouter()
 const { proxy } = getCurrentInstance()
 
 const literatureList = ref([])
-const scoreOpen = ref(false)
-const uploadOpen = ref(false)
-const loading = ref(true)
+  const uploadOpen = ref(false)
+  const editOpen = ref(false)
+  const scoreOpen = ref(false)
+  const loading = ref(true)
 const showSearch = ref(true)
 const ids = ref([])
 const single = ref(true)
@@ -191,6 +227,17 @@ const data = reactive({
   scoreRules: {
     score: [{ required: true, message: "请输入评分", trigger: "change" }]
   },
+  editForm: {
+    id: undefined,
+    title: undefined,
+    authors: undefined,
+    journal: undefined,
+    abstract: undefined,
+    keywordIds: []
+  },
+  editRules: {
+    title: [{ required: true, message: "请输入文献名称", trigger: "blur" }]
+  },
   uploadForm: {
     title: undefined,
     authors: undefined,
@@ -215,7 +262,7 @@ const data = reactive({
   }
 })
 
-const { queryParams, scoreForm, scoreRules,uploadForm, uploadRules } = toRefs(data)
+const { queryParams, scoreForm, scoreRules, editForm, editRules, uploadForm, uploadRules } = toRefs(data)
 
 /** 查询文献列表 */
 function getList() {
@@ -290,6 +337,99 @@ function submitScore() {
 function cancelScore() {
   scoreOpen.value = false
   scoreForm.value.score = undefined
+}
+
+/** 编辑按钮操作 */
+async function handleEdit(row) {
+  try {
+    // 获取文献详情
+    const response = await getLiteratureDetail(row.id)
+    const literatureDetail = response.data
+    
+    // 填充编辑表单
+    editForm.value.id = literatureDetail.id
+    editForm.value.title = literatureDetail.title
+    editForm.value.authors = literatureDetail.authors
+    editForm.value.journal = literatureDetail.journal
+    editForm.value.abstract = literatureDetail.abstractText
+    editForm.value.publishTime = literatureDetail.publishTime ? parseTime(literatureDetail.publishTime, '{y}-{m}-{d}') : undefined
+    
+    // 处理关键词 - 先加载关键词选项
+    await loadKeywordsForEdit()
+    
+    // 如果keywords是对象数组，提取ID
+    if (literatureDetail.keywords && literatureDetail.keywords.length > 0) {
+      if (typeof literatureDetail.keywords[0] === 'object') {
+        // 对象数组，提取ID
+        editForm.value.keywordIds = literatureDetail.keywords.map(kw => kw.id || kw.keywordId)
+      } else {
+        // 字符串数组，需要匹配名称到ID
+        editForm.value.keywordIds = []
+        literatureDetail.keywords.forEach(keywordName => {
+          const matchedKeyword = keywordOptions.value.find(kw => kw.keywordName === keywordName)
+          if (matchedKeyword) {
+            editForm.value.keywordIds.push(matchedKeyword.id)
+          }
+        })
+      }
+    } else {
+      editForm.value.keywordIds = []
+    }
+    
+    editOpen.value = true
+  } catch (error) {
+    console.error('获取文献详情失败:', error)
+    proxy.$modal.msgError("获取文献详情失败")
+  }
+}
+
+/** 为编辑加载关键词 */
+async function loadKeywordsForEdit() {
+  try {
+    const res = await listKeyword({})
+    keywordOptions.value = res.rows
+  } catch (error) {
+    console.error('加载关键词失败:', error)
+  }
+}
+
+/** 提交编辑 */
+function submitEdit() {
+  proxy.$refs["editRef"].validate((valid) => {
+    if (valid) {
+      updateLiterature({
+        id: editForm.value.id,
+        title: editForm.value.title,
+        authors: editForm.value.authors,
+        journal: editForm.value.journal,
+        publishTime: editForm.value.publishTime,
+        abstractText: editForm.value.abstract,
+        keywordIds: editForm.value.keywordIds
+      }).then(() => {
+        editOpen.value = false
+        proxy.$modal.msgSuccess("修改成功")
+        getList()
+      }).catch(error => {
+        console.error('修改失败:', error)
+        proxy.$modal.msgError(error.message || "修改失败")
+      })
+    }
+  })
+}
+
+/** 取消编辑 */
+function cancelEdit() {
+  editOpen.value = false
+  // 重置表单
+  editForm.value = {
+    id: undefined,
+    title: undefined,
+    authors: undefined,
+    journal: undefined,
+    abstract: undefined,
+    keywordIds: []
+  }
+  proxy.resetForm("editRef")
 }
 
 /** 下载按钮操作 */

@@ -10,6 +10,7 @@ import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -94,7 +95,7 @@ public class LiteratureController extends BaseController {
      * 修改文献
      */
     @PostMapping("/update")
-    public AjaxResult update(@RequestBody LiteratureDTO literatureDTO) {
+    public AjaxResult update(@RequestBody @Validated  LiteratureDTO literatureDTO) {
         literatureService.updateLiterature(literatureDTO);
         return AjaxResult.success("修改成功");
     }

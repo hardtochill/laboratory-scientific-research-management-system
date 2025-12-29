@@ -45,3 +45,12 @@ export function addLiterature(formData) {
     }
   })
 }
+
+// 更新文献信息
+export function updateLiterature(literatureDTO) {
+  return request({
+    url: '/literature/update',
+    method: 'post',
+    data: literatureDTO
+  })
+}

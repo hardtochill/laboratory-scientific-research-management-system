@@ -28,7 +28,6 @@ public class LiteratureDTO {
      * 文献名称
      */
     @NotBlank(message = "文献名称不能为空")
-    @Max(value = 255, message = "文献名称长度不能超过255个字符")
     private String title;
     /**
      * 文献作者，多个作者用逗号分隔
