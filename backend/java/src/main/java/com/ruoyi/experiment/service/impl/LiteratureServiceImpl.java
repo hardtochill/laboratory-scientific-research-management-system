@@ -150,6 +150,29 @@ public class LiteratureServiceImpl implements LiteratureService {
         uploadLiterature(literature.getId(),literatureDTO.getTitle(),literatureDTO.getFile());
     }
 
+    @Transactional
+    @Override
+    public void updateLiterature(LiteratureDTO literatureDTO) {
+        // 1.校验文献是否存在
+        Literature originLiterature = literatureMapper.selectLiteratureById(literatureDTO.getId());
+        if(null==originLiterature){
+            throw new ServiceException("文献不存在");
+        }
+        // 2.校验文献名称是否重复
+        String identifier = getIdentifier(literatureDTO.getTitle());
+        if(!originLiterature.getIdentifier().equals(identifier) && null != literatureMapper.selectIdentifier(identifier)){
+            throw new ServiceException("文献已上传");
+        }
+        // 3.更新文献记录
+        Literature literature = new Literature();
+        BeanUtils.copyProperties(literatureDTO,literature);
+        literature.setIdentifier(identifier);
+        literatureMapper.updateLiterature(literature);
+        // 4.更新关键词关联
+        removeKeywordsFromLiterature(literature.getId());
+        addKeywordsToLiterature(literature.getId(),literatureDTO.getKeywordIds());
+    }
+
     public void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;
@@ -187,7 +210,8 @@ public class LiteratureServiceImpl implements LiteratureService {
             throw new ServiceException("文献文件下载失败");
         }
     }
-    private void removeKeywordsFromLiterature(Long literatureId, List<Long> keywordIds) {
+    private void removeKeywordsFromLiterature(Long literatureId) {
+        List<Long> keywordIds = literatureKeywordMapper.selectKeywordIdsByLiteratureId(literatureId);
         if(CollectionUtils.isEmpty(keywordIds)){
             return;
         }

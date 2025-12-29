@@ -43,4 +43,9 @@ public interface LiteratureService {
      * @param literatureDTO 文献DTO
      */
     void addLiterature(LiteratureDTO literatureDTO);
+    /**
+     * 修改文献
+     * @param literatureDTO 文献DTO
+     */
+    void updateLiterature(LiteratureDTO literatureDTO);
 }

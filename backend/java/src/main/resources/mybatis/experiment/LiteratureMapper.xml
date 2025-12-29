@@ -72,7 +72,21 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         set final_score = #{finalScore}, update_time = now()
         where id = #{literatureId}
     </update>
-    
+    <!-- 更新文献 -->
+    <update id="updateLiterature">
+        update literature
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="identifier != null">identifier = #{identifier},</if>
+            <if test="authors != null">authors = #{authors},</if>
+            <if test="journal != null">journal = #{journal},</if>
+            <if test="publishTime != null">publish_time = #{publishTime},</if>
+            <if test="abstractText != null">abstract_text = #{abstractText},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where id = #{id}
+    </update>
+
     <!-- 查询系统内所有文献的最大下载数 -->
     <select id="selectMaxDownloadCount" resultType="java.lang.Integer">
         select max(download_count) from literature

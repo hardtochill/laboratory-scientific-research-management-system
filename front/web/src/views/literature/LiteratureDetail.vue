@@ -22,9 +22,7 @@
                 </div>
                 <div class="info-item">
                     <span class="label">关键词：</span>
-                    <div class="keyword-tags">
-                        <el-tag v-for="keyword in literature.keywords" :key="keyword.id" size="small" style="margin-right: 4px">{{ keyword.keywordName }}</el-tag>
-                    </div>
+                    <el-tag v-for="keyword in literature.keywords" :key="keyword.id" size="medium" style="margin-right: 6px">{{ keyword.keywordName }}</el-tag>
                 </div>
                 <div class="info-item">
                     <span class="label">下载数：</span>

@@ -77,4 +77,9 @@ public interface LiteratureMapper {
      */
     @AutoFill(OperationTypeEnum.INSERT)
     void insertLiterature(Literature literature);
+    /**
+     * 更新文献
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void updateLiterature(Literature literature);
 }

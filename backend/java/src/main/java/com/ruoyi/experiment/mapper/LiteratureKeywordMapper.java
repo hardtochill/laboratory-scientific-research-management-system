@@ -4,6 +4,7 @@ import com.ruoyi.experiment.pojo.vo.KeywordVO;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -20,4 +21,9 @@ public interface LiteratureKeywordMapper {
     @Delete("delete from literature_keyword where literature_id = #{literatureId}")
     void deleteBatch(Long literatureId);
 
+    /**
+     * 查询文献的所有关键词
+     */
+    @Select("select keyword_id from literature_keyword where literature_id = #{literatureId}")
+    List<Long> selectKeywordIdsByLiteratureId(Long literatureId);
 }

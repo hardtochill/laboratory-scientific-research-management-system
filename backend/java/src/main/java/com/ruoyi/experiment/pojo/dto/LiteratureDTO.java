@@ -22,6 +22,7 @@ public class LiteratureDTO {
     /**
      * id
      */
+    @NotNull
     private Long id;
     /**
      * 文献名称

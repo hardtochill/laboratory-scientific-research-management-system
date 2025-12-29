@@ -65,6 +65,9 @@ public class LiteratureController extends BaseController {
         literatureService.scoreLiterature(literatureScoreDTO);
         return AjaxResult.success("评分成功");
     }
+    /**
+     * 添加文献
+     */
     @PostMapping("/add")
     public AjaxResult add(
             @RequestParam("title") String title,
@@ -86,5 +89,13 @@ public class LiteratureController extends BaseController {
 
         literatureService.addLiterature(literatureDTO);
         return AjaxResult.success("添加成功");
+    }
+    /**
+     * 修改文献
+     */
+    @PostMapping("/update")
+    public AjaxResult update(@RequestBody LiteratureDTO literatureDTO) {
+        literatureService.updateLiterature(literatureDTO);
+        return AjaxResult.success("修改成功");
     }
 }
