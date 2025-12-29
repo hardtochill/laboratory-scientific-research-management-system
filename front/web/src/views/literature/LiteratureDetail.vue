@@ -14,7 +14,7 @@
             <div class="detail-info">
                 <div class="info-item">
                     <span class="label">发表时间：</span>
-                    <span>{{ formatDate(literature.publishTime) }}</span>
+                    <span>{{ parseTime(literature.publishTime, '{y}-{m}-{d}') }}</span>
                 </div>
                 <div class="info-item">
                     <span class="label">摘要：</span>
@@ -102,6 +102,9 @@ import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import SvgIcon from '@/components/SvgIcon'
 import { getDetail, getNoteList, toggleNoteLike } from '@/api/literature/literature'
+import { parseTime } from '@/utils/ruoyi'
+
+
 
 const router = useRouter()
 const route = useRoute()

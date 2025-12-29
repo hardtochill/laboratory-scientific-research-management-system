@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -34,7 +35,7 @@ public class Literature extends BaseEntity {
     /**
      * 发表时间
      */
-    private LocalDateTime publishTime;
+    private LocalDate publishTime;
     /**
      * 文献摘要
      */

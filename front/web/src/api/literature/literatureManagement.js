@@ -33,3 +33,15 @@ export function scoreLiterature(scoreDTO) {
     data: scoreDTO
   })
 }
+
+// 添加文献（包含文件上传）
+export function addLiterature(formData) {
+  return request({
+    url: '/literature/add',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

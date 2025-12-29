@@ -1,6 +1,8 @@
 package com.ruoyi.experiment.pojo.dto;
 
 import lombok.Data;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,12 +19,12 @@ public class LiteratureQueryDTO {
     /**
      * 发表时间开始
      */
-    private LocalDateTime publishTimeStart;
+    private LocalDate publishTimeStart;
     
     /**
      * 发表时间结束
      */
-    private LocalDateTime publishTimeEnd;
+    private LocalDate publishTimeEnd;
     
     /**
      * 关键词ID列表（用于根据关键词筛选文献）

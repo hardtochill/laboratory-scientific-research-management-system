@@ -1,12 +1,9 @@
 package com.ruoyi.experiment.controller;
 
 
-import com.ruoyi.common.utils.SecurityUtils;
-import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
-import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import com.ruoyi.experiment.service.LiteratureService;
 import com.ruoyi.framework.web.controller.BaseController;
@@ -14,8 +11,12 @@ import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import javax.servlet.http.HttpServletResponse;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -64,11 +65,25 @@ public class LiteratureController extends BaseController {
         literatureService.scoreLiterature(literatureScoreDTO);
         return AjaxResult.success("评分成功");
     }
-    /**
-     * 添加文献
-     */
     @PostMapping("/add")
-    public AjaxResult add(@RequestBody LiteratureDTO literatureDTO) {
+    public AjaxResult add(
+            @RequestParam("title") String title,
+            @RequestParam(value = "authors", required = false) String authors,
+            @RequestParam(value = "journal", required = false) String journal,
+            @RequestParam(value = "publishTime", required = false) LocalDate publishTime,
+            @RequestParam(value = "abstract", required = false) String abstractText,
+            @RequestParam(value = "keywordIds", required = false) List<Long> keywordIds,
+            @RequestParam("file") MultipartFile file) {
+
+        LiteratureDTO literatureDTO = new LiteratureDTO();
+        literatureDTO.setTitle(title);
+        literatureDTO.setAuthors(authors);
+        literatureDTO.setJournal(journal);
+        literatureDTO.setPublishTime(publishTime);
+        literatureDTO.setAbstractText(abstractText);
+        literatureDTO.setKeywordIds(keywordIds);
+        literatureDTO.setFile(file);
+
         literatureService.addLiterature(literatureDTO);
         return AjaxResult.success("添加成功");
     }

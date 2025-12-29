@@ -4,6 +4,7 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
+import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.mapper.*;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
@@ -136,12 +137,12 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 3.插入literature记录
         literatureMapper.insertLiterature(literature);
         // 4.插入keyword记录
-        addKeywordsToLiterature(literatureDTO.getId(),literatureDTO.getKeywordIds());
+        addKeywordsToLiterature(literature.getId(),literatureDTO.getKeywordIds());
         // 5.保存文件
-        uploadLiterature(literature.getId(),literatureDTO.getFile());
+        uploadLiterature(literature.getId(),literatureDTO.getTitle(),literatureDTO.getFile());
     }
 
-    public void uploadLiterature(Long literatureId, MultipartFile file){
+    public void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;
         try{
@@ -153,7 +154,9 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 2.插入数据库记录
         LiteratureFile literatureFile = new LiteratureFile();
         literatureFile.setLiteratureId(literatureId);
+        literatureFile.setFileName(fileName);
         literatureFile.setFilePath(filePath);
+        literatureFile.setFileType(FileUploadUtils.getExtension(file));
         literatureFile.setFileSize(file.getSize());
         literatureFile.setUploadUserId(SecurityUtils.getUserId());
         literatureFile.setUploadTime(LocalDateTime.now());

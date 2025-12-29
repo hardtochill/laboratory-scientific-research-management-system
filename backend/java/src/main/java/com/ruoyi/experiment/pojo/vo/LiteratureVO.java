@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -33,7 +34,7 @@ public class LiteratureVO {
     /**
      * 发表时间
      */
-    private LocalDateTime publishTime;
+    private LocalDate publishTime;
     /**
      * 下载次数
      */

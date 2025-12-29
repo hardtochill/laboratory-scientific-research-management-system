@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,7 +22,6 @@ public class LiteratureDTO {
     /**
      * id
      */
-    @NotNull
     private Long id;
     /**
      * 文献名称
@@ -40,7 +40,7 @@ public class LiteratureDTO {
     /**
      * 文献发表时间
      */
-    private LocalDateTime publishTime;
+    private LocalDate publishTime;
     /**
      * 文献摘要
      */
