@@ -54,6 +54,14 @@ public class LiteratureServiceImpl implements LiteratureService {
         }else if ("finalScore".equals(queryDTO.getSortField())){
             queryDTO.setSortField("final_score");
         }
+        
+        // 设置关键词数量，用于AND逻辑查询
+        if (queryDTO.getKeywordIds() != null && !queryDTO.getKeywordIds().isEmpty()) {
+            queryDTO.setKeywordIdsSize(queryDTO.getKeywordIds().size());
+        } else {
+            queryDTO.setKeywordIdsSize(0);
+        }
+        
         return literatureMapper.selectLiteratureList(queryDTO);
     }
     

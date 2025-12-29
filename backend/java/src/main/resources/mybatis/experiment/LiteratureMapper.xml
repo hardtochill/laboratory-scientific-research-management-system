@@ -31,15 +31,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="queryDTO.publishTimeEnd != null">
                 and publish_time &lt;= #{queryDTO.publishTimeEnd}
             </if>
-            <if test="queryDTO.keywordIds != null and queryDTO.keywordIds.size() > 0">
-                and literature.id in (
-                    select lk2.literature_id 
-                    from literature_keyword lk2 
-                    where lk2.keyword_id in
+            <if test="queryDTO.keywordIdsSize != null and queryDTO.keywordIdsSize > 0">
+                and (
+                    select count(distinct lk2.keyword_id)
+                    from literature_keyword lk2
+                    where lk2.literature_id = literature.id
+                    and lk2.keyword_id in
                     <foreach collection="queryDTO.keywordIds" item="keywordId" open="(" close=")" separator=",">
                         #{keywordId}
                     </foreach>
-                )
+                ) = #{queryDTO.keywordIdsSize}
             </if>
         </where>
         group by literature.id

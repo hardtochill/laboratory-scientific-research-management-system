@@ -32,6 +32,11 @@ public class LiteratureQueryDTO {
     private List<Long> keywordIds;
     
     /**
+     * 关键词ID列表大小（用于AND逻辑查询）
+     */
+    private Integer keywordIdsSize;
+    
+    /**
      * 排序字段（publishTime, downloadCount, finalScore）
      */
     private String sortField;
