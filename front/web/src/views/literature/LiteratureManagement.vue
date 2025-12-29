@@ -110,7 +110,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="文献文件" prop="file">
-          <el-upload ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :auto-upload="false" drag>
+          <el-upload ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :on-remove="onRemove" :auto-upload="false" drag>
             <el-icon class="el-icon--upload" style="height: 5px;">
               <upload-filled />
             </el-icon>
@@ -202,7 +202,16 @@ const data = reactive({
   },
   uploadRules: {
     title: [{ required: true, message: "请输入文献名称", trigger: "blur" }],
-    file: [{ required: true, message: "请上传文献文件", trigger: "change" }]
+    file: [{ 
+      validator: (rule, value, callback) => {
+        if (!uploadForm.value.file) {
+          callback(new Error('请上传文献文件'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'change' 
+    }]
   }
 })
 
@@ -375,6 +384,8 @@ function onChange(file, fileList) {
     proxy.$modal.msgError('只能上传PDF文件!')
     // 移除不符合要求的文件
     fileList.splice(fileList.indexOf(file), 1)
+    // 清理上传表单的文件
+    uploadForm.value.file = undefined
     return false
   }
   
@@ -384,6 +395,8 @@ function onChange(file, fileList) {
     proxy.$modal.msgError('文件大小不能超过50MB!')
     // 移除不符合要求的文件
     fileList.splice(fileList.indexOf(file), 1)
+    // 清理上传表单的文件
+    uploadForm.value.file = undefined
     return false
   }
   
@@ -391,6 +404,14 @@ function onChange(file, fileList) {
   uploadForm.value.file = file.raw
   
   return false // 返回false阻止自动上传，由我们手动控制
+}
+
+/** 文件删除时清理 */
+function onRemove(file, fileList) {
+  // 当文件被删除时，清理上传表单的文件
+  if (fileList.length === 0) {
+    uploadForm.value.file = undefined
+  }
 }
 
 /** 超出文件数量限制时替换文件 */
