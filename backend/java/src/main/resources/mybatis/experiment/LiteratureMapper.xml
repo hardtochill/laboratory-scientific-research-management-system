@@ -16,7 +16,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <!-- 根据查询条件查询文献列表 -->
     <select id="selectLiteratureList" resultType="com.ruoyi.experiment.pojo.vo.LiteratureVO">
         select literature.id, title, authors, journal, publish_time, download_count, final_score,score,
-               group_concat(k.keyword_name separator ', ') as keywords
+               group_concat(k.keyword_name order by k.usage_count desc, k.keyword_name asc separator ', ') as keywords
         from literature 
         left join literature_score on literature.id = literature_score.literature_id and #{queryDTO.userId} = literature_score.user_id
         left join literature_keyword lk on literature.id = lk.literature_id
