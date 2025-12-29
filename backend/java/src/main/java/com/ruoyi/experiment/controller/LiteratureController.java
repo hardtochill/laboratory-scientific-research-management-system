@@ -3,6 +3,7 @@ package com.ruoyi.experiment.controller;
 
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUtils;
+import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
@@ -62,5 +63,13 @@ public class LiteratureController extends BaseController {
     public AjaxResult score(@RequestBody LiteratureScoreDTO literatureScoreDTO) {
         literatureService.scoreLiterature(literatureScoreDTO);
         return AjaxResult.success("评分成功");
+    }
+    /**
+     * 添加文献
+     */
+    @PostMapping("/add")
+    public AjaxResult add(@RequestBody LiteratureDTO literatureDTO) {
+        literatureService.addLiterature(literatureDTO);
+        return AjaxResult.success("添加成功");
     }
 }

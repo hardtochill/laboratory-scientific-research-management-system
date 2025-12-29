@@ -68,9 +68,13 @@ public interface LiteratureMapper {
     Integer selectMaxDownloadCount();
 
     /**
-     * 根据文献id查询文献路径
+     * 根据文献id查询文献标识符
      */
-    @Select("select file_path from literature where id = #{id}")
-    String selectFilePathById(Long id);
-
+    @Select("select identifier from literature where identifier = #{identifier}")
+    String selectIdentifier(String identifier);
+     /**
+     * 插入文献
+     */
+    @AutoFill(OperationTypeEnum.INSERT)
+    void insertLiterature(Literature literature);
 }

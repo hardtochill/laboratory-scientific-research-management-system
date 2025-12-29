@@ -3,7 +3,16 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.LiteratureMapper">
-    
+    <insert id="insertLiterature" useGeneratedKeys="true" keyProperty="id">
+        insert into literature (title, identifier, authors, journal, publish_time, abstract_text, download_count,
+                                teacher_score_avg, teacher_score_count, student_score_avg, student_score_count,
+                                final_score,
+                                upload_user_id, upload_user_nick_name, upload_time, create_time, update_time)
+        values (#{title}, #{identifier}, #{authors}, #{journal}, #{publishTime}, #{abstractText}, #{downloadCount},
+                #{teacherScoreAvg}, #{teacherScoreCount}, #{studentScoreAvg}, #{studentScoreCount}, #{finalScore},
+                #{uploadUserId}, #{uploadUserNickName}, #{uploadTime}, #{createTime}, #{updateTime})
+    </insert>
+
     <!-- 根据查询条件查询文献列表 -->
     <select id="selectLiteratureList" resultType="com.ruoyi.experiment.pojo.vo.LiteratureVO">
         select literature.id, title, authors, journal, publish_time, download_count, final_score,score,

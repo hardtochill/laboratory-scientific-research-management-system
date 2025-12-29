@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
@@ -36,5 +37,10 @@ public interface LiteratureService {
      * @param scoreDTO 评分DTO
      */
     void scoreLiterature(LiteratureScoreDTO scoreDTO);
-    
+
+     /**
+     * 添加文献
+     * @param literatureDTO 文献DTO
+     */
+    void addLiterature(LiteratureDTO literatureDTO);
 }

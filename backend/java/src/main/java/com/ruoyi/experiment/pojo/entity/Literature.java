@@ -20,6 +20,10 @@ public class Literature extends BaseEntity {
      */
     private String title;
     /**
+     * 文献标识符
+     */
+    private String identifier;
+    /**
      * 文献作者，多个作者用逗号分隔
      */
     private String authors;

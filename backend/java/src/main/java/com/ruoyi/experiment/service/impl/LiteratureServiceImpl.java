@@ -1,14 +1,15 @@
 package com.ruoyi.experiment.service.impl;
 
+import com.github.promeg.pinyinhelper.Pinyin;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
-import com.ruoyi.experiment.mapper.KeywordMapper;
-import com.ruoyi.experiment.mapper.LiteratureKeywordMapper;
-import com.ruoyi.experiment.mapper.LiteratureMapper;
-import com.ruoyi.experiment.mapper.LiteratureScoreMapper;
+import com.ruoyi.common.utils.bean.BeanUtils;
+import com.ruoyi.experiment.mapper.*;
+import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
+import com.ruoyi.experiment.pojo.entity.LiteratureFile;
 import com.ruoyi.experiment.pojo.entity.LiteratureScore;
 import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
@@ -21,10 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ public class LiteratureServiceImpl implements LiteratureService {
     private final LiteratureMapper literatureMapper;
     private final LiteratureKeywordMapper literatureKeywordMapper;
     private final LiteratureScoreMapper literatureScoreMapper;
+    private final LiteratureFileMapper literatureFileMapper;
     private final KeywordMapper keywordMapper;
     private final ExperimentConfig experimentConfig;
     
@@ -70,23 +74,6 @@ public class LiteratureServiceImpl implements LiteratureService {
         literatureDetail.setUserScore(userScore);
         
         return literatureDetail;
-    }
-
-    @Override
-    public void downloadLiterature(Long id,HttpServletResponse response) {
-        // 更新下载数
-        literatureMapper.updateDownloadCount(id);
-
-        String filePath = literatureMapper.selectFilePathById(id);
-        if(null==filePath){
-            throw new ServiceException("文献不存在");
-        }
-        try{
-            FileUtils.downloadFile(experimentConfig.getLiteratureBaseDir(), filePath, response);
-        }catch (Exception e){
-            log.error("文献下载失败", e);
-            throw new ServiceException("文献下载失败");
-        }
     }
 
     @Override
@@ -126,22 +113,82 @@ public class LiteratureServiceImpl implements LiteratureService {
     }
 
     @Transactional
-    public void updateLiteratureKeywords(Long literatureId, List<Long> keywordIds) {
-        // 首先移除所有现有的关键词关联
-        removeKeywordsFromLiterature(literatureId,keywordIds);
+    @Override
+    public void addLiterature(LiteratureDTO literatureDTO) {
+        // 1.文献名称重复校验
+        String identifier = getIdentifier(literatureDTO.getTitle());
+        if(null != literatureMapper.selectIdentifier(identifier)){
+            throw new ServiceException("文献已上传");
+        }
+        // 2.bean构造
+        Literature literature = new Literature();
+        BeanUtils.copyProperties(literatureDTO,literature);
+        literature.setIdentifier(identifier);
+        literature.setDownloadCount(0);
+        literature.setTeacherScoreAvg(BigDecimal.ZERO);
+        literature.setTeacherScoreCount(0);
+        literature.setStudentScoreAvg(BigDecimal.ZERO);
+        literature.setStudentScoreCount(0);
+        literature.setFinalScore(BigDecimal.ZERO);
+        literature.setUploadUserId(SecurityUtils.getUserId());
+        literature.setUploadUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        literature.setUploadTime(LocalDateTime.now());
+        // 3.插入literature记录
+        literatureMapper.insertLiterature(literature);
+        // 4.插入keyword记录
+        addKeywordsToLiterature(literatureDTO.getId(),literatureDTO.getKeywordIds());
+        // 5.保存文件
+        uploadLiterature(literature.getId(),literatureDTO.getFile());
+    }
 
-        // 然后添加新的关键词关联
-        if (!CollectionUtils.isEmpty(keywordIds)) {
-            addKeywordsToLiterature(literatureId, keywordIds);
+    public void uploadLiterature(Long literatureId, MultipartFile file){
+        // 1.保存文件到本地
+        String filePath;
+        try{
+            filePath = FileUtils.uploadLiteratureFile(experimentConfig.getLiteratureBaseDir(), file);
+        }catch (Exception e){
+            log.error("文献文件上传失败", e);
+            throw new ServiceException("文献文件上传失败");
+        }
+        // 2.插入数据库记录
+        LiteratureFile literatureFile = new LiteratureFile();
+        literatureFile.setLiteratureId(literatureId);
+        literatureFile.setFilePath(filePath);
+        literatureFile.setFileSize(file.getSize());
+        literatureFile.setUploadUserId(SecurityUtils.getUserId());
+        literatureFile.setUploadTime(LocalDateTime.now());
+        literatureFileMapper.insert(literatureFile);
+    }
+
+    @Override
+    public void downloadLiterature(Long id,HttpServletResponse response) {
+        // 更新下载数
+        literatureMapper.updateDownloadCount(id);
+
+        String filePath = literatureFileMapper.selectFilePathById(id);
+        if(null==filePath){
+            throw new ServiceException("文献文件按不存在");
+        }
+        try{
+            FileUtils.downloadFile(experimentConfig.getLiteratureBaseDir(), filePath, response);
+        }catch (Exception e){
+            log.error("文献文件下载失败", e);
+            throw new ServiceException("文献文件下载失败");
         }
     }
     private void removeKeywordsFromLiterature(Long literatureId, List<Long> keywordIds) {
+        if(CollectionUtils.isEmpty(keywordIds)){
+            return;
+        }
         // 批量移除关键词关联
         literatureKeywordMapper.deleteBatch(literatureId);
         // 批量更新关键词的使用次数
         keywordMapper.updateUsageCountBatch(keywordIds,-1);
     }
     private void addKeywordsToLiterature(Long literatureId, List<Long> keywordIds) {
+        if(CollectionUtils.isEmpty(keywordIds)){
+            return;
+        }
         // 批量添加关键词关联
         literatureKeywordMapper.insertBatch(literatureId, keywordIds);
         // 批量更新关键词的使用次数
@@ -234,4 +281,28 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 更新文献的最终得分
         literatureMapper.updateFinalScore(literatureId, finalScore);
     }
+
+    /**
+     * 获取文献的唯一标识符
+     * @return
+     */
+    private String getIdentifier(String title){
+        // 1. 去除所有空格和连接符号（只保留字母、数字和中文）
+        title = title.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5]", "");
+
+        // 2. 处理中文转拼音大写和英文转大写
+        StringBuilder identifier = new StringBuilder();
+        for (char c : title.toCharArray()) {
+            // 中文转拼音大写
+            if (Character.toString(c).matches("[\\u4e00-\\u9fa5]")) {
+                String pinyin = Pinyin.toPinyin(c);
+                identifier.append(pinyin);
+            } else {
+                // 英文转大写
+                identifier.append(Character.toUpperCase(c));
+            }
+        }
+        return identifier.toString();
+    }
+
 }
