@@ -57,12 +57,6 @@ public interface KeywordMapper {
     void updateKeyword(Keyword keyword);
 
     /**
-     * 删除关键词
-     * @param keywordId 关键词ID
-     */
-    @Delete("delete from keyword where id = #{keywordId}")
-    void deleteKeyword(Long keywordId);
-    /**
      * 批量更新关键词使用次数
      * @param keywordIds 关键词ID列表
      * @param value 增量值
@@ -73,4 +67,6 @@ public interface KeywordMapper {
      * 根据文献id查询关键词列表
      */
     List<KeywordVO> selectKeywordsByLiteratureId(@Param("literatureId") Long literatureId);
+
+    void deleteKeywords(Long[] keywordIds);
 }

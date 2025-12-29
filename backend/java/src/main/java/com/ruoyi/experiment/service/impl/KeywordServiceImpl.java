@@ -2,6 +2,7 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.experiment.mapper.KeywordMapper;
+import com.ruoyi.experiment.mapper.LiteratureKeywordMapper;
 import com.ruoyi.experiment.pojo.dto.KeywordDTO;
 import com.ruoyi.experiment.pojo.dto.KeywordQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Keyword;
@@ -20,6 +21,7 @@ import java.util.List;
 public class KeywordServiceImpl implements KeywordService {
 
     private final KeywordMapper keywordMapper;
+    private final LiteratureKeywordMapper literatureKeywordMapper;
 
     @Override
     public List<Keyword> selectKeywordList(KeywordQueryDTO keywordQueryDTO) {
@@ -61,7 +63,10 @@ public class KeywordServiceImpl implements KeywordService {
 
     @Override
     @Transactional
-    public void deleteKeyword(Long keywordId) {
-        keywordMapper.deleteKeyword(keywordId);
+    public void deleteKeywords(Long[] keywordIds) {
+        // 删除关键词
+        keywordMapper.deleteKeywords(keywordIds);
+        // 删除文献关键词关联
+        literatureKeywordMapper.deleteByKeywordIds(keywordIds);
     }
 }

@@ -26,4 +26,9 @@ public interface LiteratureKeywordMapper {
      */
     @Select("select keyword_id from literature_keyword where literature_id = #{literatureId}")
     List<Long> selectKeywordIdsByLiteratureId(Long literatureId);
+
+     /**
+     * 根据关键词ID删除文献关键词关联
+     */
+    void deleteByKeywordIds(Long[] keywordIds);
 }

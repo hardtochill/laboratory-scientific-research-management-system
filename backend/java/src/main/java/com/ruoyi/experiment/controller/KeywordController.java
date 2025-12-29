@@ -46,9 +46,10 @@ public class KeywordController extends BaseController {
     /**
      * 删除关键词
      */
-    @PostMapping("/delete/{keywordId}")
-    public AjaxResult deleteKeyword(@PathVariable Long keywordId) {
-        keywordService.deleteKeyword(keywordId);
+    @DeleteMapping("/delete/{keywordIds}")
+    public AjaxResult deleteKeywords(@PathVariable Long[] keywordIds) {
+        keywordService.deleteKeywords(keywordIds);
         return AjaxResult.success("删除成功");
     }
+
 }

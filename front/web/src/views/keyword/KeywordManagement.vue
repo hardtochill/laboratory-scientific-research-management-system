@@ -14,6 +14,9 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
+      <el-col :span="1.5">
+        <el-button type="danger" plain icon="Delete" :disabled="multiple" @click="handleBatchDelete">批量删除</el-button>
+      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
@@ -62,7 +65,7 @@
 </template>
 
 <script setup name="KeywordManagement">
-import { listKeyword, addKeyword, updateKeyword, deleteKeyword } from "@/api/keyword/keyword"
+import { listKeyword, addKeyword, updateKeyword, deleteKeywords } from "@/api/keyword/keyword"
 import { parseTime } from "@/utils/ruoyi"
 import { getCurrentInstance } from "vue"
 
@@ -156,10 +159,20 @@ function handleUpdate(row) {
 /** 删除按钮操作 */
 function handleDelete(row) {
   proxy.$modal.confirm('是否确认删除关键词"' + row.keywordName + '"？').then(function () {
-    return deleteKeyword(row.id)
+    return deleteKeywords([row.id])
   }).then(() => {
     getList()
     proxy.$modal.msgSuccess("删除成功")
+  }).catch(() => {})
+}
+
+/** 批量删除按钮操作 */
+function handleBatchDelete() {
+  proxy.$modal.confirm('是否确认删除选中的' + ids.value.length + '个关键词？').then(function () {
+    return deleteKeywords(ids.value)
+  }).then(() => {
+    getList()
+    proxy.$modal.msgSuccess("批量删除成功")
   }).catch(() => {})
 }
 

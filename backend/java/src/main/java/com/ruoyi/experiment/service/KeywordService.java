@@ -32,7 +32,7 @@ public interface KeywordService {
 
     /**
      * 删除关键词
-     * @param keywordId 关键词ID
+     * @param keywordIds 关键词ID数组
      */
-    void deleteKeyword(Long keywordId);
+    void deleteKeywords(Long[] keywordIds);
 }

@@ -11,4 +11,10 @@
             (#{literatureId}, #{keywordId}, now(), now())
         </foreach>
     </insert>
+    <delete id="deleteByKeywordIds">
+        delete from literature_keyword where keyword_id in
+        <foreach collection="keywordIds" item="keywordId" open="(" close=")" separator=",">
+            #{keywordId}
+        </foreach>
+    </delete>
 </mapper>

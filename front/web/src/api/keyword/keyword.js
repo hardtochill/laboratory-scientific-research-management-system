@@ -27,10 +27,12 @@ export function updateKeyword(data) {
   })
 }
 
-// 删除关键词
-export function deleteKeyword(keywordId) {
+// 删除关键词（单个或批量）
+export function deleteKeywords(keywordIds) {
+  // Handle both single ID (string/number) and array of IDs
+  const ids = Array.isArray(keywordIds) ? keywordIds.join(',') : keywordIds
   return request({
-    url: `/keyword/delete/${keywordId}`,
-    method: 'post'
+    url: `/keyword/delete/${ids}`,
+    method: 'delete'
   })
 }
