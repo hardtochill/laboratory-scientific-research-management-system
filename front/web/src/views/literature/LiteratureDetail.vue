@@ -95,7 +95,7 @@
 </template>
 
 <script setup name="LiteratureDetail">
-import { ref, onMounted } from 'vue'
+import { ref, onActivated } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import SvgIcon from '@/components/SvgIcon'
@@ -223,7 +223,7 @@ async function toggleLike(noteId) {
 }
 
 /** 页面加载时获取数据 */
-onMounted(() => {
+onActivated(() => {
     getLiteratureDetail()
     getLiteratureNotes()
 })
