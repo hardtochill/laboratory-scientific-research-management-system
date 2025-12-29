@@ -28,7 +28,7 @@
     <el-table v-loading="loading" :data="literatureList" @selection-change="handleSelectionChange" @sort-change="handleSortChange">
       <!-- <el-table-column type="selection" width="50" align="center" /> -->
        <el-table-column type="index" width="50" align="center" />
-      <el-table-column label="文献名称" align="center" prop="title" v-if="columns[0].visible" :show-overflow-tooltip="true">
+      <el-table-column label="文献名称" width="200" align="center" prop="title" v-if="columns[0].visible" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.title }}</span>
         </template>
@@ -54,7 +54,7 @@
           <span>{{ scope.row.finalScore }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
+      <el-table-column label="操作" fixed="right" align="center" width="200" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-tooltip content="详情" placement="top">
             <el-button link type="primary" icon="Document" @click="handleDetail(scope.row)"></el-button>
