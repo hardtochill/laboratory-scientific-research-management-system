@@ -5,13 +5,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 文献心得点赞
+ * 文献评论点赞
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LiteratureNoteLike extends BaseEntity{
+public class CommentLike extends BaseEntity{
     private Long id;
+    private Long commentId;
     private Long userId;
-    private Long noteId;
 }

@@ -38,59 +38,8 @@
                 </div>
             </div>
         </div>
+        <!-- 下半部分：评论发表区 -->
         
-        <!-- 下半部分：心得发表区 -->
-        <div class="notes-section">
-            <div class="section-header">
-                <h2 class="section-title">文献评论</h2>
-                <div class="sort-controls">
-                    <el-select v-model="sortField" placeholder="选择排序字段" size="small" @change="handleSortChange">
-                        <el-option label="发表时间" value="publishTime"></el-option>
-                        <el-option label="点赞数" value="likeCount"></el-option>
-                    </el-select>
-                    <el-select v-model="sortOrder" placeholder="选择排序方式" size="small" @change="handleSortChange">
-                        <el-option label="升序" value="asc"></el-option>
-                        <el-option label="降序" value="desc"></el-option>
-                    </el-select>
-                </div>
-            </div>
-            
-            <!-- 心得列表 -->
-            <div class="notes-list">
-                <div v-for="note in notes" :key="note.id" class="note-item">
-                    <div class="note-header">
-                        <span class="user-nickname">{{ note.userNickName }}</span>
-                        <span class="publish-time">{{ formatDate(note.publishTime) }}</span>
-                    </div>
-                    <div class="note-content">
-                        {{ note.noteContent }}
-                    </div>
-                    <div class="note-footer">
-                        <el-button type="text" @click.stop="toggleLike(note.id)">
-                            <svg-icon 
-                                :icon-class="note.likeFlag ? 'thumbs-up' : 'thumbs-o-up'"
-                                :class-name="'like-icon'"
-                                :style="note.likeFlag ? { color: '#f56c6c' } : { color: '#909399' }"
-                            />
-                        </el-button>
-                        <span class="like-count">{{ note.likeCount }}</span>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 分页 -->
-            <div class="pagination">
-                <el-pagination
-                    v-model:current-page="pagination.currentPage"
-                    v-model:page-size="pagination.pageSize"
-                    :page-sizes="[10, 20, 50, 100]"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="pagination.total"
-                    @size-change="handleSizeChange"
-                    @current-change="handleCurrentChange"
-                />
-            </div>
-        </div>
     </div>
 </template>
 
@@ -99,7 +48,7 @@ import { ref, onActivated } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import SvgIcon from '@/components/SvgIcon'
-import { getLiteratureDetail, getNoteList, toggleNoteLike } from '@/api/literature/literature'
+import { getLiteratureDetail } from '@/api/literature/literature'
 import { parseTime } from '@/utils/ruoyi'
 
 
@@ -160,72 +109,9 @@ async function getDetail() {
     }
 }
 
-/** 获取心得列表 */
-async function getLiteratureNotes() {
-    const id = route.params.id
-    if (!id) return
-    
-    try {
-        const params = {
-            literatureId: id,
-            pageNum: pagination.value.currentPage,
-            pageSize: pagination.value.pageSize,
-            sortField: sortField.value,
-            sortOrder: sortOrder.value
-        }
-        
-        const res = await getNoteList(params)
-        notes.value = res.rows
-        pagination.value.total = res.total
-    } catch (error) {
-        ElMessage.error('获取心得列表失败')
-        console.error('获取心得列表失败:', error)
-    }
-}
-
-/** 分页大小变化 */
-function handleSizeChange(val) {
-    pagination.value.pageSize = val
-    getLiteratureNotes()
-}
-
-/** 分页当前页变化 */
-function handleCurrentChange(val) {
-    pagination.value.currentPage = val
-    getLiteratureNotes()
-}
-
-/** 排序变更处理 */
-function handleSortChange() {
-    // 排序变更时重置到第一页
-    pagination.value.currentPage = 1
-    getLiteratureNotes()
-}
-
-/** 切换心得点赞状态 */
-async function toggleLike(noteId) {
-    try {
-        const res = await toggleNoteLike(noteId)
-        const newLikeStatus = res.data
-        
-        // 更新对应心得的点赞状态和点赞数
-        const note = notes.value.find(n => n.id === noteId)
-        if (note) {
-            note.likeFlag = newLikeStatus
-            note.likeCount = newLikeStatus ? note.likeCount + 1 : note.likeCount - 1
-        }
-        
-        ElMessage.success(newLikeStatus ? '点赞成功' : '取消点赞成功')
-    } catch (error) {
-        ElMessage.error('操作失败')
-        console.error('点赞操作失败:', error)
-    }
-}
-
 /** 页面加载时获取数据 */
 onActivated(() => {
     getDetail()
-    getLiteratureNotes()
 })
 </script>
 
@@ -289,11 +175,6 @@ onActivated(() => {
     background-color: #f5f5f5;
     border-radius: 4px;
     line-height: 1.6;
-}
-
-/* 下半部分：心得列表 */
-.notes-section {
-    margin-top: 30px;
 }
 
 .section-header {
