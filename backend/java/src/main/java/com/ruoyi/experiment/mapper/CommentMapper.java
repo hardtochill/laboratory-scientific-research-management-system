@@ -16,15 +16,23 @@ import java.util.List;
 @Mapper
 public interface CommentMapper {
     /**
-     * 查询评论列表(教师端)
-     * @param commentQueryDTO
-     * @return
+     * 查询父评论列表(教师端)
      */
-    List<CommentVO> selectCommentListForTeacher(CommentQueryDTO commentQueryDTO);
+    List<CommentVO> selectParentCommentListForTeacher(CommentQueryDTO commentQueryDTO);
     /**
-     * 查询评论列表(学生端)
+     * 查询父评论列表(学生端)
      */
-    List<CommentVO> selectCommentListForStudent(CommentQueryDTO commentQueryDTO);
+    List<CommentVO> selectParentCommentListForStudent(CommentQueryDTO commentQueryDTO);
+
+    /**
+     * 查询子评论列表(教师端)
+     */
+    List<CommentVO> selectChildCommentListForTeacher(CommentQueryDTO commentQueryDTO);
+    /**
+     * 查询子评论列表(学生端)
+     */
+    List<CommentVO> selectChildCommentListForStudent(CommentQueryDTO commentQueryDTO);
+
     /**
      * 根据评论ID查询评论
      */

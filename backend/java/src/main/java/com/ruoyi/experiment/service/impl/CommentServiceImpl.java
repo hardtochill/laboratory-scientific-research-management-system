@@ -50,9 +50,9 @@ public class CommentServiceImpl implements CommentService {
         List<CommentVO> commentVOList;
         boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
         if(isTeacher){
-            commentVOList = commentMapper.selectCommentListForTeacher(commentQueryDTO);
+            commentVOList = commentMapper.selectParentCommentListForTeacher(commentQueryDTO);
         }else{
-            commentVOList = commentMapper.selectCommentListForStudent(commentQueryDTO);
+            commentVOList = commentMapper.selectParentCommentListForStudent(commentQueryDTO);
         }
         // 3.查询评论关联文件列表
         // 4.查询评论是否有子评论
@@ -79,9 +79,9 @@ public class CommentServiceImpl implements CommentService {
         List<CommentVO> commentVOList;
         boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
         if(isTeacher){
-            commentVOList = commentMapper.selectCommentListForTeacher(commentQueryDTO);
+            commentVOList = commentMapper.selectChildCommentListForTeacher(commentQueryDTO);
         }else{
-            commentVOList = commentMapper.selectCommentListForStudent(commentQueryDTO);
+            commentVOList = commentMapper.selectChildCommentListForStudent(commentQueryDTO);
         }
         // 3.查询评论关联文件列表
         // 4.子评论不再关联子评论
