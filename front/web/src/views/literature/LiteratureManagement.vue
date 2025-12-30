@@ -171,7 +171,7 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail } from "@/api/literature/literatureManagement"
+import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail } from "@/api/literature/literature"
 import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"

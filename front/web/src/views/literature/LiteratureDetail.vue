@@ -42,7 +42,7 @@
         <!-- 下半部分：心得发表区 -->
         <div class="notes-section">
             <div class="section-header">
-                <h2 class="section-title">文献心得</h2>
+                <h2 class="section-title">文献评论</h2>
                 <div class="sort-controls">
                     <el-select v-model="sortField" placeholder="选择排序字段" size="small" @change="handleSortChange">
                         <el-option label="发表时间" value="publishTime"></el-option>
@@ -99,7 +99,7 @@ import { ref, onActivated } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import SvgIcon from '@/components/SvgIcon'
-import { getDetail, getNoteList, toggleNoteLike } from '@/api/literature/literature'
+import { getLiteratureDetail, getNoteList, toggleNoteLike } from '@/api/literature/literature'
 import { parseTime } from '@/utils/ruoyi'
 
 
@@ -144,7 +144,7 @@ function formatDate(dateStr) {
 }
 
 /** 获取文献详情 */
-async function getLiteratureDetail() {
+async function getDetail() {
     const id = route.params.id
     if (!id) {
         ElMessage.error('参数错误')
@@ -152,7 +152,7 @@ async function getLiteratureDetail() {
     }
     
     try {
-        const res = await getDetail(id)
+        const res = await getLiteratureDetail(id)
         literature.value = res.data
     } catch (error) {
         ElMessage.error('获取文献详情失败')
@@ -224,7 +224,7 @@ async function toggleLike(noteId) {
 
 /** 页面加载时获取数据 */
 onActivated(() => {
-    getLiteratureDetail()
+    getDetail()
     getLiteratureNotes()
 })
 </script>
