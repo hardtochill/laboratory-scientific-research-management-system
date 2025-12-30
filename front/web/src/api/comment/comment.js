@@ -1,14 +1,16 @@
 import request from '@/utils/request'
 
 // 查询父评论列表
-export function listParentComments(literatureId, sortField, sortOrder) {
+export function listParentComments(literatureId, sortField, sortOrder, pageNum, pageSize) {
   return request({
     url: '/comment/listParent',
     method: 'get',
     params: {
       literatureId: literatureId,
       sortField: sortField,
-      sortOrder: sortOrder
+      sortOrder: sortOrder,
+      pageNum: pageNum,
+      pageSize: pageSize
     }
   })
 }

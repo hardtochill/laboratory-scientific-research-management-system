@@ -55,7 +55,7 @@
             </div>
             
             <div v-loading="commentsLoading" class="comments-list">
-                <div v-for="comment in parentComments" :key="comment.commentId" class="comment-item">
+                <div v-for="comment in parentComments" :key="comment.id" class="comment-item">
                     <div class="comment-header">
                         <div class="user-info">
                             <span class="user-nickname">{{ comment.userNickName }}</span>
@@ -153,6 +153,9 @@
                     暂无评论
                 </div>
             </div>
+            
+            <!-- 评论分页 -->
+            <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="handlePagination" />
         </div>
     </div>
 </template>
@@ -176,19 +179,17 @@ const route = useRoute()
 // 文献详情数据
 const literature = ref({})
 
-// 心得列表数据
-const notes = ref([])
-
-// 分页数据
-const pagination = ref({
-    currentPage: 1,
-    pageSize: 10,
-    total: 0
-})
 
 // 排序数据
 const sortField = ref('likeCount')  // 默认按点赞数排序
 const sortOrder = ref('desc')       // 默认降序
+
+// 分页数据
+const queryParams = ref({
+  pageNum: 1,
+  pageSize: 10
+})
+const total = ref(0)
 
 // 评论相关数据
 const parentComments = ref([])
@@ -253,8 +254,15 @@ async function getParentComments() {
     
     commentsLoading.value = true
     try {
-        const res = await listParentComments(literatureId, sortField.value, sortOrder.value)
+        const res = await listParentComments(
+            literatureId, 
+            sortField.value, 
+            sortOrder.value,
+            queryParams.value.pageNum,
+            queryParams.value.pageSize
+        )
         parentComments.value = res.rows || []
+        total.value = res.total || 0
     } catch (error) {
         ElMessage.error('获取评论失败')
         console.error('获取父评论失败:', error)
@@ -310,6 +318,13 @@ async function downloadFile(fileId, fileName) {
 
 /** 排序变化处理 */
 function handleSortChange() {
+    // 重置到第一页
+    queryParams.value.pageNum = 1
+    getParentComments()
+}
+
+/** 分页变化处理 */
+function handlePagination() {
     getParentComments()
 }
 </script>
