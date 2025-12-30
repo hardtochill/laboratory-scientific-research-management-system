@@ -400,25 +400,6 @@ function handleSortChange() {
     min-width: 120px;
 }
 
-.notes-list {
-    margin-bottom: 20px;
-}
-
-.note-item {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.note-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
 .user-nickname {
     font-weight: bold;
     color: #333;
@@ -426,39 +407,6 @@ function handleSortChange() {
 
 .publish-time {
     color: #999;
-}
-
-.note-content {
-    height: 100px;
-    overflow-y: auto;
-    line-height: 1.6;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #fff;
-    border-radius: 4px;
-    border: 1px solid #e0e0e0;
-}
-
-.note-footer {
-    text-align: right;
-    color: #666;
-    font-size: 13px;
-}
-
-.like-button {
-    padding: 0;
-    margin: 0;
-    height: auto;
-    line-height: normal;
-    color: #909399;
-}
-
-.like-icon {
-    font-size: 18px;
-    margin-right: 4px;
-    vertical-align: middle;
-    cursor: pointer;
-    transition: color 0.3s;
 }
 
 .like-count {
@@ -534,14 +482,24 @@ function handleSortChange() {
 }
 
 .like-icon {
-    font-size: 18px;
+    font-size: 22px;
     cursor: pointer;
-    transition: color 0.3s;
-    color: #909399;
+    transition: all 0.3s ease;
+    color: #606266;
+    padding: 2px;
+    border-radius: 4px;
+    margin-right: -6px;
 }
 
 .like-icon:hover {
     color: #409eff;
+    background-color: rgba(64, 158, 255, 0.1);
+    transform: scale(1.1);
+}
+
+.like-icon:active {
+    color: #3078c6;
+    transform: scale(0.95);
 }
 
 .like-count {
