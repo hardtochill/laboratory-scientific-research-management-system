@@ -23,40 +23,46 @@ public class FileUtils {
 
     // 文献文件允许的扩展名
     public static final String[] LITERATURE_ALLOWED_EXTENSION = {"pdf"};
+    //评论文件允许的扩展名
+    public static final String[] Comment_ALLOWED_EXTENSION = {
+            // 图片
+            "gif", "jpg", "jpeg", "png",
+            // word excel powerpoint
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
+            // 压缩文件
+            "rar", "zip", ".gz", ".bz2",
+            // pdf
+            "pdf"};
     /**
      * 上传任务文件
      */
-    public static final String uploadTaskFile(String baseDir,MultipartFile file) throws Exception{
-        // 文件名称长度校验
-        int fileNameLength = Objects.requireNonNull(file.getOriginalFilename()).length();
-        if (fileNameLength > FileUploadUtils.DEFAULT_FILE_NAME_LENGTH) {
-            throw new FileNameLengthLimitExceededException(FileUploadUtils.DEFAULT_FILE_NAME_LENGTH);
-        }
-        // 文件大小和格式校验
-        FileUploadUtils.assertAllowed(file, TASK_ALLOWED_EXTENSION);
-        // 文件相对路径使用日期+uuid
-        String filePath = FileUploadUtils.uuidFilename(file);
-        // 写入本地
-       String absPath = FileUploadUtils.getAbsoluteFile(baseDir, filePath).getAbsolutePath();
-        file.transferTo(Paths.get(absPath));
-        // 数据库存储相对路径
-        return filePath;
+    public static final String uploadTaskFile(String taskBaseDir,MultipartFile file) throws Exception{
+        return uploadFile(taskBaseDir,file,TASK_ALLOWED_EXTENSION);
     }
     /**
      * 上传文献文件
      */
     public static String uploadLiteratureFile(String literatureBaseDir, MultipartFile file) throws Exception{
+        return uploadFile(literatureBaseDir,file,LITERATURE_ALLOWED_EXTENSION);
+    }
+    /**
+     * 上传评论文件
+     */
+    public static String uploadCommentFile(String commentBaseDir, MultipartFile file) throws Exception{
+        return uploadFile(commentBaseDir,file,Comment_ALLOWED_EXTENSION);
+    }
+    public static String uploadFile(String baseDir, MultipartFile file,String[] allowedExtension) throws Exception{
         // 文件名称长度校验
         int fileNameLength = Objects.requireNonNull(file.getOriginalFilename()).length();
         if (fileNameLength > FileUploadUtils.DEFAULT_FILE_NAME_LENGTH) {
             throw new FileNameLengthLimitExceededException(FileUploadUtils.DEFAULT_FILE_NAME_LENGTH);
         }
         // 文件大小和格式校验
-        FileUploadUtils.assertAllowed(file, LITERATURE_ALLOWED_EXTENSION);
+        FileUploadUtils.assertAllowed(file, allowedExtension);
         // 文件相对路径使用日期+uuid
         String filePath = FileUploadUtils.uuidFilename(file);
         // 写入本地
-        String absPath = FileUploadUtils.getAbsoluteFile(literatureBaseDir, filePath).getAbsolutePath();
+        String absPath = FileUploadUtils.getAbsoluteFile(baseDir, filePath).getAbsolutePath();
         file.transferTo(Paths.get(absPath));
         // 数据库存储相对路径
         return filePath;
@@ -75,5 +81,4 @@ public class FileUtils {
     public static final String getFileAbsolutePath(String baseDir, String filePath){
         return baseDir + File.separator + filePath;
     }
-
 }
