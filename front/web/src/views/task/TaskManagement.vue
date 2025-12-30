@@ -102,12 +102,12 @@
               </el-tooltip>
               <!-- 任务详情按钮 -->
               <el-tooltip content="任务详情" placement="top">
-                <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="MoreFilled"
+                <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Document"
                   style="margin-left: 0px;"></el-button>
               </el-tooltip>
               <!-- 文件信息按钮 -->
               <el-tooltip content="文件信息" placement="top">
-                <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Document" style="margin-left: 0px;"></el-button>
+                <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files" style="margin-left: 0px;"></el-button>
               </el-tooltip>
               <!-- 修改状态下拉菜单 -->
               <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
@@ -370,7 +370,7 @@ import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskSta
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight, CaretBottom, Plus, MoreFilled, Switch, Delete, InfoFilled, UploadFilled, Download, Document } from '@element-plus/icons-vue'
+import { CaretRight, CaretBottom, Plus, MoreFilled, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
 import { download } from "@/utils/request"
 
