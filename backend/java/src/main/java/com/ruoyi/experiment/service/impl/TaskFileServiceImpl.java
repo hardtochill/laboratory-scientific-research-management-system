@@ -53,7 +53,7 @@ public class TaskFileServiceImpl implements TaskFileService {
         }
         // 保存文件信息到数据库
         TaskFile taskFile = new TaskFile();
-        taskFile.setFileName(file.getOriginalFilename());
+        taskFile.setFileName(com.ruoyi.common.utils.file.FileUtils.getNameNotSuffix(file.getOriginalFilename()));
         taskFile.setFilePath(filePath);
         taskFile.setFileType(FileUploadUtils.getExtension(file));
         taskFile.setFileSize((int) file.getSize());

@@ -324,7 +324,7 @@
           <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading">
             <el-table-column prop="fileName" label="文件名" min-width="200">
               <template #default="{ row }">
-                <span class="file-name">{{ row.fileName }}</span>
+                <span class="file-name">{{ row.fileName+"."+row.fileType }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="fileSize" label="文件大小" width="120">
@@ -1078,7 +1078,7 @@ const handleUploadFiles = async () => {
 
 // 下载文件
 const handleDownloadFile = async (file) => {
-  download(`/taskFile/download/${file.id}`, {}, file.fileName)
+  download(`/taskFile/download/${file.id}`, {}, file.fileName+"."+file.fileType)
 }
 
 // 删除文件
