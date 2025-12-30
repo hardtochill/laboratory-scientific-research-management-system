@@ -3,6 +3,7 @@ package com.ruoyi.experiment.mapper;
 import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.TaskFile;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -31,6 +32,12 @@ public interface TaskFileMapper {
     TaskFile selectById(@Param("id") Long id);
 
     /**
+     * 任务任务id查询任务关联的所有文件的文件路径
+     */
+    @Select("SELECT file_path FROM task_file WHERE task_id = #{taskId}")
+    List<String> selectFilePathsByTaskId(Long taskId);
+
+    /**
      * 插入文件记录
      *
      * @param taskFile 文件对象
@@ -55,4 +62,13 @@ public interface TaskFileMapper {
      */
     @Select("SELECT file_path FROM task_file WHERE id = #{id}")
     String selectFilePathById(@Param("id") Long id);
+
+     /**
+      * 根据任务ID删除文件记录
+      *
+      * @param taskId 任务ID
+      * @return 影响的行数
+      */
+     @Delete("DELETE FROM task_file WHERE task_id = #{taskId}")
+    void deleteByTaskId(Long taskId);
 }

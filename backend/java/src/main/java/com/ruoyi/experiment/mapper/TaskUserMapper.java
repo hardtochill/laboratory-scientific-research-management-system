@@ -11,7 +11,7 @@ public interface TaskUserMapper {
      * 删除任务用户关联
      */
     @Delete("delete from task_user where task_id = #{taskId}")
-    void deleteTaskUsers(Long taskId);
+    void deleteTaskUsersByTaskId(Long taskId);
 
     /**
      * 批量插入任务用户关联

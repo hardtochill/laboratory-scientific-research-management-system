@@ -7,6 +7,7 @@ import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.TaskStatusEnum;
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
+import com.ruoyi.experiment.mapper.TaskFileMapper;
 import com.ruoyi.experiment.mapper.TaskMapper;
 import com.ruoyi.experiment.mapper.TaskUserMapper;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
@@ -15,6 +16,8 @@ import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
+import com.ruoyi.experiment.utils.FileUtils;
+import com.ruoyi.framework.config.ExperimentConfig;
 import com.ruoyi.framework.web.domain.R;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
@@ -25,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,6 +43,8 @@ public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
     private final SysUserMapper sysUserMapper;
     private final TaskUserMapper taskUserMapper;
+    private final TaskFileMapper taskFileMapper;
+    private final ExperimentConfig experimentConfig;
     @Override
     public TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO) {
         // 1.获取分页的任务列表
@@ -199,7 +207,24 @@ public class TaskServiceImpl implements TaskService {
         // 3.删除当前任务
         taskMapper.deleteTask(taskId);
         // 4.删除任务用户关联
-        taskUserMapper.deleteTaskUsers(taskId);
+        taskUserMapper.deleteTaskUsersByTaskId(taskId);
+        // 5.删除任务关联文件
+        List<String> filePaths = taskFileMapper.selectFilePathsByTaskId(taskId);
+        if(CollectionUtils.isEmpty(filePaths)){
+            return;
+        }
+        try{
+            for (String filePath : filePaths) {
+                Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getTaskBaseDir(),filePath));
+                if (Files.exists(path)) {
+                    Files.delete(path);
+                }
+            }
+        }catch (Exception e){
+            log.error("删除任务关联文件失败", e);
+            throw new ServiceException("删除任务关联文件失败");
+        }
+        taskFileMapper.deleteByTaskId(taskId);
     }
 
     @Override
@@ -269,7 +294,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         // 2.删除旧的用户关联
-        taskUserMapper.deleteTaskUsers(taskId);
+        taskUserMapper.deleteTaskUsersByTaskId(taskId);
         // 3.添加新的用户关联
         if (!CollectionUtils.isEmpty(userIds)) {
             taskUserMapper.insertTaskUserBatch(taskId,userIds);
