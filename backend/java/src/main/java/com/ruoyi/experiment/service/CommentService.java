@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.dto.CommentDTO;
 import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
 import com.ruoyi.experiment.pojo.vo.CommentVO;
 
@@ -32,4 +33,10 @@ public interface CommentService {
      * @param commentId
      */
     void deleteComment(Long commentId);
+
+    /**
+     * 新增文献评论
+     * @param commentDTO
+     */
+    void addComment(CommentDTO commentDTO);
 }

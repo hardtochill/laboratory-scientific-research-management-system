@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -67,4 +68,10 @@ public interface CommentFileMapper {
       */
     @Delete("delete from comment_file where comment_id = #{commentId}")
     void deleteByCommentId(Long commentId);
+
+     /**
+      * 批量新增文献评论文件
+      */
+    @AutoFill(OperationTypeEnum.INSERT)
+    void insertBatch(List<CommentFile> commentFileList);
 }

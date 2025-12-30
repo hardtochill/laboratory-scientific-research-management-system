@@ -8,4 +8,11 @@
         insert into comment_file (comment_id, file_name, file_path, file_type, file_size,create_time,update_time)
         values (#{commentId}, #{fileName}, #{filePath}, #{fileType}, #{fileSize},#{createTime},#{updateTime})
     </insert>
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into comment_file (comment_id, file_name, file_path, file_type, file_size,create_time,update_time)
+        values
+        <foreach collection="commentFileList" item="item" index="index" separator=",">
+            (#{item.commentId}, #{item.fileName}, #{item.filePath}, #{item.fileType}, #{item.fileSize},#{item.createTime},#{item.updateTime})
+        </foreach>
+    </insert>
 </mapper>

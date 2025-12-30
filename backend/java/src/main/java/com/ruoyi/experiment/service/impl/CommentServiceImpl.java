@@ -2,12 +2,18 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.constant.CommentConstants;
+import com.ruoyi.experiment.enums.CommentVisibleTypeEnum;
 import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.mapper.CommentFileMapper;
 import com.ruoyi.experiment.mapper.CommentLikeMapper;
 import com.ruoyi.experiment.mapper.CommentMapper;
+import com.ruoyi.experiment.mapper.LiteratureMapper;
+import com.ruoyi.experiment.pojo.dto.CommentDTO;
 import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
+import com.ruoyi.experiment.pojo.entity.Comment;
+import com.ruoyi.experiment.pojo.entity.CommentFile;
 import com.ruoyi.experiment.pojo.entity.CommentLike;
 import com.ruoyi.experiment.pojo.vo.CommentVO;
 import com.ruoyi.experiment.service.CommentService;
@@ -18,10 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,6 +40,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
     private final CommentLikeMapper commentLikeMapper;
     private final CommentFileMapper commentFileMapper;
+    private final LiteratureMapper literatureMapper;
     private final ExperimentConfig experimentConfig;
 
     @Override
@@ -118,6 +128,65 @@ public class CommentServiceImpl implements CommentService {
             commentMapper.updateLikeCount(commentId, 1);
             return true;
         }
+    }
+
+    @Override
+    @Transactional
+    public void addComment(CommentDTO commentDTO){
+        // 1.校验parentId合法性
+        Long parentId = commentDTO.getParentId();
+        if( null==parentId
+                || parentId<CommentConstants.FIRST_PARENT_COMMENT_ID
+                || (!parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID) && null==commentMapper.selectById(parentId))){
+            throw new ServiceException("父评论ID异常");
+        }
+        // 2.校验文献是否存在
+        Long literatureId = commentDTO.getLiteratureId();
+        if(null==literatureId || null==literatureMapper.selectLiteratureById(literatureId)){
+            throw new ServiceException("文献不存在");
+        }
+        // 3.设置评论用户信息、评论时间、点赞数
+        Comment comment = new Comment();
+        comment.setParentId(commentDTO.getParentId());
+        comment.setLiteratureId(commentDTO.getLiteratureId());
+        comment.setUserId(SecurityUtils.getUserId());
+        comment.setUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        comment.setCommentContent(commentDTO.getCommentContent());
+        comment.setCommentTime(LocalDateTime.now());
+        comment.setLikeCount(0);
+        // 4.子评论统一可见范围
+        if(parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID)){
+            comment.setVisibleType(commentDTO.getVisibleType());
+        }else{
+            comment.setVisibleType(CommentVisibleTypeEnum.ALL_USER.getType());
+        }
+        // 5.插入评论记录
+        commentMapper.insert(comment);
+        List<MultipartFile> fileList = commentDTO.getFileList();
+        ArrayList<CommentFile> commentFileList = new ArrayList<>();
+        // 6.插入评论文件记录
+        if(!CollectionUtils.isEmpty(fileList)){
+            try{
+                for (MultipartFile file : fileList) {
+                    String filePath;
+                    filePath = FileUtils.uploadCommentFile(experimentConfig.getCommentBaseDir(), file);
+                    // 3.保存文件信息到数据库
+                    CommentFile commentFile = new CommentFile();
+                    commentFile.setCommentId(comment.getId());
+                    commentFile.setFileName(com.ruoyi.common.utils.file.FileUtils.getNameNotSuffix(file.getOriginalFilename()));
+                    commentFile.setFilePath(filePath);
+                    commentFile.setFileType(FileUploadUtils.getExtension(file));
+                    commentFile.setFileSize((int)file.getSize());
+
+                    commentFileList.add(commentFile);
+                }
+            }catch (Exception e){
+                log.error("评论文件上传失败", e);
+                throw new ServiceException("评论文件上传失败");
+            }
+        }
+        // 7.保存评论文件
+        commentFileMapper.insertBatch(commentFileList);
     }
 
     @Override

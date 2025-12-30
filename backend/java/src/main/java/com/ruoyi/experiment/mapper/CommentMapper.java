@@ -1,5 +1,7 @@
 package com.ruoyi.experiment.mapper;
 
+import com.ruoyi.experiment.annotations.AutoFill;
+import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Comment;
 import com.ruoyi.experiment.pojo.vo.CommentVO;
@@ -59,4 +61,10 @@ public interface CommentMapper {
       */
      @Delete("delete from comment where id = #{commentId}")
     void deleteById(Long commentId);
+
+    /**
+     * 插入评论
+     */
+    @AutoFill(OperationTypeEnum.INSERT)
+    void insert(Comment comment);
 }
