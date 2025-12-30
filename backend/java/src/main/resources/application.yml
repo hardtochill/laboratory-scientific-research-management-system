@@ -20,7 +20,10 @@ experiment:
     baseDir: ${ruoyi.profile}/task
   # 文献存储路径
   literature:
-    baseDir: ${ruoyi.profile}/literature
+     baseDir: ${ruoyi.profile}/literature
+  # 评论文件存储路径
+  comment:
+    baseDir: ${ruoyi.profile}/comment
 
 # 开发环境配置
 server:

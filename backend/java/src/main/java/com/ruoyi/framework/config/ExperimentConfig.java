@@ -19,4 +19,9 @@ public class ExperimentConfig {
      */
     @Value("${experiment.literature.baseDir}")
     private String literatureBaseDir;
+    /**
+     * 评论文件存储路径
+     */
+    @Value("${experiment.comment.baseDir}")
+    private String commentBaseDir;
 }

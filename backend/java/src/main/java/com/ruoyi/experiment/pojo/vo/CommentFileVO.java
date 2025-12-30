@@ -1,34 +1,25 @@
-package com.ruoyi.experiment.pojo.entity;
+package com.ruoyi.experiment.pojo.vo;
 
+import com.ruoyi.experiment.pojo.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
- * 文献评论文件
+ * 文献评论文件VO
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentFile extends BaseEntity {
+public class CommentFileVO extends BaseEntity {
     /**
      * 文件ID
      */
      private Long id;
      /**
-      * 评论ID
-      */
-     private Long commentId;
-     /**
       * 文件名
       */
      private String fileName;
-      /**
-       * 文件路径
-       */
-     private String filePath;
     /**
      * 文件类型
      */
