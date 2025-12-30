@@ -42,15 +42,18 @@
         <div class="comments-section">
             <div class="section-header">
                 <h2 class="section-title">评论</h2>
-                <div class="sort-controls">
-                    <el-select v-model="sortField" placeholder="排序字段" style="width: 120px" @change="handleSortChange">
-                        <el-option label="点赞数" value="likeCount" />
-                        <el-option label="评论时间" value="commentTime" />
-                    </el-select>
-                    <el-select v-model="sortOrder" placeholder="排序方式" style="width: 120px" @change="handleSortChange">
-                        <el-option label="升序" value="asc" />
-                        <el-option label="降序" value="desc" />
-                    </el-select>
+                <div class="section-actions">
+                    <el-button type="primary" @click="openCommentDialog">发表评论</el-button>
+                    <div class="sort-controls">
+                        <el-select v-model="sortField" placeholder="排序字段" style="width: 120px" @change="handleSortChange">
+                            <el-option label="点赞数" value="likeCount" />
+                            <el-option label="评论时间" value="commentTime" />
+                        </el-select>
+                        <el-select v-model="sortOrder" placeholder="排序方式" style="width: 120px" @change="handleSortChange">
+                            <el-option label="升序" value="asc" />
+                            <el-option label="降序" value="desc" />
+                        </el-select>
+                    </div>
                 </div>
             </div>
             
@@ -75,6 +78,9 @@
                                          class="like-icon"
                                          @click="handleLike(comment)"></svg-icon>
                                 <span class="like-count">{{ comment.likeCount }}</span>
+                            </div>
+                            <div class="reply-section">
+                                <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
                             </div>
                         </div>
                     </div>
@@ -128,6 +134,9 @@
                                                      @click="handleLike(childComment)"></svg-icon>
                                             <span class="like-count">{{ childComment.likeCount }}</span>
                                         </div>
+                                        <div class="reply-section">
+                                            <el-button type="text" @click="openReplyDialog(childComment.id)">回复</el-button>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -158,6 +167,88 @@
             <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="handlePagination" />
         </div>
     </div>
+
+    <!-- 发表评论对话框 -->
+    <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="showCommentDialog = false">
+        <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
+            <el-form-item label="评论内容" prop="content">
+                <el-input 
+                    v-model="commentForm.content"
+                    type="textarea"
+                    :rows="4"
+                    maxlength="500"
+                    show-word-limit
+                    placeholder="请输入评论内容（最多500字）"
+                ></el-input>
+            </el-form-item>
+            <el-form-item label="可见范围" prop="visibleType">
+                <el-radio-group v-model="commentForm.visibleType">
+                    <el-radio :label="0">仅自己可见</el-radio>
+                    <el-radio :label="1">公开</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="关联文件">
+                <el-upload
+                    ref="commentUploadRef"
+                    action="#"
+                    :auto-upload="false"
+                    :file-list="commentForm.files"
+                    :on-change="(file, fileList) => commentForm.files = fileList"
+                    :on-remove="(file, fileList) => commentForm.files = fileList"
+                    multiple
+                >
+                    <el-button type="primary">选择文件</el-button>
+                </el-upload>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="showCommentDialog = false">取消</el-button>
+                <el-button type="primary" @click="submitComment">发表</el-button>
+            </span>
+        </template>
+    </el-dialog>
+
+    <!-- 回复评论对话框 -->
+    <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="showReplyDialog = false">
+        <el-form ref="replyFormRef" :model="replyForm" label-width="80px">
+            <el-form-item label="回复内容" prop="content">
+                <el-input 
+                    v-model="replyForm.content"
+                    type="textarea"
+                    :rows="4"
+                    maxlength="500"
+                    show-word-limit
+                    placeholder="请输入回复内容（最多500字）"
+                ></el-input>
+            </el-form-item>
+            <el-form-item label="可见范围">
+                <el-radio-group v-model="replyForm.visibleType" disabled>
+                    <el-radio :label="1">公开</el-radio>
+                </el-radio-group>
+                <div style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">子评论只能设置为公开</div>
+            </el-form-item>
+            <el-form-item label="关联文件">
+                <el-upload
+                    ref="replyUploadRef"
+                    action="#"
+                    :auto-upload="false"
+                    :file-list="replyForm.files"
+                    :on-change="(file, fileList) => replyForm.files = fileList"
+                    :on-remove="(file, fileList) => replyForm.files = fileList"
+                    multiple
+                >
+                    <el-button type="primary">选择文件</el-button>
+                </el-upload>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="showReplyDialog = false">取消</el-button>
+                <el-button type="primary" @click="submitReply">回复</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup name="LiteratureDetail">
@@ -167,7 +258,7 @@ import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail } from '@/api/literature/literature'
-import { listParentComments, listChildComments, toggleLike } from '@/api/comment/comment'
+import { listParentComments, listChildComments, toggleLike, addComment } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
 
@@ -197,6 +288,23 @@ const childComments = ref({})  // { parentId: [childComments] }
 const expandedChildComments = ref([])  // 已展开的父评论ID列表
 const commentsLoading = ref(false)
 const childCommentsLoading = ref({})  // { parentId: boolean }
+
+// 发表评论相关数据
+const showCommentDialog = ref(false)
+const showReplyDialog = ref(false)
+const commentForm = ref({
+  content: '',
+  visibleType: 0, // 0: 仅自己可见, 1: 公开
+  files: []
+})
+const replyForm = ref({
+  content: '',
+  visibleType: 1, // 子评论固定为公开
+  files: []
+})
+const currentParentId = ref(null) // 当前回复的父评论ID
+const commentFormRef = ref()
+const replyFormRef = ref()
 
 /** 返回列表 */
 function goBack() {
@@ -327,6 +435,117 @@ function handleSortChange() {
 function handlePagination() {
     getParentComments()
 }
+
+/** 打开发表评论对话框 */
+function openCommentDialog() {
+    commentForm.value = {
+        content: '',
+        visibleType: 0,
+        files: []
+    }
+    showCommentDialog.value = true
+}
+
+/** 打开回复对话框 */
+function openReplyDialog(parentId) {
+    currentParentId.value = parentId
+    replyForm.value = {
+        content: '',
+        visibleType: 1,
+        files: []
+    }
+    showReplyDialog.value = true
+}
+
+/** 发表评论 */
+async function submitComment() {
+    const literatureId = route.params.id
+    if (!literatureId) {
+        ElMessage.error('文献ID错误')
+        return
+    }
+    
+    if (!commentForm.value.content.trim()) {
+        ElMessage.warning('请输入评论内容')
+        return
+    }
+    
+    if (commentForm.value.content.length > 500) {
+        ElMessage.warning('评论内容不能超过500字')
+        return
+    }
+    
+    try {
+        await addComment(
+            0, // parentId = 0 表示一级评论
+            literatureId,
+            commentForm.value.content.trim(),
+            commentForm.value.visibleType,
+            commentForm.value.files
+        )
+        
+        ElMessage.success('评论发表成功')
+        showCommentDialog.value = false
+        
+        // 刷新评论列表
+        getParentComments()
+    } catch (error) {
+        ElMessage.error('评论发表失败')
+        console.error('发表评论失败:', error)
+    }
+}
+
+/** 回复评论 */
+async function submitReply() {
+    const literatureId = route.params.id
+    if (!literatureId || !currentParentId.value) {
+        ElMessage.error('参数错误')
+        return
+    }
+    
+    if (!replyForm.value.content.trim()) {
+        ElMessage.warning('请输入回复内容')
+        return
+    }
+    
+    if (replyForm.value.content.length > 500) {
+        ElMessage.warning('回复内容不能超过500字')
+        return
+    }
+    
+    try {
+        await addComment(
+            currentParentId.value,
+            literatureId,
+            replyForm.value.content.trim(),
+            1, // 子评论固定为公开
+            replyForm.value.files
+        )
+        
+        ElMessage.success('回复发表成功')
+        showReplyDialog.value = false
+        
+        // 刷新子评论列表
+        if (expandedChildComments.value.includes(currentParentId.value)) {
+            // 重新加载该父评论的子评论
+            childComments.value[currentParentId.value] = null
+            await toggleChildComments(currentParentId.value)
+        }
+    } catch (error) {
+        ElMessage.error('回复发表失败')
+        console.error('回复失败:', error)
+    }
+}
+
+/** 文件上传处理 */
+function handleFileUpload(fileList) {
+    commentForm.value.files = fileList
+}
+
+/** 回复文件上传处理 */
+function handleReplyFileUpload(fileList) {
+    replyForm.value.files = fileList
+}
 </script>
 
 <style scoped>
@@ -396,6 +615,18 @@ function handlePagination() {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+}
+
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .section-title {
@@ -487,13 +718,20 @@ function handlePagination() {
 
 .comment-like-section {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
 }
 
 .like-section {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.reply-section {
+    display: flex;
+    align-items: center;
 }
 
 .like-icon {

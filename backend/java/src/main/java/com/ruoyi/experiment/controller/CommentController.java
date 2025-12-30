@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.controller;
 
+import com.ruoyi.experiment.pojo.dto.CommentDTO;
 import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
 import com.ruoyi.experiment.service.CommentService;
 import com.ruoyi.framework.web.controller.BaseController;
@@ -7,6 +8,9 @@ import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/comment")
@@ -47,5 +51,25 @@ public class CommentController extends BaseController {
     public AjaxResult toggleLike(@PathVariable("commentId") Long commentId) {
         boolean newLikeStatus = commentService.toggleCommentLike(commentId);
         return success(newLikeStatus);
+    }
+    /**
+     * 发表评论
+     */
+     @PostMapping("/add")
+    public AjaxResult addComment(
+            @RequestParam("parentId") Long parentId,
+            @RequestParam("literatureId") Long literatureId,
+            @RequestParam("commentContent") String commentContent,
+            @RequestParam("visibleType") Integer visibleType,
+            @RequestParam("fileList") List<MultipartFile> fileList
+     ) {
+         CommentDTO commentDTO = new CommentDTO();
+         commentDTO.setParentId(parentId);
+         commentDTO.setLiteratureId(literatureId);
+         commentDTO.setCommentContent(commentContent);
+         commentDTO.setVisibleType(visibleType);
+         commentDTO.setFileList(fileList);
+         commentService.addComment(commentDTO);
+        return success();
     }
 }

@@ -41,3 +41,28 @@ export function deleteComment(commentId) {
     method: 'delete'
   })
 }
+
+// 发表评论
+export function addComment(parentId, literatureId, commentContent, visibleType, fileList) {
+  const formData = new FormData()
+  formData.append('parentId', parentId)
+  formData.append('literatureId', literatureId)
+  formData.append('commentContent', commentContent)
+  formData.append('visibleType', visibleType)
+  
+  // 添加文件
+  if (fileList && fileList.length > 0) {
+    fileList.forEach(file => {
+      formData.append('fileList', file)
+    })
+  }
+  
+  return request({
+    url: '/comment/add',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
