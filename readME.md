@@ -1,1 +1,1 @@
-Today is the last day in 2025.
+这是一个用于实验室科研场景的工作流系统。
