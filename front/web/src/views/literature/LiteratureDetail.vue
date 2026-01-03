@@ -199,7 +199,7 @@
         </el-dialog>
 
         <!-- 回复评论对话框 -->
-        <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="showReplyDialog = false">
+        <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="closeReplyDialog">
             <el-form ref="replyFormRef" :model="replyForm" label-width="80px">
                 <el-form-item label="回复内容" prop="content">
                     <el-input v-model="replyForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
@@ -213,15 +213,15 @@
                 </el-form-item>
                 <el-form-item label="关联文件">
                     <el-upload ref="replyUploadRef" action="#" :auto-upload="false" :file-list="replyForm.files"
-                        :on-change="(file, fileList) => replyForm.files = fileList"
-                        :on-remove="(file, fileList) => replyForm.files = fileList" multiple>
+                        :on-change="handleReplyFileChange"
+                        :on-remove="handleReplyFileRemove" multiple>
                         <el-button type="primary">选择文件</el-button>
                     </el-upload>
                 </el-form-item>
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="showReplyDialog = false">取消</el-button>
+                    <el-button @click="closeReplyDialog">取消</el-button>
                     <el-button type="primary" @click="submitReply">回复</el-button>
                 </span>
             </template>
@@ -417,23 +417,45 @@ function handlePagination() {
 
 /** 打开发表评论对话框 */
 function openCommentDialog() {
-    commentForm.value = {
-        content: '',
-        visibleType: 0,
-        files: []
-    }
+    commentForm.value.content = ''
+    commentForm.value.visibleType = 0
+    commentForm.value.files = []
     showCommentDialog.value = true
 }
 
 /** 打开回复对话框 */
 function openReplyDialog(parentId) {
     currentParentId.value = parentId
-    replyForm.value = {
-        content: '',
-        visibleType: 1,
-        files: []
-    }
+    replyForm.value.content = ''
+    replyForm.value.visibleType = 1
+    replyForm.value.files = []
     showReplyDialog.value = true
+    
+    // 确保表单对象存在
+    console.log('打开回复对话框，parentId:', parentId)
+    console.log('当前replyForm.files:', replyForm.value.files)
+}
+
+/** 关闭回复对话框 */
+function closeReplyDialog() {
+    showReplyDialog.value = false
+    // 重置表单
+    replyForm.value.content = ''
+    replyForm.value.visibleType = 1
+    replyForm.value.files = []
+    currentParentId.value = null
+}
+
+/** 处理回复文件变化 */
+function handleReplyFileChange(file, fileList) {
+    replyForm.value.files = fileList
+    console.log('回复文件变化:', fileList)
+}
+
+/** 处理回复文件移除 */
+function handleReplyFileRemove(file, fileList) {
+    replyForm.value.files = fileList
+    console.log('回复文件移除:', fileList)
 }
 
 /** 发表评论 */
@@ -493,16 +515,25 @@ async function submitReply() {
     }
     
     try {
+        // 确保文件列表正确传递，提取原始File对象
+        let fileList = []
+        if (replyForm.value.files && Array.isArray(replyForm.value.files)) {
+            fileList = replyForm.value.files.map(file => file.raw || file)
+        }
+        
+        console.log('子评论回复文件列表:', fileList)
+        console.log('原始文件列表:', replyForm.value.files)
+        
         await addComment(
             currentParentId.value,
             literatureId,
             replyForm.value.content.trim(),
             1, // 子评论固定为公开
-            replyForm.value.files
+            fileList
         )
         
         ElMessage.success('回复发表成功')
-        showReplyDialog.value = false
+        closeReplyDialog()
         
         // 刷新子评论列表
         if (expandedChildComments.value.includes(currentParentId.value)) {

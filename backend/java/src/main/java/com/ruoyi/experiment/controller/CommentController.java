@@ -61,7 +61,7 @@ public class CommentController extends BaseController {
             @RequestParam("literatureId") Long literatureId,
             @RequestParam("commentContent") String commentContent,
             @RequestParam("visibleType") Integer visibleType,
-            @RequestParam("fileList") List<MultipartFile> fileList
+            @RequestParam(value="fileList", required = false) List<MultipartFile> fileList
      ) {
          CommentDTO commentDTO = new CommentDTO();
          commentDTO.setParentId(parentId);

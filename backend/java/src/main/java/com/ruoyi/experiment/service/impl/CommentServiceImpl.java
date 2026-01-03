@@ -163,7 +163,7 @@ public class CommentServiceImpl implements CommentService {
         // 5.插入评论记录
         commentMapper.insert(comment);
         List<MultipartFile> fileList = commentDTO.getFileList();
-        ArrayList<CommentFile> commentFileList = new ArrayList<>();
+        List<CommentFile> commentFileList = new ArrayList<>();
         // 6.插入评论文件记录
         if(!CollectionUtils.isEmpty(fileList)){
             try{
@@ -184,9 +184,9 @@ public class CommentServiceImpl implements CommentService {
                 log.error("评论文件上传失败", e);
                 throw new ServiceException("评论文件上传失败");
             }
+            // 7.保存评论文件
+            commentFileMapper.insertBatch(commentFileList);
         }
-        // 7.保存评论文件
-        commentFileMapper.insertBatch(commentFileList);
     }
 
     @Override
@@ -194,7 +194,7 @@ public class CommentServiceImpl implements CommentService {
     public void deleteComment(Long commentId) {
         // 1.删除子评论
         List<Long> childIds = commentMapper.selectChildIds(commentId);
-        if(CollectionUtils.isEmpty(childIds)){
+        if(!CollectionUtils.isEmpty(childIds)){
             for (Long childId : childIds) {
                 deleteComment(childId);
             }

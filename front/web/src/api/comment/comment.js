@@ -50,10 +50,16 @@ export function addComment(parentId, literatureId, commentContent, visibleType, 
   formData.append('commentContent', commentContent)
   formData.append('visibleType', visibleType)
   
-  // 添加文件
+  // 添加文件 - 从Element Plus文件对象中提取原始File对象
   if (fileList && fileList.length > 0) {
     fileList.forEach(file => {
-      formData.append('fileList', file)
+      // Element Plus文件对象中，原始File对象存储在raw属性中
+      if (file.raw) {
+        formData.append('fileList', file.raw)
+      } else {
+        // 如果没有raw属性，直接使用file对象
+        formData.append('fileList', file)
+      }
     })
   }
   
