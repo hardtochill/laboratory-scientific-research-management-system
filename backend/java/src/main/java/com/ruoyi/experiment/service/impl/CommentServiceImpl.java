@@ -19,6 +19,8 @@ import com.ruoyi.experiment.pojo.vo.CommentVO;
 import com.ruoyi.experiment.service.CommentService;
 import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
+import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentLikeMapper commentLikeMapper;
     private final CommentFileMapper commentFileMapper;
     private final LiteratureMapper literatureMapper;
+    private final SysUserMapper sysUserMapper;
     private final ExperimentConfig experimentConfig;
 
     @Override
@@ -135,9 +138,10 @@ public class CommentServiceImpl implements CommentService {
     public void addComment(CommentDTO commentDTO){
         // 1.校验parentId合法性
         Long parentId = commentDTO.getParentId();
+        Comment parentComment = commentMapper.selectById(parentId);
         if( null==parentId
                 || parentId<CommentConstants.FIRST_PARENT_COMMENT_ID
-                || (!parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID) && null==commentMapper.selectById(parentId))){
+                || (!parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID) && null==parentComment)){
             throw new ServiceException("父评论ID异常");
         }
         // 2.校验文献是否存在
@@ -145,26 +149,33 @@ public class CommentServiceImpl implements CommentService {
         if(null==literatureId || null==literatureMapper.selectLiteratureById(literatureId)){
             throw new ServiceException("文献不存在");
         }
-        // 3.设置评论用户信息、评论时间、点赞数
+        // 3.对于发表评论，其receiveUser相关信息为null
+        if(parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID)){
+            commentDTO.setReceiveUserId(null);
+            commentDTO.setReceiveUserNickName(null);
+        }
+        // 4.设置评论用户信息、评论时间、点赞数
         Comment comment = new Comment();
         comment.setParentId(commentDTO.getParentId());
         comment.setLiteratureId(commentDTO.getLiteratureId());
         comment.setUserId(SecurityUtils.getUserId());
         comment.setUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        comment.setReceiveUserId(commentDTO.getReceiveUserId());
+        comment.setReceiveUserNickName(commentDTO.getReceiveUserNickName());
         comment.setCommentContent(commentDTO.getCommentContent());
         comment.setCommentTime(LocalDateTime.now());
         comment.setLikeCount(0);
-        // 4.子评论统一可见范围
+        // 5.子评论统一可见范围
         if(parentId.equals(CommentConstants.FIRST_PARENT_COMMENT_ID)){
             comment.setVisibleType(commentDTO.getVisibleType());
         }else{
             comment.setVisibleType(CommentVisibleTypeEnum.ALL_USER.getType());
         }
-        // 5.插入评论记录
+        // 6.插入评论记录
         commentMapper.insert(comment);
         List<MultipartFile> fileList = commentDTO.getFileList();
         List<CommentFile> commentFileList = new ArrayList<>();
-        // 6.插入评论文件记录
+        // 7.插入评论文件记录
         if(!CollectionUtils.isEmpty(fileList)){
             try{
                 for (MultipartFile file : fileList) {
@@ -184,7 +195,7 @@ public class CommentServiceImpl implements CommentService {
                 log.error("评论文件上传失败", e);
                 throw new ServiceException("评论文件上传失败");
             }
-            // 7.保存评论文件
+            // 8.保存评论文件
             commentFileMapper.insertBatch(commentFileList);
         }
     }

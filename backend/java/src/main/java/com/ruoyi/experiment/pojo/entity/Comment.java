@@ -34,6 +34,14 @@ public class Comment extends BaseEntity{
      */
     private String userNickName;
     /**
+     * 发表用户id
+     */
+    private Long receiveUserId;
+    /**
+     * 发表用户昵称
+     */
+    private String receiveUserNickName;
+    /**
      * 评论内容
      */
      private String commentContent;

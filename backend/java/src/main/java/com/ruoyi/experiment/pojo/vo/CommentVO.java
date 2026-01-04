@@ -14,7 +14,10 @@ import java.util.List;
 public class CommentVO {
     private Long id;
     private Long parentId;
+    private Long userId;
     private String userNickName;
+    private Long receiveUserId;
+    private String receiveUserNickName;
     private String commentContent;
     private LocalDateTime commentTime;
     private Integer likeCount;

@@ -23,6 +23,14 @@ public class CommentDTO {
      */
     private Long literatureId;
     /**
+     * 用于回复评论，表示被回复评论的userId
+     */
+    private Long receiveUserId;
+    /**
+     * 用于回复评论，表示被回复评论的用户昵称
+     */
+    private String receiveUserNickName;
+    /**
      * 评论内容
      */
     private String commentContent;

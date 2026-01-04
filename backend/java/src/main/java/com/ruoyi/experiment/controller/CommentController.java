@@ -61,11 +61,15 @@ public class CommentController extends BaseController {
             @RequestParam("literatureId") Long literatureId,
             @RequestParam("commentContent") String commentContent,
             @RequestParam("visibleType") Integer visibleType,
+            @RequestParam(value = "receiveUserId" ,required = false) Long receiveUserId,
+            @RequestParam(value = "receiveUserNickName" ,required = false) String receiveUserNickName,
             @RequestParam(value="fileList", required = false) List<MultipartFile> fileList
      ) {
          CommentDTO commentDTO = new CommentDTO();
          commentDTO.setParentId(parentId);
          commentDTO.setLiteratureId(literatureId);
+         commentDTO.setReceiveUserId(receiveUserId);
+         commentDTO.setReceiveUserNickName(receiveUserNickName);
          commentDTO.setCommentContent(commentContent);
          commentDTO.setVisibleType(visibleType);
          commentDTO.setFileList(fileList);

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.CommentMapper">
     <select id="selectParentCommentListForTeacher" resultType="com.ruoyi.experiment.pojo.vo.CommentVO">
-        select id,parent_id,user_nick_name,comment_content,comment_time,like_count,visible_type
+        select id,parent_id,user_id,user_nick_name,receive_user_id,receive_user_nick_name,comment_content,comment_time,like_count,visible_type
         from comment
         where literature_id=#{literatureId} and parent_id=#{parentId}
         <if test="sortField != null and sortField != ''">
@@ -15,7 +15,7 @@
         </if>
     </select>
     <select id="selectParentCommentListForStudent" resultType="com.ruoyi.experiment.pojo.vo.CommentVO">
-        select id,parent_id,user_nick_name,comment_content,comment_time,like_count,visible_type
+        select id,parent_id,user_id,user_nick_name,receive_user_id,receive_user_nick_name,comment_content,comment_time,like_count,visible_type
         from comment
         where literature_id=#{literatureId} and parent_id=#{parentId} and (visible_type=2 or user_id=#{userId})
         <if test="sortField != null and sortField != ''">
@@ -27,7 +27,7 @@
     </select>
 
     <select id="selectChildCommentListForTeacher" resultType="com.ruoyi.experiment.pojo.vo.CommentVO">
-        select id,parent_id,user_nick_name,comment_content,comment_time,like_count,visible_type
+        select id,parent_id,user_id,user_nick_name,receive_user_id,receive_user_nick_name,comment_content,comment_time,like_count,visible_type
         from comment
         where parent_id=#{parentId}
         <if test="sortField != null and sortField != ''">
@@ -38,7 +38,7 @@
         </if>
     </select>
     <select id="selectChildCommentListForStudent" resultType="com.ruoyi.experiment.pojo.vo.CommentVO">
-        select id,parent_id,user_nick_name,comment_content,comment_time,like_count,visible_type
+        select id,parent_id,user_id,user_nick_name,receive_user_id,receive_user_nick_name,comment_content,comment_time,like_count,visible_type
         from comment
         where parent_id=#{parentId}
         <if test="sortField != null and sortField != ''">
