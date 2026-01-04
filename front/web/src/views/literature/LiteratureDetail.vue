@@ -83,7 +83,7 @@
                                     {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
                                 </span>
                             </div>
-                            <div class="actions-right">
+                           <div class="actions-right">
                                 <div class="like-section" style="margin-bottom: 4px;">
                                     <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                         class="like-icon" @click="handleLike(comment)"></svg-icon>
@@ -91,6 +91,10 @@
                                 </div>
                                 <div class="reply-section">
                                     <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
+                                </div>
+                                <div class="delete-section">
+                                    <el-button v-if="isHasTeacherRole || comment.userId === currentUserId" type="text"
+                                        class="delete-btn" @click="handleDeleteComment(comment)">删除</el-button>
                                 </div>
                             </div>
                         </div>
@@ -145,6 +149,12 @@
                                                 <el-button type="text"
                                                     @click="openReplyDialog(childComment.id)">回复</el-button>
                                             </div>
+                                            <div class="delete-section">
+                                                <el-button v-if="isHasTeacherRole || childComment.userId === currentUserId" 
+                                                          type="text" 
+                                                          class="delete-btn"
+                                                          @click="handleDeleteComment(childComment)">删除</el-button>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -193,9 +203,13 @@
                     </div>
                 </el-form-item>
                 <el-form-item label="关联文件">
-                    <el-upload ref="commentUploadRef" action="#" :auto-upload="false" :file-list="commentForm.files"
-                        :on-change="(fileList) => commentForm.files = fileList"
-                        :on-remove="(fileList) => commentForm.files = fileList" multiple>
+                    <el-upload ref="commentUploadRef" 
+                              action="#" 
+                              :auto-upload="false" 
+                              v-model:file-list="commentForm.files"
+                              :on-change="handleFileChange"
+                              :on-remove="handleFileRemove"
+                              multiple>
                         <el-button type="primary">选择文件</el-button>
                     </el-upload>
                 </el-form-item>
@@ -253,18 +267,25 @@
 <script setup name="LiteratureDetail">
 import { ref, onActivated, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from "vue-router"
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail } from '@/api/literature/literature'
-import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail } from '@/api/comment/comment'
+import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail, deleteComment } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
+import useUserStore from '@/store/modules/user'
 
 
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
+
+// 用户角色相关数据
+const userRoles = ref([])
+const isHasTeacherRole = ref(false)
+const currentUserId = ref(null)
 
 // 文献详情数据
 const literature = ref({})
@@ -296,6 +317,7 @@ const commentForm = ref({
   files: []
 })
 const commentFormType = ref('comment') // 'comment' | 'reply'
+const commentUploadRef = ref(null) // 文件上传组件引用
 const currentParentId = ref(null) // 当前回复的父评论ID
 const currentTargetId = ref(null) // 当前点击的目标评论ID（用于回复）
 const parentCommentId = ref(null) // 父评论ID（用于刷新）
@@ -315,6 +337,18 @@ const commentDialogTitle = computed(() => {
 const commentFormLabel = computed(() => {
   return commentFormType.value === 'comment' ? '评论内容' : '回复内容'
 })
+
+/** 检查用户是否含有teacher角色 */
+function checkUserRoles() {
+    userRoles.value = userStore.roles || []
+    currentUserId.value = userStore.id || null
+    isHasTeacherRole.value = userRoles.value.some(role =>
+        role === 'teacher' ||
+        role.includes('teacher') ||
+        role.roleName === 'teacher' ||
+        role.roleKey === 'teacher'
+    )
+}
 
 /** 返回列表 */
 function goBack() {
@@ -356,10 +390,12 @@ async function getDetail() {
 onActivated(() => {
     getDetail()
     getParentComments()
+    checkUserRoles()
 })
 onMounted(() => {
     getDetail()
     getParentComments()
+    checkUserRoles()
 })
 
 /** 获取父评论列表 */
@@ -416,7 +452,7 @@ async function toggleChildComments(parentId) {
     }
 }
 
-/** 刷新指定父评论的子评论 - 性能优化版本 */
+/** 刷新指定父评论的子评论 */
 async function refreshChildCommentsForParent(parentId) {
     // 如果该父评论已展开，直接刷新其子评论数据，保持展开状态
     if (expandedChildComments.value.includes(parentId)) {
@@ -548,6 +584,12 @@ function closeCommentDialog() {
     parentCommentId.value = null
     targetCommentUserId.value = null
     targetCommentUserNickName.value = null
+    
+    // 手动清空上传组件的文件列表
+    const uploadRef = commentUploadRef.value
+    if (uploadRef && uploadRef.clearFiles) {
+        uploadRef.clearFiles()
+    }
 }
 
 /** 获取用户信息 */
@@ -580,7 +622,88 @@ function closeUserInfoDialog() {
     userInfoData.value = {}
 }
 
-/** 发表评论/回复评论 - 通用方法 */
+/** 删除评论 */
+async function handleDeleteComment(comment) {
+    // 确认删除
+    try {
+        await ElMessageBox.confirm(
+            '确定要删除这条评论吗？删除后无法恢复。', 
+            '删除确认', 
+            {
+                confirmButtonText: '确定删除',
+                cancelButtonText: '取消',
+                type: 'warning',
+            }
+        )
+    } catch {
+        // 用户取消删除
+        return
+    }
+
+    try {
+        await deleteComment(comment.id)
+        ElMessage.success('删除成功')
+        
+        // 更新UI - 参考发表评论的刷新逻辑
+        const isChildComment = comment.parentId && comment.parentId !== 0
+        
+        if (isChildComment) {
+            // 这是一个子评论，删除后需要：
+            // 1. 刷新父评论列表（更新hasChildComments状态）
+            // 2. 刷新该父评论的子评论列表（保持展开状态）
+            await getParentComments()
+            await refreshChildCommentsForParent(comment.parentId)
+        } else {
+            // 这是一个父评论，删除后需要：
+            // 1. 刷新父评论列表
+            // 2. 从展开列表中移除被删除的父评论
+            // 3. 刷新其他已展开的父评论的子评论数据
+            await getParentComments()
+            
+            // 从展开列表中移除被删除的父评论ID
+            const deletedParentIndex = expandedChildComments.value.indexOf(comment.id)
+            if (deletedParentIndex > -1) {
+                expandedChildComments.value.splice(deletedParentIndex, 1)
+            }
+            
+            // 刷新其他已展开的父评论的子评论数据
+            if (expandedChildComments.value.length > 0) {
+                for (const parentId of expandedChildComments.value) {
+                    // 清除缓存，强制重新加载
+                    childComments.value[parentId] = null
+                    await refreshChildCommentsForParent(parentId)
+                }
+            }
+        }
+    } catch (error) {
+        console.error('删除评论失败:', error)
+        ElMessage.error('删除评论失败')
+    }
+}
+
+/** 处理文件选择变化 */
+function handleFileChange(file, fileList) {
+    // 检查文件大小 (50MB限制)
+    const maxSize = 50 * 1024 * 1024 // 50MB
+    if (file.size > maxSize) {
+        ElMessage.warning(`文件 ${file.name} 大小超过50MB限制，请重新选择`)
+        // 移除超过大小限制的文件
+        const index = fileList.findIndex(f => f.uid === file.uid)
+        if (index > -1) {
+            fileList.splice(index, 1)
+        }
+        return
+    }
+    // 更新文件列表
+    commentForm.value.files = fileList
+}
+
+/** 处理文件移除 */
+function handleFileRemove(file, fileList) {
+    commentForm.value.files = fileList
+}
+
+/** 发表评论/回复评论 */
 async function submitComment() {
     const literatureId = route.params.id
     if (!literatureId) {
@@ -897,12 +1020,25 @@ async function submitComment() {
 .file-link {
     color: #409eff !important;
     font-size: 14px;
-    margin-right: 10px;
-    padding: 0 !important;
+}
+.reply-section {
+    margin-right: 6x;
     height: auto !important;
 }
 
 .file-link:hover {
+    text-decoration: underline;
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    color: #f56c6c !important;
+    margin-right: 6px;
+    height: auto !important;
+}
+
+.delete-btn:hover {
+    color: #c45656 !important;
     text-decoration: underline;
 }
 
@@ -982,5 +1118,25 @@ async function submitComment() {
     text-align: center;
     color: #909399;
     padding: 40px 0;
+}
+
+/* 文件上传组件样式 */
+.el-upload__tip {
+    color: #909399;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-top: 8px;
+}
+
+.el-upload-list {
+    margin-top: 8px;
+}
+
+.el-upload-list__item {
+    transition: all 0.3s;
+}
+
+.el-upload-list__item:hover {
+    background-color: #f5f7fa;
 }
 </style>

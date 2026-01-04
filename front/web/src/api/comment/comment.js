@@ -34,14 +34,6 @@ export function toggleLike(commentId) {
   })
 }
 
-// 删除评论
-export function deleteComment(commentId) {
-  return request({
-    url: `/comment/delete/${commentId}`,
-    method: 'delete'
-  })
-}
-
 // 发表评论
 export function addComment(parentId, literatureId, commentContent, visibleType, fileList, receiveUserId = null, receiveUserNickName = null) {
   const formData = new FormData()
@@ -84,5 +76,13 @@ export function getCommentUserDetail(userId) {
   return request({
     url: `/comment/getCommentUserDetail/${userId}`,
     method: 'get',
+  })
+}
+
+// 删除评论
+export function deleteComment(commentId) {
+  return request({
+    url: `/comment/delete/${commentId}`,
+    method: 'delete'
   })
 }
