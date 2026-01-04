@@ -43,12 +43,18 @@ export function deleteComment(commentId) {
 }
 
 // 发表评论
-export function addComment(parentId, literatureId, commentContent, visibleType, fileList) {
+export function addComment(parentId, literatureId, commentContent, visibleType, fileList, receiveUserId = null, receiveUserNickName = null) {
   const formData = new FormData()
   formData.append('parentId', parentId)
   formData.append('literatureId', literatureId)
   formData.append('commentContent', commentContent)
   formData.append('visibleType', visibleType)
+  
+  // 添加接收用户ID（用于回复评论时指定被回复的用户）
+  formData.append('receiveUserId', receiveUserId !== null && receiveUserId !== undefined ? receiveUserId : '')
+  
+  // 添加接收用户昵称（用于回复评论时显示@用户）
+  formData.append('receiveUserNickName', receiveUserNickName !== null && receiveUserNickName !== undefined ? receiveUserNickName : '')
   
   // 添加文件 - 从Element Plus文件对象中提取原始File对象
   if (fileList && fileList.length > 0) {
@@ -70,5 +76,13 @@ export function addComment(parentId, literatureId, commentContent, visibleType, 
     headers: {
       'Content-Type': 'multipart/form-data'
     }
+  })
+}
+
+// 获取评论用户详情
+export function getCommentUserDetail(userId) {
+  return request({
+    url: `/comment/getCommentUserDetail/${userId}`,
+    method: 'get',
   })
 }

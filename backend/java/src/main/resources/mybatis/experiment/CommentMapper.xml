@@ -49,8 +49,8 @@
         </if>
     </select>
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into comment(parent_id, literature_id, user_id, user_nick_name, comment_content, comment_time, like_count, visible_type, create_time, update_time)
+        insert into comment(parent_id, literature_id, user_id, user_nick_name, receive_user_id, receive_user_nick_name, comment_content, comment_time, like_count, visible_type, create_time, update_time)
         VALUES
-                (#{parentId}, #{literatureId}, #{userId}, #{userNickName}, #{commentContent}, #{commentTime}, #{likeCount}, #{visibleType}, #{createTime}, #{updateTime})
+                (#{parentId}, #{literatureId}, #{userId}, #{userNickName}, #{receiveUserId}, #{receiveUserNickName}, #{commentContent}, #{commentTime}, #{likeCount}, #{visibleType}, #{createTime}, #{updateTime})
     </insert>
 </mapper>

@@ -79,7 +79,7 @@ public class CommentController extends BaseController {
     /**
      * 获取评论用户的信息
      */
-    @GetMapping("/userDetail/{userId}")
+    @GetMapping("/getCommentUserDetail/{userId}")
     public AjaxResult getCommentUserDetail(@PathVariable("userId") Long userId) {
         return success(commentService.getCommentUserDetail(userId));
     }

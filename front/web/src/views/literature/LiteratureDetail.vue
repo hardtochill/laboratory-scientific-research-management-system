@@ -65,7 +65,7 @@
                     <div v-for="comment in parentComments" :key="comment.id" class="comment-item">
                         <div class="comment-header">
                             <div class="user-info">
-                                <span class="user-nickname">{{ comment.userNickName }}</span>
+                                <span class="user-nickname" @click="getUserInfo(comment.userId)" style="cursor: pointer;">{{ comment.userNickName }}</span>
                             </div>
                             <div class="comment-time">
                                 {{ formatDate(comment.commentTime) }}
@@ -73,6 +73,7 @@
                         </div>
 
                         <div class="comment-content">
+                            <span v-if="comment.receiveUserNickName" class="reply-prefix" @click="getUserInfo(comment.receiveUserId)" style="cursor: pointer;">回复@{{ comment.receiveUserNickName }}：</span>
                             {{ comment.commentContent }}
                         </div>
 
@@ -116,7 +117,7 @@
                                     class="child-comment-item">
                                     <div class="comment-header">
                                         <div class="user-info">
-                                            <span class="user-nickname">{{ childComment.userNickName }}</span>
+                                            <span class="user-nickname" @click="getUserInfo(childComment.userId)" style="cursor: pointer;">{{ childComment.userNickName }}</span>
                                         </div>
                                         <div class="comment-time">
                                             {{ formatDate(childComment.commentTime) }}
@@ -124,6 +125,11 @@
                                     </div>
 
                                     <div class="comment-content">
+                                        <span v-if="childComment.receiveUserNickName">
+                                            回复
+                                            <span class="reply-prefix" @click="getUserInfo(childComment.receiveUserId)" style="cursor: pointer;">@{{ childComment.receiveUserNickName}}</span>
+                                            : 
+                                        </span>
                                         {{ childComment.commentContent }}
                                     </div>
 
@@ -190,8 +196,8 @@
                 </el-form-item>
                 <el-form-item label="关联文件">
                     <el-upload ref="commentUploadRef" action="#" :auto-upload="false" :file-list="commentForm.files"
-                        :on-change="(file, fileList) => commentForm.files = fileList"
-                        :on-remove="(file, fileList) => commentForm.files = fileList" multiple>
+                        :on-change="(fileList) => commentForm.files = fileList"
+                        :on-remove="(fileList) => commentForm.files = fileList" multiple>
                         <el-button type="primary">选择文件</el-button>
                     </el-upload>
                 </el-form-item>
@@ -200,6 +206,46 @@
                 <span class="dialog-footer">
                     <el-button @click="closeCommentDialog">取消</el-button>
                     <el-button type="primary" @click="submitComment">{{ commentFormType === 'comment' ? '发表' : '回复' }}</el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- 用户信息弹窗 -->
+        <el-dialog v-model="showUserInfoDialog" title="用户信息" width="500px" @close="closeUserInfoDialog">
+            <div v-loading="userInfoLoading" class="user-info-content">
+                <div v-if="userInfoData && Object.keys(userInfoData).length > 0" class="user-info-item">
+                    <div class="info-row">
+                        <span class="label">用户名：</span>
+                        <span class="value">{{ userInfoData.userName || '-' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">昵称：</span>
+                        <span class="value">{{ userInfoData.userNickName || '-' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">邮箱：</span>
+                        <span class="value">{{ userInfoData.email || '-' }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">电话：</span>
+                        <span class="value">{{ userInfoData.phone || '-' }}</span>
+                    </div>
+                    <div class="info-row" v-if="userInfoData.sysRoles && userInfoData.sysRoles.length > 0">
+                        <span class="label">角色：</span>
+                        <span class="value">
+                            <el-tag v-for="role in userInfoData.sysRoles" :key="role.roleId" size="small" style="margin-right: 5px;">
+                                {{ role.roleName }}
+                            </el-tag>
+                        </span>
+                    </div>
+                </div>
+                <div v-else class="no-data">
+                    暂无用户信息
+                </div>
+            </div>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button type="primary" @click="closeUserInfoDialog">确定</el-button>
                 </span>
             </template>
         </el-dialog>
@@ -213,7 +259,7 @@ import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail } from '@/api/literature/literature'
-import { listParentComments, listChildComments, toggleLike, addComment } from '@/api/comment/comment'
+import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
 
@@ -255,6 +301,13 @@ const commentFormType = ref('comment') // 'comment' | 'reply'
 const currentParentId = ref(null) // 当前回复的父评论ID
 const currentTargetId = ref(null) // 当前点击的目标评论ID（用于回复）
 const parentCommentId = ref(null) // 父评论ID（用于刷新）
+const targetCommentUserId = ref(null) // 目标评论的userId（用于receiveUserId）
+const targetCommentUserNickName = ref(null) // 目标评论的userNickName（用于receiveUserNickName）
+
+// 用户信息弹窗相关状态
+const showUserInfoDialog = ref(false)
+const userInfoData = ref({})
+const userInfoLoading = ref(false)
 
 // 计算属性
 const commentDialogTitle = computed(() => {
@@ -430,6 +483,7 @@ function openCommentDialog() {
     currentParentId.value = null
     currentTargetId.value = null
     parentCommentId.value = null
+    targetCommentUserId.value = null
     showCommentDialog.value = true
 }
 
@@ -447,21 +501,32 @@ function openReplyDialog(targetCommentId) {
         // 点击的是主评论的回复按钮
         currentParentId.value = targetCommentId
         parentCommentId.value = targetCommentId
+        
+        // 获取主评论的userId和userNickName，用于receiveUserId和receiveUserNickName
+        const targetComment = parentComments.value.find(comment => comment.id === targetCommentId)
+        targetCommentUserId.value = targetComment ? targetComment.userId : null
+        targetCommentUserNickName.value = targetComment ? targetComment.userNickName : null
     } else {
         // 点击的是子评论的回复按钮，需要找到其所属的主评论
         let parentComment = null
+        let targetComment = null
+        
         for (const comment of parentComments.value) {
             const childCommentsList = childComments.value[comment.id] || []
             const isChildComment = childCommentsList.some(child => child.id === targetCommentId)
             if (isChildComment) {
                 parentComment = comment
+                targetComment = childCommentsList.find(child => child.id === targetCommentId)
                 break
             }
         }
         
-        if (parentComment) {
+        if (parentComment && targetComment) {
             currentParentId.value = parentComment.id
             parentCommentId.value = parentComment.id
+            // 保存子评论的userId和userNickName作为receiveUserId和receiveUserNickName
+            targetCommentUserId.value = targetComment.userId
+            targetCommentUserNickName.value = targetComment.userNickName
         } else {
             console.error('找不到所属的主评论，targetCommentId:', targetCommentId)
             ElMessage.error('回复失败：找不到所属的评论')
@@ -473,7 +538,7 @@ function openReplyDialog(targetCommentId) {
     currentTargetId.value = targetCommentId
     showCommentDialog.value = true
     
-    console.log('打开回复对话框，targetCommentId:', targetCommentId, 'parentId:', currentParentId.value)
+    console.log('打开回复对话框，targetCommentId:', targetCommentId, 'parentId:', currentParentId.value, 'targetUserId:', targetCommentUserId.value, 'targetUserNickName:', targetCommentUserNickName.value)
     console.log('当前commentForm.files:', commentForm.value.files)
 }
 
@@ -488,6 +553,38 @@ function closeCommentDialog() {
     currentParentId.value = null
     currentTargetId.value = null
     parentCommentId.value = null
+    targetCommentUserId.value = null
+    targetCommentUserNickName.value = null
+}
+
+/** 获取用户信息 */
+async function getUserInfo(userId) {
+    if (!userId) {
+        ElMessage.warning('用户ID无效')
+        return
+    }
+    
+    try {
+        userInfoLoading.value = true
+        const response = await getCommentUserDetail(userId)
+        if (response.code === 200) {
+            userInfoData.value = response.data || {}
+            showUserInfoDialog.value = true
+        } else {
+            ElMessage.error(response.msg || '获取用户信息失败')
+        }
+    } catch (error) {
+        console.error('获取用户信息失败:', error)
+        ElMessage.error('获取用户信息失败')
+    } finally {
+        userInfoLoading.value = false
+    }
+}
+
+/** 关闭用户信息弹窗 */
+function closeUserInfoDialog() {
+    showUserInfoDialog.value = false
+    userInfoData.value = {}
 }
 
 /** 发表评论/回复评论 - 通用方法 */
@@ -516,7 +613,8 @@ async function submitComment() {
                 literatureId,
                 commentForm.value.content.trim(),
                 commentForm.value.visibleType,
-                commentForm.value.files
+                commentForm.value.files,
+                null // 发表评论不携带receiveUserId
             )
             
             ElMessage.success('评论发表成功')
@@ -544,7 +642,9 @@ async function submitComment() {
                 literatureId,
                 commentForm.value.content.trim(),
                 2, // 子评论固定为公开
-                commentForm.value.files
+                commentForm.value.files,
+                targetCommentUserId.value, // 传递目标评论的userId作为receiveUserId
+                targetCommentUserNickName.value // 传递目标评论的userNickName作为receiveUserNickName
             )
             
             ElMessage.success('回复发表成功')
@@ -849,5 +949,45 @@ async function submitComment() {
     padding: 40px 20px;
     color: #909399;
     font-size: 16px;
+}
+
+/* 回复前缀样式 */
+.reply-prefix {
+    color: #409eff;
+    font-weight: 500;
+}
+
+/* 用户信息弹窗样式 */
+.user-info-content {
+    padding: 10px 0;
+}
+
+.user-info-item {
+    line-height: 1.8;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.info-row .label {
+    font-weight: 500;
+    color: #333;
+    min-width: 80px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.info-row .value {
+    color: #666;
+    flex: 1;
+}
+
+.no-data {
+    text-align: center;
+    color: #909399;
+    padding: 40px 0;
 }
 </style>
