@@ -72,6 +72,10 @@
                             </div>
                         </div>
 
+                       <div class="comment-content">
+                             {{ comment.commentContent }}
+                        </div>
+
                         <div class="comment-actions-row">
                             <div class="actions-left">
                                 <span v-if="comment.hasChildComments" class="view-child-btn-inline"
@@ -121,7 +125,6 @@
 
                                     <div class="comment-content">
                                         <span v-if="childComment.receiveUserNickName">
-                                            回复
                                             <span class="reply-prefix" @click="getUserInfo(childComment.receiveUserId)" style="cursor: pointer;">@{{ childComment.receiveUserNickName}}</span>
                                             : 
                                         </span>
@@ -797,7 +800,7 @@ async function submitComment() {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
 }
 
 .user-info .user-nickname {
@@ -815,7 +818,7 @@ async function submitComment() {
     line-height: 1.6;
     color: #333;
     font-size: 15px;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .comment-actions-row {
