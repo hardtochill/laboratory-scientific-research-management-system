@@ -94,14 +94,12 @@ public class CommentServiceImpl implements CommentService {
             commentVOList = commentMapper.selectChildCommentListForStudent(commentQueryDTO);
         }
         // 3.查询评论关联文件列表
-        // 4.查询子评论的子评论数量
-        // 5.标记是否点赞
+        // 4.标记是否点赞
         List<Long> likedCommentIds = commentLikeMapper.selectCommentIdsByUserId(userId);
         for (CommentVO commentVO : commentVOList) {
             commentVO.setCommentFiles(commentFileMapper.selectByCommentId(commentVO.getId()));
             // 检查该评论是否有子评论
-            Integer hasChild = commentMapper.hasChildComments(commentVO.getId());
-            commentVO.setHasChildComments(hasChild != null && hasChild > 0);
+            commentVO.setHasChildComments(false);
             commentVO.setIsLiked(likedCommentIds.contains(commentVO.getId()));
         }
         return commentVOList;

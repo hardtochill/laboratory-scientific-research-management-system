@@ -72,12 +72,19 @@
                             </div>
                         </div>
 
-                        <div class="comment-main">
-                            <div class="comment-content">
-                                {{ comment.commentContent }}
+                        <div class="comment-content">
+                            {{ comment.commentContent }}
+                        </div>
+
+                        <div class="comment-actions-row">
+                            <div class="actions-left">
+                                <span v-if="comment.hasChildComments" class="view-child-btn-inline"
+                                    @click="toggleChildComments(comment.id)">
+                                    {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
+                                </span>
                             </div>
-                            <div class="comment-like-section">
-                                <div class="like-section">
+                            <div class="actions-right">
+                                <div class="like-section" style="margin-bottom: 4px;">
                                     <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                         class="like-icon" @click="handleLike(comment)"></svg-icon>
                                     <span class="like-count">{{ comment.likeCount }}</span>
@@ -86,13 +93,6 @@
                                     <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="comment-actions">
-                            <span v-if="comment.hasChildComments" class="view-child-btn"
-                                @click="toggleChildComments(comment.id)">
-                                {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
-                            </span>
                         </div>
 
                         <div v-if="comment.commentFiles && comment.commentFiles.length > 0" class="related-files">
@@ -123,12 +123,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="comment-main">
-                                        <div class="comment-content">
-                                            {{ childComment.commentContent }}
+                                    <div class="comment-content">
+                                        {{ childComment.commentContent }}
+                                    </div>
+
+                                    <div class="comment-actions-row">
+                                        <div class="actions-left">
                                         </div>
-                                        <div class="comment-like-section">
-                                            <div class="like-section">
+                                        <div class="actions-right">
+                                            <div class="like-section" style="margin-bottom: 4px;">
                                                 <svg-icon
                                                     :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                                     class="like-icon" @click="handleLike(childComment)"></svg-icon>
@@ -178,8 +181,8 @@
                 </el-form-item>
                 <el-form-item label="可见范围" prop="visibleType">
                     <el-radio-group v-model="commentForm.visibleType">
-                        <el-radio :label="0">仅自己可见</el-radio>
-                        <el-radio :label="1">公开</el-radio>
+                        <el-radio :label="1">仅自己可见</el-radio>
+                        <el-radio :label="2">公开</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="关联文件">
@@ -207,7 +210,7 @@
                 </el-form-item>
                 <el-form-item label="可见范围">
                     <el-radio-group v-model="replyForm.visibleType" disabled>
-                        <el-radio :label="1">公开</el-radio>
+                        <el-radio :label="2">公开</el-radio>
                     </el-radio-group>
                     <div style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">子评论只能设置为公开</div>
                 </el-form-item>
@@ -272,12 +275,12 @@ const showCommentDialog = ref(false)
 const showReplyDialog = ref(false)
 const commentForm = ref({
   content: '',
-  visibleType: 0, // 0: 仅自己可见, 1: 公开
+  visibleType: 1, // 1: 仅自己可见, 2: 公开
   files: []
 })
 const replyForm = ref({
   content: '',
-  visibleType: 1, // 子评论固定为公开
+  visibleType: 2, // 2: 公开
   files: []
 })
 const currentParentId = ref(null) // 当前回复的父评论ID
@@ -384,29 +387,12 @@ async function toggleChildComments(parentId) {
     }
 }
 
-/** 递归刷新所有相关层级的子评论 */
-async function refreshAllRelatedComments(replyParentId) {
+/** 刷新相关评论的子评论*/
+async function refreshRelatedChildComments(replyParentId) {
     // 刷新当前父评论的子评论（如果已展开）
     if (expandedChildComments.value.includes(replyParentId)) {
         childComments.value[replyParentId] = null
         await toggleChildComments(replyParentId)
-    }
-    
-    // 检查并刷新所有上级评论的子评论
-    for (const expandedParentId of expandedChildComments.value) {
-        if (childComments.value[expandedParentId]) {
-            // 检查该父评论的子评论中是否包含我们刚回复的评论
-            const hasThisComment = childComments.value[expandedParentId].some(comment => comment.id === replyParentId)
-            if (hasThisComment) {
-                // 如果包含，刷新这个父评论的子评论
-                childComments.value[expandedParentId] = null
-                await toggleChildComments(expandedParentId)
-                
-                // 递归检查更上级的评论
-                await refreshAllRelatedComments(expandedParentId)
-                break
-            }
-        }
     }
 }
 
@@ -443,7 +429,7 @@ function handlePagination() {
 /** 打开发表评论对话框 */
 function openCommentDialog() {
     commentForm.value.content = ''
-    commentForm.value.visibleType = 0
+    commentForm.value.visibleType = 1
     commentForm.value.files = []
     showCommentDialog.value = true
 }
@@ -452,7 +438,7 @@ function openCommentDialog() {
 function openReplyDialog(parentId) {
     currentParentId.value = parentId
     replyForm.value.content = ''
-    replyForm.value.visibleType = 1
+    replyForm.value.visibleType = 2
     replyForm.value.files = []
     showReplyDialog.value = true
     
@@ -475,31 +461,9 @@ function closeReplyDialog() {
     showReplyDialog.value = false
     // 重置表单
     replyForm.value.content = ''
-    replyForm.value.visibleType = 1
+    replyForm.value.visibleType = 2
     replyForm.value.files = []
     currentParentId.value = null
-}
-
-/** 处理回复文件变化 */
-function handleReplyFileChange(file, fileList) {
-    replyForm.value.files = fileList
-    console.log('回复文件变化:', fileList)
-}
-
-/** 处理回复文件移除 */
-function handleReplyFileRemove(file, fileList) {
-    replyForm.value.files = fileList
-    console.log('回复文件移除:', fileList)
-}
-
-/** 处理文件变化 */
-function handleFileChange(file, fileList) {
-    commentForm.value.files = fileList
-}
-
-/** 处理文件移除 */
-function handleFileRemove(file, fileList) {
-    commentForm.value.files = fileList
 }
 
 /** 发表评论 */
@@ -567,21 +531,12 @@ async function submitReply() {
     }
     
     try {
-        // 确保文件列表正确传递，提取原始File对象
-        let fileList = []
-        if (replyForm.value.files && Array.isArray(replyForm.value.files)) {
-            fileList = replyForm.value.files.map(file => file.raw || file)
-        }
-        
-        console.log('子评论回复文件列表:', fileList)
-        console.log('原始文件列表:', replyForm.value.files)
-        
         await addComment(
             currentParentId.value,
             literatureId,
             replyForm.value.content.trim(),
-            1, // 子评论固定为公开
-            fileList
+            2, // 子评论固定为公开
+            replyForm.value.files
         )
         
         ElMessage.success('回复发表成功')
@@ -593,23 +548,14 @@ async function submitReply() {
         // 首先刷新父评论列表，以更新hasChildComments状态
         await getParentComments()
         
-        // 然后刷新所有相关层级的子评论
-        await refreshAllRelatedComments(replyParentId)
+        // 然后刷新相关评论的子评论
+        await refreshRelatedChildComments(replyParentId)
     } catch (error) {
         ElMessage.error('回复发表失败')
         console.error('回复失败:', error)
     }
 }
 
-/** 文件上传处理 */
-function handleFileUpload(fileList) {
-    commentForm.value.files = fileList
-}
-
-/** 回复文件上传处理 */
-function handleReplyFileUpload(fileList) {
-    replyForm.value.files = fileList
-}
 </script>
 
 <style scoped>
@@ -753,10 +699,6 @@ function handleReplyFileUpload(fileList) {
     margin-bottom: 6px;
 }
 
-.comment-main {
-    margin-bottom: 6px;
-}
-
 .user-info .user-nickname {
     font-weight: 500;
     color: #333;
@@ -768,42 +710,43 @@ function handleReplyFileUpload(fileList) {
     font-size: 12px;
 }
 
-.comment-main {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-}
-
 .comment-content {
-    flex: 1;
     line-height: 1.6;
     color: #333;
     font-size: 15px;
-    margin-right: 0;
+    margin-bottom: 8px;
 }
 
-/* 紧凑型评论操作区域 */
-.comment-actions-compact {
+.comment-actions-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    margin-top: 4px;
+    margin-bottom: -5px;
 }
 
 .actions-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+}
+
+.actions-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .view-child-btn-inline {
     color: #409eff;
     cursor: pointer;
     font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
 }
 
 .view-child-btn-inline:hover {
     color: #337ecc;
+    background-color: rgba(64, 158, 255, 0.1);
 }
 
 .like-icon {
@@ -813,7 +756,8 @@ function handleReplyFileUpload(fileList) {
     color: #606266;
     padding: 2px;
     border-radius: 4px;
-    margin-right: -6px;
+    margin-right: 1px;
+    margin-bottom: -4px;
 }
 
 .like-icon:hover {
@@ -832,15 +776,7 @@ function handleReplyFileUpload(fileList) {
     color: #666;
 }
 
-.view-child-btn {
-    color: #409eff;
-    cursor: pointer;
-    font-size: 14px;
-}
 
-.view-child-btn:hover {
-    text-decoration: underline;
-}
 
 .related-files {
     margin-top: 8px;
@@ -868,8 +804,8 @@ function handleReplyFileUpload(fileList) {
 
 /* 子评论样式 */
 .child-comments {
-    margin-top: 12px;
-    padding-top: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #f0f0f0;
     margin-left: 20px;
 }
@@ -882,69 +818,7 @@ function handleReplyFileUpload(fileList) {
     margin-bottom: 8px;
 }
 
-/* 子评论操作区域 */
-.child-comment-actions {
-    margin-top: 6px;
-    text-align: left;
-}
 
-.view-child-btn {
-    color: #409eff;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.view-child-btn:hover {
-    color: #337ecc;
-}
-
-/* 孙评论样式 */
-.grandchild-comments {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #e8e8e8;
-    margin-left: 15px;
-}
-
-.grandchild-comment-item {
-    background-color: #f5f5f5;
-    border: 1px solid #dcdcdc;
-    border-radius: 4px;
-    padding: 8px;
-    margin-bottom: 6px;
-}
-
-/* 曾孙评论样式 */
-.great-grandchild-comments {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid #e0e0e0;
-    margin-left: 12px;
-}
-
-.great-grandchild-comment-item {
-    background-color: #f0f0f0;
-    border: 1px solid #d0d0d0;
-    border-radius: 3px;
-    padding: 6px;
-    margin-bottom: 4px;
-}
-
-/* 曾曾孙评论样式 */
-.great-great-grandchild-comments {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid #d8d8d8;
-    margin-left: 10px;
-}
-
-.great-great-grandchild-comment-item {
-    background-color: #ebebeb;
-    border: 1px solid #c8c8c8;
-    border-radius: 2px;
-    padding: 4px;
-    margin-bottom: 3px;
-}
 
 .child-loading {
     text-align: center;
