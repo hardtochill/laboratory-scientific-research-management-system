@@ -15,6 +15,7 @@ import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Comment;
 import com.ruoyi.experiment.pojo.entity.CommentFile;
 import com.ruoyi.experiment.pojo.entity.CommentLike;
+import com.ruoyi.experiment.pojo.vo.CommentUserVO;
 import com.ruoyi.experiment.pojo.vo.CommentVO;
 import com.ruoyi.experiment.service.CommentService;
 import com.ruoyi.experiment.utils.FileUtils;
@@ -231,5 +232,17 @@ public class CommentServiceImpl implements CommentService {
             throw new ServiceException("删除任务关联文件失败");
         }
         commentFileMapper.deleteByCommentId(commentId);
+    }
+    @Override
+    public CommentUserVO getCommentUserDetail(Long userId) {
+        SysUser sysUser = sysUserMapper.selectUserById(userId);
+        CommentUserVO commentUserVO = new CommentUserVO();
+        commentUserVO.setUserId(sysUser.getUserId());
+        commentUserVO.setUserName(sysUser.getUserName());
+        commentUserVO.setUserNickName(sysUser.getNickName());
+        commentUserVO.setRoles(sysUser.getRoles());
+        commentUserVO.setEmail(sysUser.getEmail());
+        commentUserVO.setPhone(sysUser.getPhonenumber());
+        return commentUserVO;
     }
 }
