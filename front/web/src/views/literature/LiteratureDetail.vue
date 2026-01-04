@@ -387,12 +387,29 @@ async function toggleChildComments(parentId) {
     }
 }
 
-/** 刷新相关评论的子评论*/
-async function refreshRelatedChildComments(replyParentId) {
-    // 刷新当前父评论的子评论（如果已展开）
-    if (expandedChildComments.value.includes(replyParentId)) {
-        childComments.value[replyParentId] = null
-        await toggleChildComments(replyParentId)
+/** 刷新指定父评论的子评论 - 性能优化版本 */
+async function refreshChildCommentsForParent(parentId) {
+    // 如果该父评论已展开，直接刷新其子评论数据，保持展开状态
+    if (expandedChildComments.value.includes(parentId)) {
+        childCommentsLoading.value[parentId] = true
+        try {
+            const res = await listChildComments(parentId)
+            childComments.value[parentId] = res.rows || []
+        } catch (error) {
+            ElMessage.error('刷新子评论失败')
+            console.error('刷新子评论失败:', error)
+        } finally {
+            childCommentsLoading.value[parentId] = false
+        }
+    } else {
+        // 如果该父评论未展开，也刷新数据，这样下次展开时能看到最新内容
+        try {
+            const res = await listChildComments(parentId)
+            childComments.value[parentId] = res.rows || []
+        } catch (error) {
+            console.error('预刷新子评论失败:', error)
+            // 不显示错误消息，因为用户可能没有展开这个评论
+        }
     }
 }
 
@@ -435,15 +452,43 @@ function openCommentDialog() {
 }
 
 /** 打开回复对话框 */
-function openReplyDialog(parentId) {
-    currentParentId.value = parentId
+function openReplyDialog(targetCommentId) {
+    // 如果是主评论，直接使用其ID
+    const isParentComment = parentComments.value.some(comment => comment.id === targetCommentId)
+    
+    if (isParentComment) {
+        // 点击的是主评论的回复按钮
+        currentParentId.value = targetCommentId
+    } else {
+        // 点击的是子评论的回复按钮，需要找到其所属的主评论
+        let parentCommentId = null
+        for (const comment of parentComments.value) {
+            const childCommentsList = childComments.value[comment.id] || []
+            const isChildComment = childCommentsList.some(child => child.id === targetCommentId)
+            if (isChildComment) {
+                parentCommentId = comment.id
+                break
+            }
+        }
+        
+        if (parentCommentId) {
+            currentParentId.value = parentCommentId
+        } else {
+            console.error('找不到所属的主评论，targetCommentId:', targetCommentId)
+            ElMessage.error('回复失败：找不到所属的评论')
+            return
+        }
+    }
+    
     replyForm.value.content = ''
     replyForm.value.visibleType = 2
     replyForm.value.files = []
+    // 保存用户点击的评论ID和正确的父评论ID，便于后续刷新
+    replyForm.value.targetCommentId = targetCommentId
+    replyForm.value.parentCommentId = currentParentId.value
     showReplyDialog.value = true
     
-    // 确保表单对象存在
-    console.log('打开回复对话框，parentId:', parentId)
+    console.log('打开回复对话框，targetCommentId:', targetCommentId, 'parentId:', currentParentId.value)
     console.log('当前replyForm.files:', replyForm.value.files)
 }
 
@@ -463,6 +508,8 @@ function closeReplyDialog() {
     replyForm.value.content = ''
     replyForm.value.visibleType = 2
     replyForm.value.files = []
+    replyForm.value.targetCommentId = null
+    replyForm.value.parentCommentId = null
     currentParentId.value = null
 }
 
@@ -540,16 +587,19 @@ async function submitReply() {
         )
         
         ElMessage.success('回复发表成功')
-        closeReplyDialog()
         
-        // 刷新评论列表 - 确保所有层级的评论都能正确刷新
-        const replyParentId = currentParentId.value
+        // 先保存需要刷新的父评论ID，再关闭对话框
+        const parentCommentId = replyForm.value.parentCommentId
+        closeReplyDialog()
         
         // 首先刷新父评论列表，以更新hasChildComments状态
         await getParentComments()
         
-        // 然后刷新相关评论的子评论
-        await refreshRelatedChildComments(replyParentId)
+        // 然后刷新被回复评论所属父评论的子评论，保持其展开状态
+        if (parentCommentId) {
+            await refreshChildCommentsForParent(parentCommentId)
+        }
+
     } catch (error) {
         ElMessage.error('回复发表失败')
         console.error('回复失败:', error)
