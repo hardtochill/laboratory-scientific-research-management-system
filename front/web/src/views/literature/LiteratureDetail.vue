@@ -72,11 +72,6 @@
                             </div>
                         </div>
 
-                        <div class="comment-content">
-                            <span v-if="comment.receiveUserNickName" class="reply-prefix" @click="getUserInfo(comment.receiveUserId)" style="cursor: pointer;">回复@{{ comment.receiveUserNickName }}：</span>
-                            {{ comment.commentContent }}
-                        </div>
-
                         <div class="comment-actions-row">
                             <div class="actions-left">
                                 <span v-if="comment.hasChildComments" class="view-child-btn-inline"
@@ -494,52 +489,47 @@ function openReplyDialog(targetCommentId) {
     commentForm.value.visibleType = 2
     commentForm.value.files = []
     
-    // 如果是主评论，直接使用其ID
-    const isParentComment = parentComments.value.some(comment => comment.id === targetCommentId)
+    // 直接查找目标评论，利用parentId优化性能
+    let targetComment = null
+    let parentId = null
     
-    if (isParentComment) {
-        // 点击的是主评论的回复按钮
-        currentParentId.value = targetCommentId
-        parentCommentId.value = targetCommentId
-        
-        // 获取主评论的userId和userNickName，用于receiveUserId和receiveUserNickName
-        const targetComment = parentComments.value.find(comment => comment.id === targetCommentId)
-        targetCommentUserId.value = targetComment ? targetComment.userId : null
-        targetCommentUserNickName.value = targetComment ? targetComment.userNickName : null
+    // 首先在主评论中查找
+    targetComment = parentComments.value.find(comment => comment.id === targetCommentId)
+    
+    if (targetComment) {
+        // 找到的是主评论
+        // 如果是回复一级评论，则parentId = 被回复评论的id
+        parentId = targetCommentId
     } else {
-        // 点击的是子评论的回复按钮，需要找到其所属的主评论
-        let parentComment = null
-        let targetComment = null
-        
+        // 在子评论中查找
         for (const comment of parentComments.value) {
             const childCommentsList = childComments.value[comment.id] || []
-            const isChildComment = childCommentsList.some(child => child.id === targetCommentId)
-            if (isChildComment) {
-                parentComment = comment
-                targetComment = childCommentsList.find(child => child.id === targetCommentId)
+            const foundChild = childCommentsList.find(child => child.id === targetCommentId)
+            if (foundChild) {
+                targetComment = foundChild
+                // 如果是回复子评论，则parentId = 被回复评论的parentId
+                parentId = targetComment.parentId
                 break
             }
         }
-        
-        if (parentComment && targetComment) {
-            currentParentId.value = parentComment.id
-            parentCommentId.value = parentComment.id
-            // 保存子评论的userId和userNickName作为receiveUserId和receiveUserNickName
-            targetCommentUserId.value = targetComment.userId
-            targetCommentUserNickName.value = targetComment.userNickName
-        } else {
-            console.error('找不到所属的主评论，targetCommentId:', targetCommentId)
-            ElMessage.error('回复失败：找不到所属的评论')
-            return
-        }
     }
     
-    // 保存用户点击的目标评论ID
-    currentTargetId.value = targetCommentId
-    showCommentDialog.value = true
+    if (!targetComment) {
+        console.error('找不到目标评论，targetCommentId:', targetCommentId)
+        ElMessage.error('回复失败：找不到目标评论')
+        return
+    }
     
-    console.log('打开回复对话框，targetCommentId:', targetCommentId, 'parentId:', currentParentId.value, 'targetUserId:', targetCommentUserId.value, 'targetUserNickName:', targetCommentUserNickName.value)
-    console.log('当前commentForm.files:', commentForm.value.files)
+    // 设置父评论ID和目标评论ID
+    currentParentId.value = parentId
+    parentCommentId.value = parentId
+    currentTargetId.value = targetCommentId
+    
+    // 保存目标评论的userId和userNickName作为receiveUserId和receiveUserNickName
+    targetCommentUserId.value = targetComment.userId
+    targetCommentUserNickName.value = targetComment.userNickName
+    
+    showCommentDialog.value = true
 }
 
 /** 关闭评论对话框 */
