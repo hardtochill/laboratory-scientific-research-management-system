@@ -204,11 +204,21 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Long commentId) {
+        // 1.权限校验
+        Comment comment = commentMapper.selectById(commentId);
+        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
+            // 2.递归删除评论及其子评论
+            deleteCommentRecursively(commentId);
+        }
+    }
+
+    private void deleteCommentRecursively(Long commentId){
         // 1.删除子评论
         List<Long> childIds = commentMapper.selectChildIds(commentId);
         if(!CollectionUtils.isEmpty(childIds)){
             for (Long childId : childIds) {
-                deleteComment(childId);
+                deleteCommentRecursively(childId);
             }
         }
         // 2.删除评论点赞记录
@@ -233,6 +243,7 @@ public class CommentServiceImpl implements CommentService {
         }
         commentFileMapper.deleteByCommentId(commentId);
     }
+
     @Override
     public CommentUserVO getCommentUserDetail(Long userId) {
         SysUser sysUser = sysUserMapper.selectUserById(userId);
