@@ -172,18 +172,21 @@
             </div>
         </div>
 
-        <!-- 发表评论对话框 -->
-        <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="showCommentDialog = false">
+        <!-- 通用评论对话框 -->
+        <el-dialog v-model="showCommentDialog" :title="commentDialogTitle" width="600px" @close="closeCommentDialog">
             <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
-                <el-form-item label="评论内容" prop="content">
+                <el-form-item :label="commentFormLabel" prop="content">
                     <el-input v-model="commentForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
-                        placeholder="请输入评论内容（最多500字）"></el-input>
+                        :placeholder="`请输入${commentFormType === 'comment' ? '评论' : '回复'}内容（最多500字）`"></el-input>
                 </el-form-item>
                 <el-form-item label="可见范围" prop="visibleType">
-                    <el-radio-group v-model="commentForm.visibleType">
+                    <el-radio-group v-model="commentForm.visibleType" :disabled="commentFormType === 'reply'">
                         <el-radio :label="1">仅自己可见</el-radio>
                         <el-radio :label="2">公开</el-radio>
                     </el-radio-group>
+                    <div v-if="commentFormType === 'reply'" style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">
+                        子评论只能设置为公开
+                    </div>
                 </el-form-item>
                 <el-form-item label="关联文件">
                     <el-upload ref="commentUploadRef" action="#" :auto-upload="false" :file-list="commentForm.files"
@@ -195,37 +198,8 @@
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="showCommentDialog = false">取消</el-button>
-                    <el-button type="primary" @click="submitComment">发表</el-button>
-                </span>
-            </template>
-        </el-dialog>
-
-        <!-- 回复评论对话框 -->
-        <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="showReplyDialog = false">
-            <el-form ref="replyFormRef" :model="replyForm" label-width="80px">
-                <el-form-item label="回复内容" prop="content">
-                    <el-input v-model="replyForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
-                        placeholder="请输入回复内容（最多500字）"></el-input>
-                </el-form-item>
-                <el-form-item label="可见范围">
-                    <el-radio-group v-model="replyForm.visibleType" disabled>
-                        <el-radio :label="2">公开</el-radio>
-                    </el-radio-group>
-                    <div style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">子评论只能设置为公开</div>
-                </el-form-item>
-                <el-form-item label="关联文件">
-                    <el-upload ref="replyUploadRef" action="#" :auto-upload="false" :file-list="replyForm.files"
-                        :on-change="(file, fileList) => replyForm.files = fileList"
-                        :on-remove="(file, fileList) => replyForm.files = fileList" multiple>
-                        <el-button type="primary">选择文件</el-button>
-                    </el-upload>
-                </el-form-item>
-            </el-form>
-            <template #footer>
-                <span class="dialog-footer">
-                    <el-button @click="showReplyDialog = false">取消</el-button>
-                    <el-button type="primary" @click="submitReply">回复</el-button>
+                    <el-button @click="closeCommentDialog">取消</el-button>
+                    <el-button type="primary" @click="submitComment">{{ commentFormType === 'comment' ? '发表' : '回复' }}</el-button>
                 </span>
             </template>
         </el-dialog>
@@ -233,7 +207,7 @@
 </template>
 
 <script setup name="LiteratureDetail">
-import { ref, onActivated, onMounted } from 'vue'
+import { ref, onActivated, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
@@ -270,22 +244,26 @@ const expandedChildComments = ref([])  // 已展开的父评论ID列表
 const commentsLoading = ref(false)
 const childCommentsLoading = ref({})  // { parentId: boolean }
 
-// 发表评论相关数据
+// 评论对话框相关数据
 const showCommentDialog = ref(false)
-const showReplyDialog = ref(false)
 const commentForm = ref({
   content: '',
   visibleType: 1, // 1: 仅自己可见, 2: 公开
   files: []
 })
-const replyForm = ref({
-  content: '',
-  visibleType: 2, // 2: 公开
-  files: []
-})
+const commentFormType = ref('comment') // 'comment' | 'reply'
 const currentParentId = ref(null) // 当前回复的父评论ID
-const commentFormRef = ref()
-const replyFormRef = ref()
+const currentTargetId = ref(null) // 当前点击的目标评论ID（用于回复）
+const parentCommentId = ref(null) // 父评论ID（用于刷新）
+
+// 计算属性
+const commentDialogTitle = computed(() => {
+  return commentFormType.value === 'comment' ? '发表评论' : '回复评论'
+})
+
+const commentFormLabel = computed(() => {
+  return commentFormType.value === 'comment' ? '评论内容' : '回复内容'
+})
 
 /** 返回列表 */
 function goBack() {
@@ -445,34 +423,45 @@ function handlePagination() {
 
 /** 打开发表评论对话框 */
 function openCommentDialog() {
+    commentFormType.value = 'comment'
     commentForm.value.content = ''
     commentForm.value.visibleType = 1
     commentForm.value.files = []
+    currentParentId.value = null
+    currentTargetId.value = null
+    parentCommentId.value = null
     showCommentDialog.value = true
 }
 
 /** 打开回复对话框 */
 function openReplyDialog(targetCommentId) {
+    commentFormType.value = 'reply'
+    commentForm.value.content = ''
+    commentForm.value.visibleType = 2
+    commentForm.value.files = []
+    
     // 如果是主评论，直接使用其ID
     const isParentComment = parentComments.value.some(comment => comment.id === targetCommentId)
     
     if (isParentComment) {
         // 点击的是主评论的回复按钮
         currentParentId.value = targetCommentId
+        parentCommentId.value = targetCommentId
     } else {
         // 点击的是子评论的回复按钮，需要找到其所属的主评论
-        let parentCommentId = null
+        let parentComment = null
         for (const comment of parentComments.value) {
             const childCommentsList = childComments.value[comment.id] || []
             const isChildComment = childCommentsList.some(child => child.id === targetCommentId)
             if (isChildComment) {
-                parentCommentId = comment.id
+                parentComment = comment
                 break
             }
         }
         
-        if (parentCommentId) {
-            currentParentId.value = parentCommentId
+        if (parentComment) {
+            currentParentId.value = parentComment.id
+            parentCommentId.value = parentComment.id
         } else {
             console.error('找不到所属的主评论，targetCommentId:', targetCommentId)
             ElMessage.error('回复失败：找不到所属的评论')
@@ -480,16 +469,12 @@ function openReplyDialog(targetCommentId) {
         }
     }
     
-    replyForm.value.content = ''
-    replyForm.value.visibleType = 2
-    replyForm.value.files = []
-    // 保存用户点击的评论ID和正确的父评论ID，便于后续刷新
-    replyForm.value.targetCommentId = targetCommentId
-    replyForm.value.parentCommentId = currentParentId.value
-    showReplyDialog.value = true
+    // 保存用户点击的目标评论ID
+    currentTargetId.value = targetCommentId
+    showCommentDialog.value = true
     
     console.log('打开回复对话框，targetCommentId:', targetCommentId, 'parentId:', currentParentId.value)
-    console.log('当前replyForm.files:', replyForm.value.files)
+    console.log('当前commentForm.files:', commentForm.value.files)
 }
 
 /** 关闭评论对话框 */
@@ -499,21 +484,13 @@ function closeCommentDialog() {
     commentForm.value.content = ''
     commentForm.value.visibleType = 1
     commentForm.value.files = []
-}
-
-/** 关闭回复对话框 */
-function closeReplyDialog() {
-    showReplyDialog.value = false
-    // 重置表单
-    replyForm.value.content = ''
-    replyForm.value.visibleType = 2
-    replyForm.value.files = []
-    replyForm.value.targetCommentId = null
-    replyForm.value.parentCommentId = null
+    commentFormType.value = 'comment'
     currentParentId.value = null
+    currentTargetId.value = null
+    parentCommentId.value = null
 }
 
-/** 发表评论 */
+/** 发表评论/回复评论 - 通用方法 */
 async function submitComment() {
     const literatureId = route.params.id
     if (!literatureId) {
@@ -522,87 +499,71 @@ async function submitComment() {
     }
     
     if (!commentForm.value.content.trim()) {
-        ElMessage.warning('请输入评论内容')
+        ElMessage.warning(`请输入${commentFormType.value === 'comment' ? '评论' : '回复'}内容`)
         return
     }
     
     if (commentForm.value.content.length > 500) {
-        ElMessage.warning('评论内容不能超过500字')
+        ElMessage.warning(`${commentFormType.value === 'comment' ? '评论' : '回复'}内容不能超过500字`)
         return
     }
     
     try {
-        await addComment(
-            0, // parentId = 0 表示一级评论
-            literatureId,
-            commentForm.value.content.trim(),
-            commentForm.value.visibleType,
-            commentForm.value.files
-        )
-        
-        ElMessage.success('评论发表成功')
-        closeCommentDialog()
-        
-        // 刷新评论列表
-        await getParentComments()
-        
-        // 如果有展开的子评论，也要刷新子评论数据
-        if (expandedChildComments.value.length > 0) {
-            for (const parentId of expandedChildComments.value) {
-                childComments.value[parentId] = null
-                await toggleChildComments(parentId)
+        if (commentFormType.value === 'comment') {
+            // 发表评论
+            await addComment(
+                0, // parentId = 0 表示一级评论
+                literatureId,
+                commentForm.value.content.trim(),
+                commentForm.value.visibleType,
+                commentForm.value.files
+            )
+            
+            ElMessage.success('评论发表成功')
+            closeCommentDialog()
+            
+            // 刷新评论列表
+            await getParentComments()
+            
+            // 如果有展开的子评论，也要刷新子评论数据
+            if (expandedChildComments.value.length > 0) {
+                for (const parentId of expandedChildComments.value) {
+                    childComments.value[parentId] = null
+                    await toggleChildComments(parentId)
+                }
+            }
+        } else {
+            // 回复评论
+            if (!currentParentId.value) {
+                ElMessage.error('参数错误')
+                return
+            }
+            
+            await addComment(
+                currentParentId.value,
+                literatureId,
+                commentForm.value.content.trim(),
+                2, // 子评论固定为公开
+                commentForm.value.files
+            )
+            
+            ElMessage.success('回复发表成功')
+            
+            // 保存需要刷新的父评论ID，再关闭对话框
+            const refreshParentId = parentCommentId.value
+            closeCommentDialog()
+            
+            // 首先刷新父评论列表，以更新hasChildComments状态
+            await getParentComments()
+            
+            // 然后刷新被回复评论所属父评论的子评论，保持其展开状态
+            if (refreshParentId) {
+                await refreshChildCommentsForParent(refreshParentId)
             }
         }
     } catch (error) {
-        ElMessage.error('评论发表失败')
-        console.error('发表评论失败:', error)
-    }
-}
-
-/** 回复评论 */
-async function submitReply() {
-    const literatureId = route.params.id
-    if (!literatureId || !currentParentId.value) {
-        ElMessage.error('参数错误')
-        return
-    }
-    
-    if (!replyForm.value.content.trim()) {
-        ElMessage.warning('请输入回复内容')
-        return
-    }
-    
-    if (replyForm.value.content.length > 500) {
-        ElMessage.warning('回复内容不能超过500字')
-        return
-    }
-    
-    try {
-        await addComment(
-            currentParentId.value,
-            literatureId,
-            replyForm.value.content.trim(),
-            2, // 子评论固定为公开
-            replyForm.value.files
-        )
-        
-        ElMessage.success('回复发表成功')
-        
-        // 先保存需要刷新的父评论ID，再关闭对话框
-        const parentCommentId = replyForm.value.parentCommentId
-        closeReplyDialog()
-        
-        // 首先刷新父评论列表，以更新hasChildComments状态
-        await getParentComments()
-        
-        // 然后刷新被回复评论所属父评论的子评论，保持其展开状态
-        if (parentCommentId) {
-            await refreshChildCommentsForParent(parentCommentId)
-        }
-
-    } catch (error) {
-        ElMessage.error('回复发表失败')
-        console.error('回复失败:', error)
+        ElMessage.error(`${commentFormType.value === 'comment' ? '评论' : '回复'}发表失败`)
+        console.error(`${commentFormType.value === 'comment' ? '评论' : '回复'}失败:`, error)
     }
 }
 
