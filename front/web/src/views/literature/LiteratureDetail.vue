@@ -73,27 +73,22 @@
                         </div>
 
                         <div class="comment-main">
-                            <div class="comment-content">
-                                {{ comment.commentContent }}
-                            </div>
-                            <div class="comment-like-section">
-                                <div class="like-section">
-                                    <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
-                                        class="like-icon" @click="handleLike(comment)"></svg-icon>
-                                    <span class="like-count">{{ comment.likeCount }}</span>
-                                </div>
-                                <div class="reply-section">
-                                    <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
-                                </div>
+                        <div class="comment-content">
+                            {{ comment.commentContent }}
+                        </div>
+                        <div class="comment-actions-compact">
+                            <div class="actions-left">
+                                <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                    class="like-icon" @click="handleLike(comment)"></svg-icon>
+                                <span class="like-count">{{ comment.likeCount }}</span>
+                                <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
+                                <span v-if="comment.hasChildComments" class="view-child-btn-inline"
+                                    @click="toggleChildComments(comment.id)">
+                                    {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
+                                </span>
                             </div>
                         </div>
-
-                        <div class="comment-actions">
-                            <span v-if="comment.hasChildComments" class="view-child-btn"
-                                @click="toggleChildComments(comment.id)">
-                                {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
-                            </span>
-                        </div>
+                    </div>
 
                         <div v-if="comment.commentFiles && comment.commentFiles.length > 0" class="related-files">
                             <span class="files-label">关联文件：</span>
@@ -127,28 +122,190 @@
                                         <div class="comment-content">
                                             {{ childComment.commentContent }}
                                         </div>
-                                        <div class="comment-like-section">
-                                            <div class="like-section">
-                                                <svg-icon
-                                                    :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                        <div class="comment-actions-compact">
+                                            <div class="actions-left">
+                                                <svg-icon :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                                     class="like-icon" @click="handleLike(childComment)"></svg-icon>
                                                 <span class="like-count">{{ childComment.likeCount }}</span>
-                                            </div>
-                                            <div class="reply-section">
-                                                <el-button type="text"
-                                                    @click="openReplyDialog(childComment.id)">回复</el-button>
+                                                <el-button type="text" @click="openReplyDialog(childComment.id)">回复</el-button>
+                                                <span v-if="childComment.hasChildComments" class="view-child-btn-inline"
+                                                    @click="toggleChildComments(childComment.id)">
+                                                    {{ expandedChildComments.includes(childComment.id) ? '收起子评论' : '查看子评论' }}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div v-if="childComment.commentFiles && childComment.commentFiles.length > 0"
-                                        class="related-files">
-                                        <span class="files-label">关联文件：</span>
-                                        <el-button v-for="file in childComment.commentFiles" :key="file.id" type="text"
-                                            class="file-link"
-                                            @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
-                                            {{ file.fileName }}.{{ file.fileType }}
-                                        </el-button>
+                                            class="related-files">
+                                            <span class="files-label">关联文件：</span>
+                                            <el-button v-for="file in childComment.commentFiles" :key="file.id" type="text"
+                                                class="file-link"
+                                                @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                                {{ file.fileName }}.{{ file.fileType }}
+                                            </el-button>
+                                        </div>
+
+                                    <!-- 子评论的子评论区域 -->
+                                    <div v-if="expandedChildComments.includes(childComment.id)" class="grandchild-comments">
+                                        <div v-if="childCommentsLoading[childComment.id]" class="child-loading">
+                                            <el-icon class="is-loading">
+                                                <loading />
+                                            </el-icon>
+                                            加载中...
+                                        </div>
+                                        <div v-else-if="childComments[childComment.id] && childComments[childComment.id].length > 0">
+                                            <div v-for="grandchildComment in childComments[childComment.id]" :key="grandchildComment.id"
+                                                class="grandchild-comment-item">
+                                                <div class="comment-header">
+                                                    <div class="user-info">
+                                                        <span class="user-nickname">{{ grandchildComment.userNickName }}</span>
+                                                    </div>
+                                                    <div class="comment-time">
+                                                        {{ formatDate(grandchildComment.commentTime) }}
+                                                    </div>
+                                                </div>
+
+                                                <div class="comment-main">
+                                                    <div class="comment-content">
+                                                        {{ grandchildComment.commentContent }}
+                                                    </div>
+                                                    <div class="comment-actions-compact">
+                                                        <div class="actions-left">
+                                                            <svg-icon :icon-class="grandchildComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                                                class="like-icon" @click="handleLike(grandchildComment)"></svg-icon>
+                                                            <span class="like-count">{{ grandchildComment.likeCount }}</span>
+                                                            <el-button type="text" @click="openReplyDialog(grandchildComment.id)">回复</el-button>
+                                                            <span v-if="grandchildComment.hasChildComments" class="view-child-btn-inline"
+                                                                @click="toggleChildComments(grandchildComment.id)">
+                                                                {{ expandedChildComments.includes(grandchildComment.id) ? '收起子评论' : '查看子评论' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div v-if="grandchildComment.commentFiles && grandchildComment.commentFiles.length > 0"
+                                                    class="related-files">
+                                                    <span class="files-label">关联文件：</span>
+                                                    <el-button v-for="file in grandchildComment.commentFiles" :key="file.id" type="text"
+                                                        class="file-link"
+                                                        @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                                        {{ file.fileName }}.{{ file.fileType }}
+                                                    </el-button>
+                                                </div>
+
+                                                <!-- 孙子评论的子评论区域（四级评论） -->
+                                                <div v-if="expandedChildComments.includes(grandchildComment.id)" class="great-grandchild-comments">
+                                                    <div v-if="childCommentsLoading[grandchildComment.id]" class="child-loading">
+                                                        <el-icon class="is-loading">
+                                                            <loading />
+                                                        </el-icon>
+                                                        加载中...
+                                                    </div>
+                                                    <div v-else-if="childComments[grandchildComment.id] && childComments[grandchildComment.id].length > 0">
+                                                        <div v-for="greatGrandchildComment in childComments[grandchildComment.id]" :key="greatGrandchildComment.id"
+                                                            class="great-grandchild-comment-item">
+                                                            <div class="comment-header">
+                                                                <div class="user-info">
+                                                                    <span class="user-nickname">{{ greatGrandchildComment.userNickName }}</span>
+                                                                </div>
+                                                                <div class="comment-time">
+                                                                    {{ formatDate(greatGrandchildComment.commentTime) }}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="comment-main">
+                                                                <div class="comment-content">
+                                                                    {{ greatGrandchildComment.commentContent }}
+                                                                </div>
+                                                                <div class="comment-actions-compact">
+                                                                    <div class="actions-left">
+                                                                        <svg-icon :icon-class="greatGrandchildComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                                                            class="like-icon" @click="handleLike(greatGrandchildComment)"></svg-icon>
+                                                                        <span class="like-count">{{ greatGrandchildComment.likeCount }}</span>
+                                                                        <el-button type="text" @click="openReplyDialog(greatGrandchildComment.id)">回复</el-button>
+                                                                        <span v-if="greatGrandchildComment.hasChildComments" class="view-child-btn-inline"
+                                                                            @click="toggleChildComments(greatGrandchildComment.id)">
+                                                                            {{ expandedChildComments.includes(greatGrandchildComment.id) ? '收起子评论' : '查看子评论' }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div v-if="greatGrandchildComment.commentFiles && greatGrandchildComment.commentFiles.length > 0"
+                                                                class="related-files">
+                                                                <span class="files-label">关联文件：</span>
+                                                                <el-button v-for="file in greatGrandchildComment.commentFiles" :key="file.id" type="text"
+                                                                    class="file-link"
+                                                                    @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                                                    {{ file.fileName }}.{{ file.fileType }}
+                                                                </el-button>
+                                                            </div>
+
+                                                            <!-- 五级评论区域 -->
+                                                            <div v-if="expandedChildComments.includes(greatGrandchildComment.id)" class="great-great-grandchild-comments">
+                                                                <div v-if="childCommentsLoading[greatGrandchildComment.id]" class="child-loading">
+                                                                    <el-icon class="is-loading">
+                                                                        <loading />
+                                                                    </el-icon>
+                                                                    加载中...
+                                                                </div>
+                                                                <div v-else-if="childComments[greatGrandchildComment.id] && childComments[greatGrandchildComment.id].length > 0">
+                                                                    <div v-for="greatGreatGrandchildComment in childComments[greatGrandchildComment.id]" :key="greatGreatGrandchildComment.id"
+                                                                        class="great-great-grandchild-comment-item">
+                                                                        <div class="comment-header">
+                                                                            <div class="user-info">
+                                                                                <span class="user-nickname">{{ greatGreatGrandchildComment.userNickName }}</span>
+                                                                            </div>
+                                                                            <div class="comment-time">
+                                                                                {{ formatDate(greatGreatGrandchildComment.commentTime) }}
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div class="comment-main">
+                                                                            <div class="comment-content">
+                                                                                {{ greatGreatGrandchildComment.commentContent }}
+                                                                            </div>
+                                                                            <div class="comment-actions-compact">
+                                                                                <div class="actions-left">
+                                                                                    <svg-icon :icon-class="greatGreatGrandchildComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                                                                        class="like-icon" @click="handleLike(greatGreatGrandchildComment)"></svg-icon>
+                                                                                    <span class="like-count">{{ greatGreatGrandchildComment.likeCount }}</span>
+                                                                                    <el-button type="text" @click="openReplyDialog(greatGreatGrandchildComment.id)">回复</el-button>
+                                                                                    <span v-if="greatGreatGrandchildComment.hasChildComments" class="view-child-btn-inline"
+                                                                                        @click="toggleChildComments(greatGreatGrandchildComment.id)">
+                                                                                        {{ expandedChildComments.includes(greatGreatGrandchildComment.id) ? '收起子评论' : '查看子评论' }}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div v-if="greatGreatGrandchildComment.commentFiles && greatGreatGrandchildComment.commentFiles.length > 0"
+                                                                            class="related-files">
+                                                                            <span class="files-label">关联文件：</span>
+                                                                            <el-button v-for="file in greatGreatGrandchildComment.commentFiles" :key="file.id" type="text"
+                                                                                class="file-link"
+                                                                                @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                                                                {{ file.fileName }}.{{ file.fileType }}
+                                                                            </el-button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div v-else class="no-child-comments">
+                                                                    暂无子评论
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div v-else class="no-child-comments">
+                                                        暂无子评论
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-else class="no-child-comments">
+                                            暂无子评论
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -170,7 +327,7 @@
         </div>
 
         <!-- 发表评论对话框 -->
-        <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="showCommentDialog = false">
+        <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="closeCommentDialog">
             <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
                 <el-form-item label="评论内容" prop="content">
                     <el-input v-model="commentForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
@@ -184,15 +341,15 @@
                 </el-form-item>
                 <el-form-item label="关联文件">
                     <el-upload ref="commentUploadRef" action="#" :auto-upload="false" :file-list="commentForm.files"
-                        :on-change="(file, fileList) => commentForm.files = fileList"
-                        :on-remove="(file, fileList) => commentForm.files = fileList" multiple>
+                        :on-change="handleFileChange"
+                        :on-remove="handleFileRemove" multiple>
                         <el-button type="primary">选择文件</el-button>
                     </el-upload>
                 </el-form-item>
             </el-form>
             <template #footer>
                 <span class="dialog-footer">
-                    <el-button @click="showCommentDialog = false">取消</el-button>
+                    <el-button @click="closeCommentDialog">取消</el-button>
                     <el-button type="primary" @click="submitComment">发表</el-button>
                 </span>
             </template>
@@ -385,6 +542,32 @@ async function toggleChildComments(parentId) {
     }
 }
 
+/** 递归刷新所有相关层级的子评论 */
+async function refreshAllRelatedComments(replyParentId) {
+    // 刷新当前父评论的子评论（如果已展开）
+    if (expandedChildComments.value.includes(replyParentId)) {
+        childComments.value[replyParentId] = null
+        await toggleChildComments(replyParentId)
+    }
+    
+    // 检查并刷新所有上级评论的子评论
+    for (const expandedParentId of expandedChildComments.value) {
+        if (childComments.value[expandedParentId]) {
+            // 检查该父评论的子评论中是否包含我们刚回复的评论
+            const hasThisComment = childComments.value[expandedParentId].some(comment => comment.id === replyParentId)
+            if (hasThisComment) {
+                // 如果包含，刷新这个父评论的子评论
+                childComments.value[expandedParentId] = null
+                await toggleChildComments(expandedParentId)
+                
+                // 递归检查更上级的评论
+                await refreshAllRelatedComments(expandedParentId)
+                break
+            }
+        }
+    }
+}
+
 /** 点赞/取消点赞 */
 async function handleLike(comment) {
     try {
@@ -436,6 +619,15 @@ function openReplyDialog(parentId) {
     console.log('当前replyForm.files:', replyForm.value.files)
 }
 
+/** 关闭评论对话框 */
+function closeCommentDialog() {
+    showCommentDialog.value = false
+    // 重置表单
+    commentForm.value.content = ''
+    commentForm.value.visibleType = 1
+    commentForm.value.files = []
+}
+
 /** 关闭回复对话框 */
 function closeReplyDialog() {
     showReplyDialog.value = false
@@ -456,6 +648,16 @@ function handleReplyFileChange(file, fileList) {
 function handleReplyFileRemove(file, fileList) {
     replyForm.value.files = fileList
     console.log('回复文件移除:', fileList)
+}
+
+/** 处理文件变化 */
+function handleFileChange(file, fileList) {
+    commentForm.value.files = fileList
+}
+
+/** 处理文件移除 */
+function handleFileRemove(file, fileList) {
+    commentForm.value.files = fileList
 }
 
 /** 发表评论 */
@@ -486,10 +688,18 @@ async function submitComment() {
         )
         
         ElMessage.success('评论发表成功')
-        showCommentDialog.value = false
+        closeCommentDialog()
         
         // 刷新评论列表
-        getParentComments()
+        await getParentComments()
+        
+        // 如果有展开的子评论，也要刷新子评论数据
+        if (expandedChildComments.value.length > 0) {
+            for (const parentId of expandedChildComments.value) {
+                childComments.value[parentId] = null
+                await toggleChildComments(parentId)
+            }
+        }
     } catch (error) {
         ElMessage.error('评论发表失败')
         console.error('发表评论失败:', error)
@@ -535,12 +745,14 @@ async function submitReply() {
         ElMessage.success('回复发表成功')
         closeReplyDialog()
         
-        // 刷新子评论列表
-        if (expandedChildComments.value.includes(currentParentId.value)) {
-            // 重新加载该父评论的子评论
-            childComments.value[currentParentId.value] = null
-            await toggleChildComments(currentParentId.value)
-        }
+        // 刷新评论列表 - 确保所有层级的评论都能正确刷新
+        const replyParentId = currentParentId.value
+        
+        // 首先刷新父评论列表，以更新hasChildComments状态
+        await getParentComments()
+        
+        // 然后刷新所有相关层级的子评论
+        await refreshAllRelatedComments(replyParentId)
     } catch (error) {
         ElMessage.error('回复发表失败')
         console.error('回复失败:', error)
@@ -686,36 +898,39 @@ function handleReplyFileUpload(fileList) {
 
 .comment-item {
     background-color: #fff;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e8e8e8;
     border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 12px;
+    margin-bottom: 8px;
 }
 
 .comment-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 6px;
+}
+
+.comment-main {
+    margin-bottom: 6px;
 }
 
 .user-info .user-nickname {
-    font-weight: bold;
+    font-weight: 500;
     color: #333;
     font-size: 16px;
 }
 
 .comment-time {
     color: #999;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .comment-main {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
 }
 
 .comment-content {
@@ -723,25 +938,30 @@ function handleReplyFileUpload(fileList) {
     line-height: 1.6;
     color: #333;
     font-size: 15px;
-    margin-right: 20px;
+    margin-right: 0;
 }
 
-.comment-like-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-}
-
-.like-section {
+/* 紧凑型评论操作区域 */
+.comment-actions-compact {
     display: flex;
     align-items: center;
-    gap: 8px;
+    margin-top: 4px;
 }
 
-.reply-section {
+.actions-left {
     display: flex;
     align-items: center;
+    gap: 10px;
+}
+
+.view-child-btn-inline {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.view-child-btn-inline:hover {
+    color: #337ecc;
 }
 
 .like-icon {
@@ -781,8 +1001,8 @@ function handleReplyFileUpload(fileList) {
 }
 
 .related-files {
-    margin-top: 15px;
-    padding-top: 15px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #f0f0f0;
 }
 
@@ -806,8 +1026,8 @@ function handleReplyFileUpload(fileList) {
 
 /* 子评论样式 */
 .child-comments {
-    margin-top: 20px;
-    padding-top: 20px;
+    margin-top: 12px;
+    padding-top: 12px;
     border-top: 1px solid #f0f0f0;
     margin-left: 20px;
 }
@@ -816,8 +1036,72 @@ function handleReplyFileUpload(fileList) {
     background-color: #f9f9f9;
     border: 1px solid #e0e0e0;
     border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 15px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+/* 子评论操作区域 */
+.child-comment-actions {
+    margin-top: 6px;
+    text-align: left;
+}
+
+.view-child-btn {
+    color: #409eff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.view-child-btn:hover {
+    color: #337ecc;
+}
+
+/* 孙评论样式 */
+.grandchild-comments {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e8e8e8;
+    margin-left: 15px;
+}
+
+.grandchild-comment-item {
+    background-color: #f5f5f5;
+    border: 1px solid #dcdcdc;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+
+/* 曾孙评论样式 */
+.great-grandchild-comments {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #e0e0e0;
+    margin-left: 12px;
+}
+
+.great-grandchild-comment-item {
+    background-color: #f0f0f0;
+    border: 1px solid #d0d0d0;
+    border-radius: 3px;
+    padding: 6px;
+    margin-bottom: 4px;
+}
+
+/* 曾曾孙评论样式 */
+.great-great-grandchild-comments {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #d8d8d8;
+    margin-left: 10px;
+}
+
+.great-great-grandchild-comment-item {
+    background-color: #ebebeb;
+    border: 1px solid #c8c8c8;
+    border-radius: 2px;
+    padding: 4px;
+    margin-bottom: 3px;
 }
 
 .child-loading {
