@@ -1,254 +1,232 @@
 <template>
-    <div class="app-container">
-        <!-- 返回按钮 -->
-        <div class="back-btn">
-            <el-button type="primary" @click="goBack">返回列表</el-button>
-        </div>
-        
-        <!-- 上半部分：文献内容展示 -->
-        <div class="literature-content">
-            <h1 class="title">{{ literature.title }}</h1>
-            <div class="authors">{{ literature.authors }}</div>
-            <div class="journal">{{ literature.journal }}</div>
-            
-            <div class="detail-info">
-                <div class="info-item">
-                    <span class="label">发表时间：</span>
-                    <span>{{ parseTime(literature.publishTime, '{y}-{m}-{d}') }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">摘要：</span>
-                    <div class="abstract-text">{{ literature.abstractText }}</div>
-                </div>
-                <div class="info-item">
-                    <span class="label">关键词：</span>
-                    <el-tag v-for="keyword in literature.keywords" :key="keyword.id" size="medium" style="margin-right: 6px">{{ keyword.keywordName }}</el-tag>
-                </div>
-                <div class="info-item">
-                    <span class="label">下载数：</span>
-                    <span>{{ literature.downloadCount }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">评分：</span>
-                    <span>{{ literature.finalScore }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">上传用户：</span>
-                    <span>{{ literature.uploadUserNickName }}</span>
-                </div>
+    <div>
+        <div class="app-container">
+            <!-- 返回按钮 -->
+            <div class="back-btn">
+                <el-button type="primary" @click="goBack">返回列表</el-button>
             </div>
-        </div>
-        <!-- 下半部分：评论展示区 -->
-        <div class="comments-section">
-            <div class="section-header">
-                <h2 class="section-title">评论</h2>
-                <div class="section-actions">
-                    <el-button type="primary" @click="openCommentDialog">发表评论</el-button>
-                    <div class="sort-controls">
-                        <el-select v-model="sortField" placeholder="排序字段" style="width: 120px" @change="handleSortChange">
-                            <el-option label="点赞数" value="likeCount" />
-                            <el-option label="评论时间" value="commentTime" />
-                        </el-select>
-                        <el-select v-model="sortOrder" placeholder="排序方式" style="width: 120px" @change="handleSortChange">
-                            <el-option label="升序" value="asc" />
-                            <el-option label="降序" value="desc" />
-                        </el-select>
+
+            <!-- 上半部分：文献内容展示 -->
+            <div class="literature-content">
+                <h1 class="title">{{ literature.title }}</h1>
+                <div class="authors">{{ literature.authors }}</div>
+                <div class="journal">{{ literature.journal }}</div>
+
+                <div class="detail-info">
+                    <div class="info-item">
+                        <span class="label">发表时间：</span>
+                        <span>{{ parseTime(literature.publishTime, '{y}-{m}-{d}') }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">摘要：</span>
+                        <div class="abstract-text">{{ literature.abstractText }}</div>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">关键词：</span>
+                        <el-tag v-for="keyword in literature.keywords" :key="keyword.id" size="medium"
+                            style="margin-right: 6px">{{ keyword.keywordName }}</el-tag>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">下载数：</span>
+                        <span>{{ literature.downloadCount }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">评分：</span>
+                        <span>{{ literature.finalScore }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">上传用户：</span>
+                        <span>{{ literature.uploadUserNickName }}</span>
                     </div>
                 </div>
             </div>
-            
-            <div v-loading="commentsLoading" class="comments-list">
-                <div v-for="comment in parentComments" :key="comment.id" class="comment-item">
-                    <div class="comment-header">
-                        <div class="user-info">
-                            <span class="user-nickname">{{ comment.userNickName }}</span>
-                        </div>
-                        <div class="comment-time">
-                            {{ formatDate(comment.commentTime) }}
+            <!-- 下半部分：评论展示区 -->
+            <div class="comments-section">
+                <div class="section-header">
+                    <h2 class="section-title">评论</h2>
+                    <div class="section-actions">
+                        <el-button type="primary" @click="openCommentDialog">发表评论</el-button>
+                        <div class="sort-controls">
+                            <el-select v-model="sortField" placeholder="排序字段" style="width: 120px"
+                                @change="handleSortChange">
+                                <el-option label="点赞数" value="likeCount" />
+                                <el-option label="评论时间" value="commentTime" />
+                            </el-select>
+                            <el-select v-model="sortOrder" placeholder="排序方式" style="width: 120px"
+                                @change="handleSortChange">
+                                <el-option label="升序" value="asc" />
+                                <el-option label="降序" value="desc" />
+                            </el-select>
                         </div>
                     </div>
-                    
-                    <div class="comment-main">
-                        <div class="comment-content">
-                            {{ comment.commentContent }}
-                        </div>
-                        <div class="comment-like-section">
-                            <div class="like-section">
-                                <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'" 
-                                         class="like-icon"
-                                         @click="handleLike(comment)"></svg-icon>
-                                <span class="like-count">{{ comment.likeCount }}</span>
+                </div>
+
+                <div v-loading="commentsLoading" class="comments-list">
+                    <div v-for="comment in parentComments" :key="comment.id" class="comment-item">
+                        <div class="comment-header">
+                            <div class="user-info">
+                                <span class="user-nickname">{{ comment.userNickName }}</span>
                             </div>
-                            <div class="reply-section">
-                                <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
+                            <div class="comment-time">
+                                {{ formatDate(comment.commentTime) }}
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="comment-actions">
-                        <span v-if="comment.hasChildComments" 
-                              class="view-child-btn"
-                              @click="toggleChildComments(comment.id)">
-                            {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
-                        </span>
-                    </div>
-                    
-                    <div v-if="comment.commentFiles && comment.commentFiles.length > 0" class="related-files">
-                        <span class="files-label">关联文件：</span>
-                        <el-button v-for="file in comment.commentFiles" 
-                                  :key="file.id"
-                                  type="text" 
-                                  class="file-link"
-                                  @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
-                            {{ file.fileName }}.{{ file.fileType }}
-                        </el-button>
-                    </div>
-                    
-                    <!-- 子评论区域 -->
-                    <div v-if="expandedChildComments.includes(comment.id)" class="child-comments">
-                        <div v-if="childCommentsLoading[comment.id]" class="child-loading">
-                            <el-icon class="is-loading"><loading /></el-icon>
-                            加载中...
-                        </div>
-                        <div v-else-if="childComments[comment.id] && childComments[comment.id].length > 0">
-                            <div v-for="childComment in childComments[comment.id]" 
-                                 :key="childComment.id" 
-                                 class="child-comment-item">
-                                <div class="comment-header">
-                                    <div class="user-info">
-                                        <span class="user-nickname">{{ childComment.userNickName }}</span>
-                                    </div>
-                                    <div class="comment-time">
-                                        {{ formatDate(childComment.commentTime) }}
-                                    </div>
+
+                        <div class="comment-main">
+                            <div class="comment-content">
+                                {{ comment.commentContent }}
+                            </div>
+                            <div class="comment-like-section">
+                                <div class="like-section">
+                                    <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                        class="like-icon" @click="handleLike(comment)"></svg-icon>
+                                    <span class="like-count">{{ comment.likeCount }}</span>
                                 </div>
-                                
-                                <div class="comment-main">
-                                    <div class="comment-content">
-                                        {{ childComment.commentContent }}
-                                    </div>
-                                    <div class="comment-like-section">
-                                        <div class="like-section">
-                                            <svg-icon :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'" 
-                                                     class="like-icon"
-                                                     @click="handleLike(childComment)"></svg-icon>
-                                            <span class="like-count">{{ childComment.likeCount }}</span>
+                                <div class="reply-section">
+                                    <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="comment-actions">
+                            <span v-if="comment.hasChildComments" class="view-child-btn"
+                                @click="toggleChildComments(comment.id)">
+                                {{ expandedChildComments.includes(comment.id) ? '收起子评论' : '查看子评论' }}
+                            </span>
+                        </div>
+
+                        <div v-if="comment.commentFiles && comment.commentFiles.length > 0" class="related-files">
+                            <span class="files-label">关联文件：</span>
+                            <el-button v-for="file in comment.commentFiles" :key="file.id" type="text" class="file-link"
+                                @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                {{ file.fileName }}.{{ file.fileType }}
+                            </el-button>
+                        </div>
+
+                        <!-- 子评论区域 -->
+                        <div v-if="expandedChildComments.includes(comment.id)" class="child-comments">
+                            <div v-if="childCommentsLoading[comment.id]" class="child-loading">
+                                <el-icon class="is-loading">
+                                    <loading />
+                                </el-icon>
+                                加载中...
+                            </div>
+                            <div v-else-if="childComments[comment.id] && childComments[comment.id].length > 0">
+                                <div v-for="childComment in childComments[comment.id]" :key="childComment.id"
+                                    class="child-comment-item">
+                                    <div class="comment-header">
+                                        <div class="user-info">
+                                            <span class="user-nickname">{{ childComment.userNickName }}</span>
                                         </div>
-                                        <div class="reply-section">
-                                            <el-button type="text" @click="openReplyDialog(childComment.id)">回复</el-button>
+                                        <div class="comment-time">
+                                            {{ formatDate(childComment.commentTime) }}
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div v-if="childComment.commentFiles && childComment.commentFiles.length > 0" class="related-files">
-                                    <span class="files-label">关联文件：</span>
-                                    <el-button v-for="file in childComment.commentFiles" 
-                                              :key="file.id"
-                                              type="text" 
-                                              class="file-link"
-                                              @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
-                                        {{ file.fileName }}.{{ file.fileType }}
-                                    </el-button>
+
+                                    <div class="comment-main">
+                                        <div class="comment-content">
+                                            {{ childComment.commentContent }}
+                                        </div>
+                                        <div class="comment-like-section">
+                                            <div class="like-section">
+                                                <svg-icon
+                                                    :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
+                                                    class="like-icon" @click="handleLike(childComment)"></svg-icon>
+                                                <span class="like-count">{{ childComment.likeCount }}</span>
+                                            </div>
+                                            <div class="reply-section">
+                                                <el-button type="text"
+                                                    @click="openReplyDialog(childComment.id)">回复</el-button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div v-if="childComment.commentFiles && childComment.commentFiles.length > 0"
+                                        class="related-files">
+                                        <span class="files-label">关联文件：</span>
+                                        <el-button v-for="file in childComment.commentFiles" :key="file.id" type="text"
+                                            class="file-link"
+                                            @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                            {{ file.fileName }}.{{ file.fileType }}
+                                        </el-button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div v-else class="no-child-comments">
-                            暂无子评论
+                            <div v-else class="no-child-comments">
+                                暂无子评论
+                            </div>
                         </div>
                     </div>
+
+                    <div v-if="parentComments.length === 0 && !commentsLoading" class="no-comments">
+                        暂无评论
+                    </div>
                 </div>
-                
-                <div v-if="parentComments.length === 0 && !commentsLoading" class="no-comments">
-                    暂无评论
-                </div>
+
+                <!-- 评论分页 -->
+                <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum"
+                    v-model:limit="queryParams.pageSize" @pagination="handlePagination" />
             </div>
-            
-            <!-- 评论分页 -->
-            <pagination v-show="total > 0" :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="handlePagination" />
         </div>
+
+        <!-- 发表评论对话框 -->
+        <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="showCommentDialog = false">
+            <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
+                <el-form-item label="评论内容" prop="content">
+                    <el-input v-model="commentForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
+                        placeholder="请输入评论内容（最多500字）"></el-input>
+                </el-form-item>
+                <el-form-item label="可见范围" prop="visibleType">
+                    <el-radio-group v-model="commentForm.visibleType">
+                        <el-radio :label="0">仅自己可见</el-radio>
+                        <el-radio :label="1">公开</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item label="关联文件">
+                    <el-upload ref="commentUploadRef" action="#" :auto-upload="false" :file-list="commentForm.files"
+                        :on-change="(file, fileList) => commentForm.files = fileList"
+                        :on-remove="(file, fileList) => commentForm.files = fileList" multiple>
+                        <el-button type="primary">选择文件</el-button>
+                    </el-upload>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="showCommentDialog = false">取消</el-button>
+                    <el-button type="primary" @click="submitComment">发表</el-button>
+                </span>
+            </template>
+        </el-dialog>
+
+        <!-- 回复评论对话框 -->
+        <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="showReplyDialog = false">
+            <el-form ref="replyFormRef" :model="replyForm" label-width="80px">
+                <el-form-item label="回复内容" prop="content">
+                    <el-input v-model="replyForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
+                        placeholder="请输入回复内容（最多500字）"></el-input>
+                </el-form-item>
+                <el-form-item label="可见范围">
+                    <el-radio-group v-model="replyForm.visibleType" disabled>
+                        <el-radio :label="1">公开</el-radio>
+                    </el-radio-group>
+                    <div style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">子评论只能设置为公开</div>
+                </el-form-item>
+                <el-form-item label="关联文件">
+                    <el-upload ref="replyUploadRef" action="#" :auto-upload="false" :file-list="replyForm.files"
+                        :on-change="(file, fileList) => replyForm.files = fileList"
+                        :on-remove="(file, fileList) => replyForm.files = fileList" multiple>
+                        <el-button type="primary">选择文件</el-button>
+                    </el-upload>
+                </el-form-item>
+            </el-form>
+            <template #footer>
+                <span class="dialog-footer">
+                    <el-button @click="showReplyDialog = false">取消</el-button>
+                    <el-button type="primary" @click="submitReply">回复</el-button>
+                </span>
+            </template>
+        </el-dialog>
     </div>
-
-    <!-- 发表评论对话框 -->
-    <el-dialog v-model="showCommentDialog" title="发表评论" width="600px" @close="showCommentDialog = false">
-        <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
-            <el-form-item label="评论内容" prop="content">
-                <el-input 
-                    v-model="commentForm.content"
-                    type="textarea"
-                    :rows="4"
-                    maxlength="500"
-                    show-word-limit
-                    placeholder="请输入评论内容（最多500字）"
-                ></el-input>
-            </el-form-item>
-            <el-form-item label="可见范围" prop="visibleType">
-                <el-radio-group v-model="commentForm.visibleType">
-                    <el-radio :label="0">仅自己可见</el-radio>
-                    <el-radio :label="1">公开</el-radio>
-                </el-radio-group>
-            </el-form-item>
-            <el-form-item label="关联文件">
-                <el-upload
-                    ref="commentUploadRef"
-                    action="#"
-                    :auto-upload="false"
-                    :file-list="commentForm.files"
-                    :on-change="(file, fileList) => commentForm.files = fileList"
-                    :on-remove="(file, fileList) => commentForm.files = fileList"
-                    multiple
-                >
-                    <el-button type="primary">选择文件</el-button>
-                </el-upload>
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button @click="showCommentDialog = false">取消</el-button>
-                <el-button type="primary" @click="submitComment">发表</el-button>
-            </span>
-        </template>
-    </el-dialog>
-
-    <!-- 回复评论对话框 -->
-    <el-dialog v-model="showReplyDialog" title="回复评论" width="600px" @close="showReplyDialog = false">
-        <el-form ref="replyFormRef" :model="replyForm" label-width="80px">
-            <el-form-item label="回复内容" prop="content">
-                <el-input 
-                    v-model="replyForm.content"
-                    type="textarea"
-                    :rows="4"
-                    maxlength="500"
-                    show-word-limit
-                    placeholder="请输入回复内容（最多500字）"
-                ></el-input>
-            </el-form-item>
-            <el-form-item label="可见范围">
-                <el-radio-group v-model="replyForm.visibleType" disabled>
-                    <el-radio :label="1">公开</el-radio>
-                </el-radio-group>
-                <div style="margin-top: 5px; margin-left: 6px; color: #999; font-size: 12px;">子评论只能设置为公开</div>
-            </el-form-item>
-            <el-form-item label="关联文件">
-                <el-upload
-                    ref="replyUploadRef"
-                    action="#"
-                    :auto-upload="false"
-                    :file-list="replyForm.files"
-                    :on-change="(file, fileList) => replyForm.files = fileList"
-                    :on-remove="(file, fileList) => replyForm.files = fileList"
-                    multiple
-                >
-                    <el-button type="primary">选择文件</el-button>
-                </el-upload>
-            </el-form-item>
-        </el-form>
-        <template #footer>
-            <span class="dialog-footer">
-                <el-button @click="showReplyDialog = false">取消</el-button>
-                <el-button type="primary" @click="submitReply">回复</el-button>
-            </span>
-        </template>
-    </el-dialog>
 </template>
 
 <script setup name="LiteratureDetail">
