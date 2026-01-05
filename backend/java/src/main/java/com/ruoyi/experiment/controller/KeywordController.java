@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.controller;
 
+import com.ruoyi.experiment.annotations.CheckTeacher;
 import com.ruoyi.experiment.pojo.dto.KeywordDTO;
 import com.ruoyi.experiment.pojo.dto.KeywordQueryDTO;
 import com.ruoyi.experiment.service.KeywordService;
@@ -20,6 +21,7 @@ public class KeywordController extends BaseController {
      * 根据关键词查询条件分页查询关键词列表
      */
     @GetMapping("/list")
+    @CheckTeacher
     public TableDataInfo list(KeywordQueryDTO keywordQueryDTO) {
         startPage();
         return getDataTable(keywordService.selectKeywordList(keywordQueryDTO));
@@ -29,6 +31,7 @@ public class KeywordController extends BaseController {
      * 新增关键词
      */
     @PostMapping("/add")
+    @CheckTeacher
     public AjaxResult addKeyword(@RequestBody KeywordDTO keywordDTO) {
         keywordService.addKeyword(keywordDTO);
         return AjaxResult.success("新增成功");
@@ -38,6 +41,7 @@ public class KeywordController extends BaseController {
      * 修改关键词
      */
     @PostMapping("/update")
+    @CheckTeacher
     public AjaxResult updateKeyword(@RequestBody @Validated KeywordDTO keywordDTO) {
         keywordService.updateKeyword(keywordDTO);
         return AjaxResult.success("修改成功");
@@ -47,6 +51,7 @@ public class KeywordController extends BaseController {
      * 删除关键词
      */
     @DeleteMapping("/delete/{keywordIds}")
+    @CheckTeacher
     public AjaxResult deleteKeywords(@PathVariable Long[] keywordIds) {
         keywordService.deleteKeywords(keywordIds);
         return AjaxResult.success("删除成功");
