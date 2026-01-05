@@ -675,23 +675,8 @@ async function changeCommentVisibility(comment, visibleType) {
         await changeVisibleType(comment.id, visibleType)
         ElMessage.success('更改可见状态成功')
         
-        // 更新评论的可见状态
-        if (comment.parentId && comment.parentId !== 0) {
-            // 这是子评论
-            const parentId = comment.parentId
-            if (childComments.value[parentId]) {
-                const childIndex = childComments.value[parentId].findIndex(c => c.id === comment.id)
-                if (childIndex > -1) {
-                    childComments.value[parentId][childIndex].visibleType = visibleType
-                }
-            }
-        } else {
-            // 这是父评论
-            const parentIndex = parentComments.value.findIndex(c => c.id === comment.id)
-            if (parentIndex > -1) {
-                parentComments.value[parentIndex].visibleType = visibleType
-            }
-        }
+        await getParentComments()
+
     } catch (error) {
         console.error('更改可见状态失败:', error)
         ElMessage.error('更改可见状态失败')
@@ -1102,6 +1087,7 @@ async function submitComment() {
     justify-content: center;
     width: 20px;
     height: 20px;
+    outline: none !important;
 }
 
 .more-icon:hover {
@@ -1113,6 +1099,7 @@ async function submitComment() {
     width: 14px;
     height: 14px;
     color: #606266;
+    outline: none !important;
 }
 
 .view-child-btn-inline {
