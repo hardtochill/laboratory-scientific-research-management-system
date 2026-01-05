@@ -86,3 +86,15 @@ export function deleteComment(commentId) {
     method: 'delete'
   })
 }
+
+// 更改评论可见状态
+export function changeVisibleType(commentId, visibleType) {
+  return request({
+    url: '/comment/changeVisibleType',
+    method: 'post',
+    params: {
+      commentId: commentId,
+      visibleType: visibleType
+    }
+  })
+}

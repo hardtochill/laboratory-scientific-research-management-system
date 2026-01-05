@@ -66,6 +66,7 @@
                         <div class="comment-header">
                             <div class="user-info">
                                 <span class="user-nickname" @click="getUserInfo(comment.userId)" style="cursor: pointer;">{{ comment.userNickName }}</span>
+                                <span class="visible-type" style="color: #999; margin-left: 8px; font-size: 13px;">{{ comment.visibleType === 1 ? '仅自己可见' : '公开' }}</span>
                             </div>
                             <div class="comment-time">
                                 {{ formatDate(comment.commentTime) }}
@@ -92,9 +93,23 @@
                                 <div class="reply-section">
                                     <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
                                 </div>
-                                <div class="delete-section">
-                                    <el-button v-if="isHasTeacherRole || comment.userId === currentUserId" type="text"
-                                        class="delete-btn" @click="handleDeleteComment(comment)">删除</el-button>
+                                <div class="more-actions">
+                                    <el-dropdown @command="(command) => handleMoreAction(command, comment)">
+                                        <span class="more-icon">
+                                            <svg-icon icon-class="more-up2"></svg-icon>
+                                        </span>
+                                        <template #dropdown>
+                                            <el-dropdown-menu>
+                                                <el-dropdown-item v-if="isHasTeacherRole || comment.userId === currentUserId" 
+                                                                  command="delete" class="delete-item">删除</el-dropdown-item>
+                                                <el-dropdown-item v-if="isHasTeacherRole || comment.userId === currentUserId" 
+                                                                  :command="comment.visibleType === 1 ? 'makePublic' : 'makePrivate'"
+                                                                  class="change-visibility-item">
+                                                    {{ comment.visibleType === 1 ? '公开' : '仅自己可见' }}
+                                                </el-dropdown-item>
+                                            </el-dropdown-menu>
+                                        </template>
+                                    </el-dropdown>
                                 </div>
                             </div>
                         </div>
@@ -121,6 +136,7 @@
                                     <div class="comment-header">
                                         <div class="user-info">
                                             <span class="user-nickname" @click="getUserInfo(childComment.userId)" style="cursor: pointer;">{{ childComment.userNickName }}</span>
+                                            <span class="visible-type" style="color: #999; margin-left: 8px;font-size: 13px;">{{ childComment.visibleType === 1 ? '仅自己可见' : '公开' }}</span>
                                         </div>
                                         <div class="comment-time">
                                             {{ formatDate(childComment.commentTime) }}
@@ -149,11 +165,22 @@
                                                 <el-button type="text"
                                                     @click="openReplyDialog(childComment.id)">回复</el-button>
                                             </div>
-                                            <div class="delete-section">
-                                                <el-button v-if="isHasTeacherRole || childComment.userId === currentUserId" 
-                                                          type="text" 
-                                                          class="delete-btn"
-                                                          @click="handleDeleteComment(childComment)">删除</el-button>
+                                            <div class="more-actions">
+                                                <el-dropdown @command="(command) => handleMoreAction(command, childComment)">
+                                                    <span class="more-icon">
+                                                        <svg-icon icon-class="more-up2"></svg-icon>
+                                                    </span>
+                                                    <template #dropdown>
+                                                        <el-dropdown-menu>
+                                                            <el-dropdown-item v-if="isHasTeacherRole || childComment.userId === currentUserId" 
+                                                                              command="delete" class="delete-item">删除</el-dropdown-item>
+                                                            <el-dropdown-item :disabled="true" 
+                                                                              class="change-visibility-item-disabled">
+                                                                更改可见状态
+                                                            </el-dropdown-item>
+                                                        </el-dropdown-menu>
+                                                    </template>
+                                                </el-dropdown>
                                             </div>
                                         </div>
                                     </div>
@@ -271,7 +298,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail } from '@/api/literature/literature'
-import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail, deleteComment } from '@/api/comment/comment'
+import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail, deleteComment, changeVisibleType } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
 import useUserStore from '@/store/modules/user'
@@ -622,6 +649,55 @@ function closeUserInfoDialog() {
     userInfoData.value = {}
 }
 
+/** 处理更多操作下拉菜单 */
+async function handleMoreAction(command, comment) {
+    if (!comment) {
+        ElMessage.error('评论信息获取失败')
+        return
+    }
+
+    switch (command) {
+        case 'delete':
+            await handleDeleteComment(comment)
+            break
+        case 'makePublic':
+            await changeCommentVisibility(comment, 2) // 公开
+            break
+        case 'makePrivate':
+            await changeCommentVisibility(comment, 1) // 仅自己可见
+            break
+    }
+}
+
+/** 更改评论可见状态 */
+async function changeCommentVisibility(comment, visibleType) {
+    try {
+        await changeVisibleType(comment.id, visibleType)
+        ElMessage.success('更改可见状态成功')
+        
+        // 更新评论的可见状态
+        if (comment.parentId && comment.parentId !== 0) {
+            // 这是子评论
+            const parentId = comment.parentId
+            if (childComments.value[parentId]) {
+                const childIndex = childComments.value[parentId].findIndex(c => c.id === comment.id)
+                if (childIndex > -1) {
+                    childComments.value[parentId][childIndex].visibleType = visibleType
+                }
+            }
+        } else {
+            // 这是父评论
+            const parentIndex = parentComments.value.findIndex(c => c.id === comment.id)
+            if (parentIndex > -1) {
+                parentComments.value[parentIndex].visibleType = visibleType
+            }
+        }
+    } catch (error) {
+        console.error('更改可见状态失败:', error)
+        ElMessage.error('更改可见状态失败')
+    }
+}
+
 /** 删除评论 */
 async function handleDeleteComment(comment) {
     // 确认删除
@@ -894,6 +970,7 @@ async function submitComment() {
 
 .like-count {
     vertical-align: middle;
+    color: #666;
 }
 
 /* 分页 */
@@ -959,7 +1036,7 @@ async function submitComment() {
 .actions-right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .view-child-btn-inline {
@@ -1138,5 +1215,57 @@ async function submitComment() {
 
 .el-upload-list__item:hover {
     background-color: #f5f7fa;
+}
+
+/* 更多操作下拉菜单样式 */
+.more-icon {
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 2px;
+    border-radius: 4px;
+    outline: none !important;
+}
+
+.more-icon:hover {
+    color: #666;
+    background-color: #f5f7fa;
+    transform: scale(1.1);
+}
+
+
+.more-actions {
+    margin-left: -8px;
+}
+
+/* 下拉菜单项样式 */
+:deep(.el-dropdown-menu__item.delete-item) {
+    color: #f56c6c !important;
+}
+
+:deep(.el-dropdown-menu__item.delete-item:hover) {
+    background-color: #fef0f0 !important;
+    color: #f56c6c !important;
+}
+
+:deep(.el-dropdown-menu__item.change-visibility-item) {
+    color: #606266 !important;
+}
+
+:deep(.el-dropdown-menu__item.change-visibility-item:hover) {
+    background-color: #f5f7fa !important;
+    color: #606266 !important;
+}
+
+:deep(.el-dropdown-menu__item.change-visibility-item-disabled) {
+    color: #c0c4cc !important;
+    cursor: not-allowed !important;
+}
+
+:deep(.el-dropdown-menu__item.change-visibility-item-disabled:hover) {
+    background-color: transparent !important;
+    color: #c0c4cc !important;
+}
+.without-outline:focus {
+    outline: none;
 }
 </style>
