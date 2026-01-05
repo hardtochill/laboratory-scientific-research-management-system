@@ -85,14 +85,12 @@
                                 </span>
                             </div>
                            <div class="actions-right">
-                                <div class="like-section" style="margin-bottom: 4px;">
+                                <div class="like-section">
                                     <svg-icon :icon-class="comment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                         class="like-icon" @click="handleLike(comment)"></svg-icon>
                                     <span class="like-count">{{ comment.likeCount }}</span>
                                 </div>
-                                <div class="reply-section">
-                                    <el-button type="text" @click="openReplyDialog(comment.id)">回复</el-button>
-                                </div>
+                                <el-button type="text" @click="openReplyDialog(comment.id)" class="reply-btn">回复</el-button>
                                 <div class="more-actions">
                                     <el-dropdown @command="(command) => handleMoreAction(command, comment)">
                                         <span class="more-icon">
@@ -155,27 +153,29 @@
                                         <div class="actions-left">
                                         </div>
                                         <div class="actions-right">
-                                            <div class="like-section" style="margin-bottom: 4px;">
+                                            <div class="like-section">
                                                 <svg-icon
                                                     :icon-class="childComment.isLiked ? 'thumbs-up' : 'thumbs-o-up'"
                                                     class="like-icon" @click="handleLike(childComment)"></svg-icon>
                                                 <span class="like-count">{{ childComment.likeCount }}</span>
                                             </div>
-                                            <div class="reply-section">
-                                                <el-button type="text"
+                                            <el-button type="text" 
+                                                    class="reply-btn"
                                                     @click="openReplyDialog(childComment.id)">回复</el-button>
-                                            </div>
                                             <div class="more-actions">
-                                                <el-dropdown @command="(command) => handleMoreAction(command, childComment)">
+                                                <el-dropdown
+                                                    @command="(command) => handleMoreAction(command, childComment)">
                                                     <span class="more-icon">
                                                         <svg-icon icon-class="more-up2"></svg-icon>
                                                     </span>
                                                     <template #dropdown>
                                                         <el-dropdown-menu>
-                                                            <el-dropdown-item v-if="isHasTeacherRole || childComment.userId === currentUserId" 
-                                                                              command="delete" class="delete-item">删除</el-dropdown-item>
-                                                            <el-dropdown-item :disabled="true" 
-                                                                              class="change-visibility-item-disabled">
+                                                            <el-dropdown-item
+                                                                v-if="isHasTeacherRole || childComment.userId === currentUserId"
+                                                                command="delete"
+                                                                class="delete-item">删除</el-dropdown-item>
+                                                            <el-dropdown-item :disabled="true"
+                                                                class="change-visibility-item-disabled">
                                                                 更改可见状态
                                                             </el-dropdown-item>
                                                         </el-dropdown-menu>
@@ -1021,22 +1021,98 @@ async function submitComment() {
     margin-bottom: 2px;
 }
 
+/* 评论操作区域统一样式 */
 .comment-actions-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: -5px;
+    margin-top: 8px;
 }
 
 .actions-left {
-    display: flex;
-    align-items: center;
+    flex: 1;
 }
 
 .actions-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+}
+
+/* 点赞区域 */
+.like-section {
+    display: flex;
+    align-items: center;
+    margin-right: 4px;
+    height: 20px;
+    line-height: 20px;
+}
+
+.like-icon {
+    font-size: 22px;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    color: #606266;
+}
+
+.like-icon:hover {
+    color: #409eff;
+    background-color: #f0f9ff;
+    transform: scale(1.1);
+}
+
+.like-icon:active {
+    transform: scale(0.95);
+}
+
+.like-count {
+    font-size: 13px;
+    color: #909399;
+    text-align: center;
+}
+
+/* 回复按钮 */
+.reply-btn {
+    font-size: 13px;
+    padding: 4px 4px 4px 8px;
+    height: 20px;
+    line-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 更多操作 */
+.more-actions {
+    position: relative;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.more-icon {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.more-icon:hover {
+    background-color: #f5f7fa;
+    color: #666;
+}
+
+.more-icon .svg-icon {
+    width: 14px;
+    height: 14px;
+    color: #606266;
 }
 
 .view-child-btn-inline {
@@ -1053,35 +1129,6 @@ async function submitComment() {
     background-color: rgba(64, 158, 255, 0.1);
 }
 
-.like-icon {
-    font-size: 22px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #606266;
-    padding: 2px;
-    border-radius: 4px;
-    margin-right: 1px;
-    margin-bottom: -4px;
-}
-
-.like-icon:hover {
-    color: #409eff;
-    background-color: rgba(64, 158, 255, 0.1);
-    transform: scale(1.1);
-}
-
-.like-icon:active {
-    color: #3078c6;
-    transform: scale(0.95);
-}
-
-.like-count {
-    font-size: 14px;
-    color: #666;
-}
-
-
-
 .related-files {
     margin-top: 8px;
     padding-top: 8px;
@@ -1097,10 +1144,6 @@ async function submitComment() {
 .file-link {
     color: #409eff !important;
     font-size: 14px;
-}
-.reply-section {
-    margin-right: 6x;
-    height: auto !important;
 }
 
 .file-link:hover {
@@ -1217,25 +1260,7 @@ async function submitComment() {
     background-color: #f5f7fa;
 }
 
-/* 更多操作下拉菜单样式 */
-.more-icon {
-    cursor: pointer;
-    transition: all 0.3s;
-    padding: 2px;
-    border-radius: 4px;
-    outline: none !important;
-}
 
-.more-icon:hover {
-    color: #666;
-    background-color: #f5f7fa;
-    transform: scale(1.1);
-}
-
-
-.more-actions {
-    margin-left: -8px;
-}
 
 /* 下拉菜单项样式 */
 :deep(.el-dropdown-menu__item.delete-item) {
