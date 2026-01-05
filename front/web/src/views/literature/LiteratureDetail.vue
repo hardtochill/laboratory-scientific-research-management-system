@@ -100,9 +100,16 @@
                                             <el-dropdown-menu>
                                                 <el-dropdown-item v-if="isHasTeacherRole || comment.userId === currentUserId" 
                                                                   command="delete" class="delete-item">删除</el-dropdown-item>
+                                                <el-dropdown-item v-else :disabled="true" class="delete-item-disabled">
+                                                    删除
+                                                </el-dropdown-item>
+
                                                 <el-dropdown-item v-if="isHasTeacherRole || comment.userId === currentUserId" 
                                                                   :command="comment.visibleType === 1 ? 'makePublic' : 'makePrivate'"
                                                                   class="change-visibility-item">
+                                                    {{ comment.visibleType === 1 ? '公开' : '仅自己可见' }}
+                                                </el-dropdown-item>
+                                                <el-dropdown-item v-else :disabled="true" class="change-visibility-item-disabled">
                                                     {{ comment.visibleType === 1 ? '公开' : '仅自己可见' }}
                                                 </el-dropdown-item>
                                             </el-dropdown-menu>
@@ -174,6 +181,10 @@
                                                                 v-if="isHasTeacherRole || childComment.userId === currentUserId"
                                                                 command="delete"
                                                                 class="delete-item">删除</el-dropdown-item>
+                                                            <el-dropdown-item v-else
+                                                            class="delete-item-disabled" :disabled="true">
+                                                                删除
+                                                            </el-dropdown-item>
                                                             <el-dropdown-item :disabled="true"
                                                                 class="change-visibility-item-disabled">
                                                                 更改可见状态
@@ -1266,6 +1277,11 @@ async function submitComment() {
 :deep(.el-dropdown-menu__item.change-visibility-item:hover) {
     background-color: #f5f7fa !important;
     color: #606266 !important;
+}
+
+:deep(.el-dropdown-menu__item.delete-item-disabled){
+    color: #c0c4cc !important;
+    cursor: not-allowed !important;
 }
 
 :deep(.el-dropdown-menu__item.change-visibility-item-disabled) {
