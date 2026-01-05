@@ -42,4 +42,10 @@ public interface CommentService {
     void addComment(CommentDTO commentDTO);
 
     CommentUserVO getCommentUserDetail(Long userId);
+     /**
+      * 更改评论的可见状态
+      * @param commentId
+      * @param visibleType
+      */
+    void changeVisibleType(Long commentId, Integer visibleType);
 }

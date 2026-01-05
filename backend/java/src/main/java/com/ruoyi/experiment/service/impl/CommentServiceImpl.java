@@ -256,4 +256,17 @@ public class CommentServiceImpl implements CommentService {
         commentUserVO.setPhone(sysUser.getPhonenumber());
         return commentUserVO;
     }
+
+    @Override
+    public void changeVisibleType(Long commentId, Integer visibleType) {
+        // 权限校验
+        Comment comment = commentMapper.selectById(commentId);
+        if(null==comment || !CommentConstants.FIRST_PARENT_COMMENT_ID.equals(comment.getParentId())){
+            throw new ServiceException("评论状态异常");
+        }
+        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
+            commentMapper.updateVisibleType(commentId, visibleType);
+        }
+    }
 }

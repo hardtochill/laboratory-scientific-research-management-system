@@ -83,4 +83,14 @@ public class CommentController extends BaseController {
     public AjaxResult getCommentUserDetail(@PathVariable("userId") Long userId) {
         return success(commentService.getCommentUserDetail(userId));
     }
+
+    /**
+     * 更改评论的可见状态
+     */
+    @PostMapping("/changeVisibleType")
+     public AjaxResult changeVisibleType(@RequestParam("commentId") Long commentId,
+                                         @RequestParam("visibleType") Integer visibleType) {
+        commentService.changeVisibleType(commentId, visibleType);
+        return success();
+    }
 }

@@ -67,4 +67,9 @@ public interface CommentMapper {
      */
     @AutoFill(OperationTypeEnum.INSERT)
     void insert(Comment comment);
+    /**
+     * 更新评论可见状态
+     */
+    @Update("update comment set visible_type = #{visibleType} where id = #{commentId}")
+    void updateVisibleType(Long commentId, Integer visibleType);
 }
