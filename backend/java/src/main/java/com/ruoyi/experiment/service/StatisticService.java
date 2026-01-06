@@ -1,14 +1,22 @@
 package com.ruoyi.experiment.service;
 
-import com.ruoyi.experiment.pojo.dto.KeywordDTO;
-import com.ruoyi.experiment.pojo.dto.KeywordQueryDTO;
-import com.ruoyi.experiment.pojo.entity.Keyword;
+import com.ruoyi.experiment.pojo.dto.StatisticQueryDTO;
+import com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO;
+import com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO;
+import com.ruoyi.framework.web.page.TableDataInfo;
 
+import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 文献统计管理服务接口
- */
 public interface StatisticService {
+    List<StudentReadStatisticsVO> selectStudentReadingStatistics(StatisticQueryDTO queryDTO);
 
+    List<StudentReadStatisticsVO.LiteratureReadDetail> selectStudentLiteratureDetail(Long studentId, LocalDateTime startTime, LocalDateTime endTime);
+
+    List<LiteratureReadStatisticsVO> selectLiteratureReadingStatistics(StatisticQueryDTO queryDTO);
+
+    List<LiteratureReadStatisticsVO.StudentReadDetail> selectLiteratureStudentDetail(Long literatureId, LocalDateTime startTime, LocalDateTime endTime);
+
+    void exportStatistics(StatisticQueryDTO queryDTO, HttpServletResponse response);
 }

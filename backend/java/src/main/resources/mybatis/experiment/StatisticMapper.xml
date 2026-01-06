@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.StatisticMapper">
+    <select id="selectStudentReadingStatistics" resultType="com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO">
+        SELECT
+            c.user_id as userId,
+            c.user_nick_name as userNickName,
+            COUNT(DISTINCT c.literature_id) as literatureCount
+        FROM comment c
+        WHERE c.parent_id = 0
+        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
+            AND c.user_nick_name LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        </if>
+        GROUP BY c.user_id, c.user_nick_name
+        <choose>
+            <when test="queryDTO.sortField != null and queryDTO.sortField != ''">
+                ORDER BY ${queryDTO.sortField} ${queryDTO.sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY literatureCount DESC, userNickName ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectStudentLiteratureDetail" resultType="com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO$LiteratureReadDetail">
+        SELECT
+            c.literature_id as literatureId,
+            l.title,
+            (
+                SELECT GROUP_CONCAT(k.keyword_name ORDER BY k.usage_count DESC SEPARATOR ', ')
+                FROM literature_keyword lk
+                LEFT JOIN keyword k ON lk.keyword_id = k.id
+                WHERE lk.literature_id = c.literature_id
+            ) as keywords,
+            MAX(c.comment_time) as lastReadTime,
+            COUNT(*) as readCount
+        FROM comment c
+        LEFT JOIN literature l ON c.literature_id = l.id
+        WHERE c.parent_id = 0
+        AND c.user_id = #{userId}
+        AND c.comment_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY c.literature_id, l.title
+        ORDER BY readCount DESC, lastReadTime DESC
+    </select>
+
+    <select id="selectLiteratureReadingStatistics" resultType="com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO">
+        SELECT
+            c.literature_id as literatureId,
+            l.title,
+            (
+                SELECT GROUP_CONCAT(k.keyword_name ORDER BY k.usage_count DESC SEPARATOR ', ')
+                FROM literature_keyword lk
+                LEFT JOIN keyword k ON lk.keyword_id = k.id
+                WHERE lk.literature_id = c.literature_id
+            ) as keywords,
+            COUNT(DISTINCT c.user_id) as studentCount
+        FROM comment c
+        LEFT JOIN literature l ON c.literature_id = l.id
+        WHERE c.parent_id = 0
+        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
+            AND l.title LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        </if>
+        GROUP BY c.literature_id, l.title
+        <choose>
+            <when test="queryDTO.sortField != null and queryDTO.sortField != ''">
+                ORDER BY ${queryDTO.sortField} ${queryDTO.sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY studentCount DESC, title ASC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectLiteratureStudentDetail" resultType="com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO$StudentReadDetail">
+        SELECT
+            c.user_id as userId,
+            c.user_nick_name as userNickName,
+            MAX(c.comment_time) as lastReadTime,
+            COUNT(*) as readCount
+        FROM comment c
+        WHERE c.parent_id = 0
+        AND c.literature_id = #{literatureId}
+        AND c.comment_time BETWEEN #{startTime} AND #{endTime}
+        GROUP BY c.user_id, c.user_nick_name
+        ORDER BY readCount DESC, lastReadTime DESC
+    </select>
+
+    <select id="selectStudentStatisticsForExport" resultType="com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO">
+        SELECT
+            c.user_id as userId,
+            c.user_nick_name as userNickName,
+            COUNT(DISTINCT c.literature_id) as literatureCount
+        FROM comment c
+        WHERE c.parent_id = 0
+        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
+            AND c.user_nick_name LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        </if>
+        GROUP BY c.user_id, c.user_nick_name
+        ORDER BY literatureCount DESC, userNickName ASC
+    </select>
+
+    <select id="selectLiteratureStatisticsForExport" resultType="com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO">
+        SELECT
+            c.literature_id as literatureId,
+            l.title,
+            (
+                SELECT GROUP_CONCAT(k.keyword_name ORDER BY k.usage_count DESC SEPARATOR ', ')
+                FROM literature_keyword lk
+                LEFT JOIN keyword k ON lk.keyword_id = k.id
+                WHERE lk.literature_id = c.literature_id
+            ) as keywords,
+            COUNT(DISTINCT c.user_id) as studentCount
+        FROM comment c
+        LEFT JOIN literature l ON c.literature_id = l.id
+        WHERE c.parent_id = 0
+        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
+            AND l.title LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        </if>
+        GROUP BY c.literature_id, l.title
+        ORDER BY studentCount DESC, title ASC
+    </select>
+</mapper>
