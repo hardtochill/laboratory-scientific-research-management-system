@@ -1,4 +1,4 @@
-package com.ruoyi.experiment.pojo.vo;
+package com.ruoyi.project.system.domain.vo;
 
 import com.ruoyi.project.system.domain.SysRole;
 import lombok.AllArgsConstructor;
@@ -7,13 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * 评论用户VO
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentUserVO {
+public class UserDetailVO {
     private Long userId;
     private String userName;
     private String userNickName;

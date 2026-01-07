@@ -309,10 +309,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail } from '@/api/literature/literature'
-import { listParentComments, listChildComments, toggleLike, addComment, getCommentUserDetail, deleteComment, changeVisibleType } from '@/api/comment/comment'
+import { listParentComments, listChildComments, toggleLike, addComment, deleteComment, changeVisibleType } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
 import useUserStore from '@/store/modules/user'
+import { getUserDetail } from '../../api/system/user'
 
 
 
@@ -639,7 +640,7 @@ async function getUserInfo(userId) {
     
     try {
         userInfoLoading.value = true
-        const response = await getCommentUserDetail(userId)
+        const response = await getUserDetail(userId)
         if (response.code === 200) {
             userInfoData.value = response.data || {}
             showUserInfoDialog.value = true

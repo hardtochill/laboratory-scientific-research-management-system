@@ -2,7 +2,6 @@ package com.ruoyi.experiment.service;
 
 import com.ruoyi.experiment.pojo.dto.CommentDTO;
 import com.ruoyi.experiment.pojo.dto.CommentQueryDTO;
-import com.ruoyi.experiment.pojo.vo.CommentUserVO;
 import com.ruoyi.experiment.pojo.vo.CommentVO;
 
 import java.util.List;
@@ -41,7 +40,6 @@ public interface CommentService {
      */
     void addComment(CommentDTO commentDTO);
 
-    CommentUserVO getCommentUserDetail(Long userId);
      /**
       * 更改评论的可见状态
       * @param commentId

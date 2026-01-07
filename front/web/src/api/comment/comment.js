@@ -71,14 +71,6 @@ export function addComment(parentId, literatureId, commentContent, visibleType, 
   })
 }
 
-// 获取评论用户详情
-export function getCommentUserDetail(userId) {
-  return request({
-    url: `/comment/getCommentUserDetail/${userId}`,
-    method: 'get',
-  })
-}
-
 // 删除评论
 export function deleteComment(commentId) {
   return request({

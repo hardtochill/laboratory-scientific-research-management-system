@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.validation.Validator;
 
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
+import com.ruoyi.project.system.domain.vo.UserDetailVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,6 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
-import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.framework.aspectj.lang.annotation.DataScope;
 import com.ruoyi.project.system.domain.SysRole;
 import com.ruoyi.project.system.domain.SysUser;
@@ -471,5 +471,18 @@ public class SysUserServiceImpl implements ISysUserService
     public List<SysUser> getSelectableUsers(String nickName) {
         // 查询未毕业的用户（支持模糊匹配）
         return userMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
+    }
+
+    @Override
+    public UserDetailVO getUserDetail(Long userId) {
+        SysUser sysUser = userMapper.selectUserById(userId);
+        UserDetailVO userDetailVO = new UserDetailVO();
+        userDetailVO.setUserId(sysUser.getUserId());
+        userDetailVO.setUserName(sysUser.getUserName());
+        userDetailVO.setUserNickName(sysUser.getNickName());
+        userDetailVO.setRoles(sysUser.getRoles());
+        userDetailVO.setEmail(sysUser.getEmail());
+        userDetailVO.setPhone(sysUser.getPhonenumber());
+        return userDetailVO;
     }
 }

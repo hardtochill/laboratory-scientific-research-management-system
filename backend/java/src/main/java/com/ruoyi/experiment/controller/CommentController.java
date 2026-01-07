@@ -76,13 +76,6 @@ public class CommentController extends BaseController {
          commentService.addComment(commentDTO);
         return success();
     }
-    /**
-     * 获取评论用户的信息
-     */
-    @GetMapping("/getCommentUserDetail/{userId}")
-    public AjaxResult getCommentUserDetail(@PathVariable("userId") Long userId) {
-        return success(commentService.getCommentUserDetail(userId));
-    }
 
     /**
      * 更改评论的可见状态

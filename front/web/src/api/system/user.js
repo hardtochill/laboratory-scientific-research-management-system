@@ -135,3 +135,11 @@ export function getSelectableUsers(params) {
     params
   })
 }
+
+// 获取用户详情
+export function getUserDetail(userId) {
+  return request({
+    url: `/system/user/getUserDetail/${userId}`,
+    method: 'get',
+  })
+}

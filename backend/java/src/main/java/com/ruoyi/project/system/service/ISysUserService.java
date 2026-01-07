@@ -2,6 +2,7 @@ package com.ruoyi.project.system.service;
 
 import java.util.List;
 import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.domain.vo.UserDetailVO;
 
 /**
  * 用户 业务层
@@ -197,4 +198,10 @@ public interface ISysUserService
      */
     List<SysUser> getSelectableUsers(String nickName);
 
+    /**
+     * 获取用户详细信息
+     * @param userId
+     * @return
+     */
+    UserDetailVO getUserDetail(Long userId);
 }

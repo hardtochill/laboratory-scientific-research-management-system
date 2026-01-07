@@ -230,4 +230,11 @@ public class SysUserController extends BaseController
         List<SysUser> users = userService.getSelectableUsers(nickName);
         return AjaxResult.success(users);
     }
+    /**
+     * 获取评论用户的信息
+     */
+    @GetMapping("/getUserDetail/{userId}")
+    public AjaxResult getUserDetail(@PathVariable("userId") Long userId) {
+        return success(userService.getUserDetail(userId));
+    }
 }
