@@ -279,11 +279,12 @@
                     <div class="info-row">
                         <span class="label">电话：</span>
                         <span class="value">{{ userInfoData.phone || '-' }}</span>
-                    </div>
-                    <div class="info-row" v-if="userInfoData.sysRoles && userInfoData.sysRoles.length > 0">
+                   </div>
+                    <div class="info-row" v-if="userInfoData.roles && userInfoData.roles.length > 0">
                         <span class="label">角色：</span>
                         <span class="value">
-                            <el-tag v-for="role in userInfoData.sysRoles" :key="role.roleId" size="small" style="margin-right: 5px;">
+                            <el-tag v-for="role in userInfoData.roles" :key="role.roleId" size="small"
+                                style="margin-right: 5px;">
                                 {{ role.roleName }}
                             </el-tag>
                         </span>
