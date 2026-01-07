@@ -74,43 +74,44 @@
 
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="按学生统计" name="student">
-        <el-table v-loading="loading" :data="studentList" @expand-change="handleStudentExpand" row-key="userId" :default-expand-all="false" :key="studentTableKey">
-          <el-table-column type="expand">
+        <el-table v-loading="loading" :data="studentList" @expand-change="handleStudentExpand" row-key="userId" :default-expand-all="false" :key="studentTableKey" fit>
+          <el-table-column type="expand" width="50">
             <template #default="{ row }">
               <div v-if="expandedStudentIds.includes(row.userId)" class="student-detail">
                 <el-table :data="studentLiteratureMap[row.userId]" border size="small">
-                  <el-table-column prop="title" label="文献名称" min-width="200" :show-overflow-tooltip="true" />
-                  <el-table-column prop="keywords" label="关键词" width="200" :show-overflow-tooltip="true" />
-                  <el-table-column prop="readCount" label="阅读次数" width="100" align="center" />
-                  <el-table-column prop="lastReadTime" label="最后阅读时间" width="160" align="center">
+                  <el-table-column prop="title" label="文献名称" min-width="180" :show-overflow-tooltip="true" align="center" />
+                  <el-table-column prop="keywords" label="关键词" min-width="180" :show-overflow-tooltip="true" align="center" />
+                  <el-table-column prop="readCount" label="阅读次数" min-width="150" align="center" sortable />
+                  <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="250" align="center">
                     <template #default="{ row: detail }">
                       <span>{{ parseTime(detail.lastReadTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
                     </template>
                   </el-table-column>
-                  <el-table-column label="操作" width="80" align="center">
+                  <el-table-column label="操作" width="150" align="center">
                     <template #default="{ row: detail }">
-                      <el-button link type="primary" size="small" @click="goToLiteratureDetail(detail.literatureId)">查看详情</el-button>
+                      <el-button link type="primary" size="small" @click="goToLiteratureDetail(detail.literatureId)">查看文献</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="userNickName" label="学生昵称" width="150" align="center" />
+          <el-table-column prop="userNickName" label="学生昵称" min-width="150" align="center" />
           <el-table-column prop="literatureCount" label="阅读文献数量" width="150" align="center" sortable />
+          <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="150" align="center" />
         </el-table>
         <pagination v-show="studentTotal > 0" :total="studentTotal" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getStudentList" />
       </el-tab-pane>
 
       <el-tab-pane label="按文献统计" name="literature">
-        <el-table v-loading="loading" :data="literatureList" @expand-change="handleLiteratureExpand" row-key="literatureId" :default-expand-all="false" :key="literatureTableKey">
-          <el-table-column type="expand">
+        <el-table v-loading="loading" :data="literatureList" @expand-change="handleLiteratureExpand" row-key="literatureId" :default-expand-all="false" :key="literatureTableKey" fit>
+          <el-table-column type="expand" width="50">
             <template #default="{ row }">
               <div v-if="expandedLiteratureIds.includes(row.literatureId)" class="literature-detail">
                 <el-table :data="literatureStudentMap[row.literatureId]" border size="small">
-                  <el-table-column prop="userNickName" label="学生昵称" width="150" align="center" />
-                  <el-table-column prop="readCount" label="阅读次数" width="100" align="center" />
-                  <el-table-column prop="lastReadTime" label="最后阅读时间" width="160" align="center">
+                  <el-table-column prop="userNickName" label="学生昵称" min-width="150" align="center" />
+                  <el-table-column prop="readCount" label="阅读次数" min-width="150" align="center" sortable />
+                  <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="200" align="center">
                     <template #default="{ row: detail }">
                       <span>{{ parseTime(detail.lastReadTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
                     </template>
@@ -119,9 +120,9 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="title" label="文献名称" min-width="200" :show-overflow-tooltip="true" />
-          <el-table-column prop="keywords" label="关键词" width="200" :show-overflow-tooltip="true" />
-          <el-table-column prop="studentCount" label="阅读学生数量" width="150" align="center" sortable />
+          <el-table-column prop="title" label="文献名称" min-width="180" :show-overflow-tooltip="true" align="center" />
+          <el-table-column prop="keywords" label="关键词" min-width="180" :show-overflow-tooltip="true" align="center" />
+          <el-table-column prop="studentCount" label="阅读学生数量" width="180" align="center" sortable />
         </el-table>
         <pagination v-show="literatureTotal > 0" :total="literatureTotal" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getLiteratureList" />
       </el-tab-pane>

@@ -14,6 +14,7 @@ public class StudentReadStatisticsVO {
     private Long userId;
     private String userNickName;
     private Long literatureCount;
+    private LocalDateTime lastReadTime;
     private List<LiteratureReadDetail> literatureList;
 
     @Data

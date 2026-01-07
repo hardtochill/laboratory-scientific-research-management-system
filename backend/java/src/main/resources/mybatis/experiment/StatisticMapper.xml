@@ -7,7 +7,8 @@
         SELECT
             c.user_id as userId,
             c.user_nick_name as userNickName,
-            COUNT(DISTINCT c.literature_id) as literatureCount
+            COUNT(DISTINCT c.literature_id) as literatureCount,
+            MAX(c.comment_time) as lastReadTime
         FROM comment c
         WHERE c.parent_id = 0
         AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
