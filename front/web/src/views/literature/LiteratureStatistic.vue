@@ -74,7 +74,7 @@
 
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="按学生统计" name="student">
-        <el-table v-loading="loading" :data="studentList" @expand-change="handleStudentExpand" row-key="userId" :default-expand-all="false">
+        <el-table v-loading="loading" :data="studentList" @expand-change="handleStudentExpand" row-key="userId" :default-expand-all="false" :key="studentTableKey">
           <el-table-column type="expand">
             <template #default="{ row }">
               <div v-if="expandedStudentIds.includes(row.userId)" class="student-detail">
@@ -103,7 +103,7 @@
       </el-tab-pane>
 
       <el-tab-pane label="按文献统计" name="literature">
-        <el-table v-loading="loading" :data="literatureList" @expand-change="handleLiteratureExpand" row-key="literatureId" :default-expand-all="false">
+        <el-table v-loading="loading" :data="literatureList" @expand-change="handleLiteratureExpand" row-key="literatureId" :default-expand-all="false" :key="literatureTableKey">
           <el-table-column type="expand">
             <template #default="{ row }">
               <div v-if="expandedLiteratureIds.includes(row.literatureId)" class="literature-detail">
@@ -199,18 +199,23 @@ const data = reactive({
     endTime: undefined,
     userId: undefined,
     literatureId: undefined,
-  }
+  },
+  studentTableKey: 0,
+  literatureTableKey: 0,
 })
 
-const { queryParams } = toRefs(data)
+const { queryParams, studentTableKey, literatureTableKey } = toRefs(data)
 
 function getDefaultDateRange() {
   const end = new Date()
   end.setHours(23, 59, 59, 999)
   const start = new Date()
-  start.setTime(start.getTime() - 30 * 24 * 60 * 60 * 1000)
-  dateRange.value = [start, end]
-  handleDateChange([start, end])
+  start.setTime(start.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const startStr = parseTime(start, '{y}-{m}-{d} {h}:{i}:{s}')
+  const endStr = parseTime(end, '{y}-{m}-{d} {h}:{i}:{s}')
+  dateRange.value = [startStr, endStr]
+  queryParams.value.startTime = startStr
+  queryParams.value.endTime = endStr
 }
 
 function handleDateChange(val) {
@@ -251,17 +256,15 @@ function resetQuery() {
 
 function handleTabChange(tab) {
   queryParams.value.pageNum = 1
-  queryParams.value.userId = undefined
-  queryParams.value.literatureId = undefined
-  selectedUserNickName.value = ''
-  selectedLiteratureName.value = ''
-  expandedStudentIds.value = []
-  expandedLiteratureIds.value = []
-  studentLiteratureMap.value = {}
-  literatureStudentMap.value = {}
   if (tab === 'student') {
+    expandedLiteratureIds.value = []
+    literatureStudentMap.value = {}
+    literatureTableKey.value++
     getStudentList()
   } else {
+    expandedStudentIds.value = []
+    studentLiteratureMap.value = {}
+    studentTableKey.value++
     getLiteratureList()
   }
 }
@@ -431,6 +434,7 @@ function handleClearLiterature() {
 
 onMounted(() => {
   getDefaultDateRange()
+  getStudentList()
 })
 </script>
 
