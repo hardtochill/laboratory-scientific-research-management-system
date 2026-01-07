@@ -116,6 +116,11 @@
                       <span>{{ parseTime(detail.lastReadTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
                     </template>
                   </el-table-column>
+                  <el-table-column label="操作" width="150" align="center">
+                    <template #default="{ row: detail }">
+                      <el-button link type="primary" size="small" @click="handleViewUser(detail.userId)">查看用户</el-button>
+                    </template>
+                  </el-table-column>
                 </el-table>
               </div>
             </template>
@@ -127,6 +132,45 @@
         <pagination v-show="literatureTotal > 0" :total="literatureTotal" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getLiteratureList" />
       </el-tab-pane>
     </el-tabs>
+
+    <el-dialog v-model="showUserInfoDialog" title="用户信息" width="500px" @close="closeUserInfoDialog">
+      <div v-loading="userInfoLoading" class="user-info-content">
+        <div v-if="userInfoData && Object.keys(userInfoData).length > 0" class="user-info-item">
+          <div class="info-row">
+            <span class="label">用户名：</span>
+            <span class="value">{{ userInfoData.userName || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">昵称：</span>
+            <span class="value">{{ userInfoData.userNickName || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">邮箱：</span>
+            <span class="value">{{ userInfoData.email || '-' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">电话：</span>
+            <span class="value">{{ userInfoData.phone || '-' }}</span>
+          </div>
+          <div class="info-row" v-if="userInfoData.roles && userInfoData.roles.length > 0">
+            <span class="label">角色：</span>
+            <span class="value">
+              <el-tag v-for="role in userInfoData.roles" :key="role.roleId" size="small" style="margin-right: 5px;">
+                {{ role.roleName }}
+              </el-tag>
+            </span>
+          </div>
+        </div>
+        <div v-else class="no-data">
+          暂无用户信息
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="closeUserInfoDialog">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -134,6 +178,7 @@
 import { listStudentStatistics, listLiteratureStatistics, getStudentReadingDetail, getLiteratureReadingDetail, exportStatistics } from "@/api/statistic/statistic"
 import { getSelectableUsers } from "@/api/system/user"
 import { getSelectableLiteratures } from "@/api/literature/literature"
+import { getUserDetail } from "@/api/system/user"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
@@ -160,6 +205,9 @@ const selectedUserNickName = ref('')
 const literatureOptions = ref([])
 const literatureLoading = ref(false)
 const selectedLiteratureName = ref('')
+const showUserInfoDialog = ref(false)
+const userInfoData = ref({})
+const userInfoLoading = ref(false)
 
 const timeShortcuts = [
   { text: '今天', value: () => {
@@ -352,6 +400,34 @@ function goToLiteratureDetail(literatureId) {
   router.push(`/literature/detail/${literatureId}`)
 }
 
+async function handleViewUser(userId) {
+  if (!userId) {
+    proxy.$modal.msgError('用户ID获取失败')
+    return
+  }
+
+  try {
+    userInfoLoading.value = true
+    const res = await getUserDetail(userId)
+    if (res.code === 200) {
+      userInfoData.value = res.data || {}
+      showUserInfoDialog.value = true
+    } else {
+      proxy.$modal.msgError(res.msg || '获取用户信息失败')
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    proxy.$modal.msgError('获取用户信息失败')
+  } finally {
+    userInfoLoading.value = false
+  }
+}
+
+function closeUserInfoDialog() {
+  showUserInfoDialog.value = false
+  userInfoData.value = {}
+}
+
 async function handleExport() {
   if (!queryParams.value.startTime || !queryParams.value.endTime) {
     proxy.$modal.msgWarning("请先选择时间范围")
@@ -443,6 +519,30 @@ onMounted(() => {
 .student-detail,
 .literature-detail {
   padding: 10px 20px;
+}
+.user-info-content {
+    padding: 10px 0;
+}
+.user-info-item {
+    line-height: 1.8;
+}
+.info-row {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.info-row .label {
+    font-weight: 500;
+    color: #333;
+    min-width: 80px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.info-row .value {
+    color: #666;
+    flex: 1;
 }
 
 :deep(.el-table .el-table__expand-icon) {
