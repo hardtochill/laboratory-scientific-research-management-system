@@ -48,4 +48,10 @@ public interface LiteratureService {
      * @param literatureDTO 文献DTO
      */
     void updateLiterature(LiteratureDTO literatureDTO);
+     /**
+     * 获取可选择的文献列表（用于前端文献选择）
+     * @param literatureTitle 文献标题
+     * @return 文献列表
+     */
+    List<LiteratureVO> getSelectableLiteratures(String literatureTitle);
 }

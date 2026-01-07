@@ -173,6 +173,11 @@ public class LiteratureServiceImpl implements LiteratureService {
         addKeywordsToLiterature(literature.getId(),literatureDTO.getKeywordIds());
     }
 
+    @Override
+    public List<LiteratureVO> getSelectableLiteratures(String literatureTitle) {
+        return literatureMapper.selectSelectableLiteratures(literatureTitle);
+    }
+
     public void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;

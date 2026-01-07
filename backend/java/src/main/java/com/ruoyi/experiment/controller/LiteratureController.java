@@ -9,6 +9,7 @@ import com.ruoyi.experiment.service.LiteratureService;
 import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
+import com.ruoyi.project.system.domain.SysUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -98,5 +99,13 @@ public class LiteratureController extends BaseController {
     public AjaxResult update(@RequestBody @Validated  LiteratureDTO literatureDTO) {
         literatureService.updateLiterature(literatureDTO);
         return AjaxResult.success("修改成功");
+    }
+    /**
+     * 获取文献列表（用于前端用户选择）
+     */
+    @GetMapping("/listSelectableLiteratures")
+    public AjaxResult getSelectableLiteratures(String literatureTitle) {
+        List<LiteratureVO> literatureVOS = literatureService.getSelectableLiteratures(literatureTitle);
+        return AjaxResult.success(literatureVOS);
     }
 }

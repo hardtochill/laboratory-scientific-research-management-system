@@ -82,4 +82,8 @@ public interface LiteratureMapper {
      */
     @AutoFill(OperationTypeEnum.UPDATE)
     void updateLiterature(Literature literature);
+     /**
+     * 查询可选择的文献列表（用于前端文献选择）
+     */
+    List<LiteratureVO> selectSelectableLiteratures(String literatureTitle);
 }

@@ -101,5 +101,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from literature
         where id = #{id}
     </select>
-    
+    <select id="selectSelectableLiteratures" resultType="com.ruoyi.experiment.pojo.vo.LiteratureVO">
+        select id,title
+        from literature
+        <where>
+            <if test="literatureTitle != null">
+                and title like concat('%', #{literatureTitle}, '%')
+            </if>
+        </where>
+        order by title asc
+    </select>
+
 </mapper>

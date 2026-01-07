@@ -63,3 +63,12 @@ export function toggleNoteLike(noteId) {
     method: 'post'
   })
 }
+
+// 获取可供选择的文献列表
+export function getSelectableLiteratures(params) {
+  return request({
+    url: '/literature/listSelectableLiteratures',
+    method: 'get',
+    params
+  })
+}
