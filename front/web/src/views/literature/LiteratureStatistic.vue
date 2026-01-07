@@ -1,20 +1,6 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="100px">
-      <el-form-item label="时间范围" prop="dateRange">
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          :disabled-date="disabledDate"
-          :shortcuts="timeShortcuts"
-          @change="handleDateChange"
-          style="width: 400px"
-        ></el-date-picker>
-      </el-form-item>
       <el-form-item v-if="activeTab === 'student'" label="学生昵称" prop="userId">
         <el-select
           v-model="queryParams.userId"
@@ -58,6 +44,20 @@
             :value="item.value"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="时间范围" prop="dateRange">
+        <el-segmented class="time-range-segmented" v-model="selectedTimeRange" :options="timeRangeOptions" @change="handleTimeRangeChange"/>
+        <el-date-picker
+          v-model="dateRange"
+          type="datetimerange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          :disabled-date="disabledDate"
+          @change="handleDateChange"
+          style="width: 400px; margin-left: 20px;"
+        ></el-date-picker>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -208,6 +208,14 @@ const selectedLiteratureName = ref('')
 const showUserInfoDialog = ref(false)
 const userInfoData = ref({})
 const userInfoLoading = ref(false)
+const selectedTimeRange = ref('week')
+
+const timeRangeOptions = [
+  { label: '今天', value: 'today' },
+  { label: '最近一周', value: 'week' },
+  { label: '最近一个月', value: 'month' },
+  { label: '最近三个月', value: 'quarter' },
+]
 
 const timeShortcuts = [
   { text: '今天', value: () => {
@@ -265,6 +273,7 @@ function getDefaultDateRange() {
   dateRange.value = [startStr, endStr]
   queryParams.value.startTime = startStr
   queryParams.value.endTime = endStr
+  selectedTimeRange.value = 'week'
 }
 
 function handleDateChange(val) {
@@ -275,6 +284,33 @@ function handleDateChange(val) {
     queryParams.value.startTime = undefined
     queryParams.value.endTime = undefined
   }
+}
+
+function handleTimeRangeChange(val) {
+  const end = new Date()
+  end.setHours(23, 59, 59, 999)
+  const start = new Date()
+
+  switch (val) {
+    case 'today':
+      start.setHours(0, 0, 0, 0)
+      break
+    case 'week':
+      start.setTime(start.getTime() - 7 * 24 * 60 * 60 * 1000)
+      break
+    case 'month':
+      start.setTime(start.getTime() - 30 * 24 * 60 * 60 * 1000)
+      break
+    case 'quarter':
+      start.setTime(start.getTime() - 90 * 24 * 60 * 60 * 1000)
+      break
+  }
+
+  const startStr = parseTime(start, '{y}-{m}-{d} {h}:{i}:{s}')
+  const endStr = parseTime(end, '{y}-{m}-{d} {h}:{i}:{s}')
+  dateRange.value = [startStr, endStr]
+  queryParams.value.startTime = startStr
+  queryParams.value.endTime = endStr
 }
 
 function disabledDate(time) {
@@ -543,6 +579,11 @@ onMounted(() => {
 .info-row .value {
     color: #666;
     flex: 1;
+}
+
+.time-range-segmented {
+  --el-segmented-item-active-bg: #409EFF;
+  background-color: #f5f7fa;
 }
 
 :deep(.el-table .el-table__expand-icon) {
