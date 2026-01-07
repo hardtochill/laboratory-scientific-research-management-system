@@ -11,18 +11,11 @@
         FROM comment c
         WHERE c.parent_id = 0
         AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
-        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
-            AND c.user_nick_name LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        <if test="queryDTO.userId != null">
+            AND c.user_id = #{queryDTO.userId}
         </if>
         GROUP BY c.user_id, c.user_nick_name
-        <choose>
-            <when test="queryDTO.sortField != null and queryDTO.sortField != ''">
-                ORDER BY ${queryDTO.sortField} ${queryDTO.sortOrder}
-            </when>
-            <otherwise>
-                ORDER BY literatureCount DESC, userNickName ASC
-            </otherwise>
-        </choose>
+        ORDER BY literatureCount DESC, userNickName ASC
     </select>
 
     <select id="selectStudentLiteratureDetail" resultType="com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO$LiteratureReadDetail">
@@ -61,18 +54,11 @@
         LEFT JOIN literature l ON c.literature_id = l.id
         WHERE c.parent_id = 0
         AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
-        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
-            AND l.title LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        <if test="queryDTO.literatureId != null">
+            AND c.literature_id = #{queryDTO.literatureId}
         </if>
         GROUP BY c.literature_id, l.title
-        <choose>
-            <when test="queryDTO.sortField != null and queryDTO.sortField != ''">
-                ORDER BY ${queryDTO.sortField} ${queryDTO.sortOrder}
-            </when>
-            <otherwise>
-                ORDER BY studentCount DESC, title ASC
-            </otherwise>
-        </choose>
+        ORDER BY studentCount DESC, title ASC
     </select>
 
     <select id="selectLiteratureStudentDetail" resultType="com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO$StudentReadDetail">
@@ -97,8 +83,8 @@
         FROM comment c
         WHERE c.parent_id = 0
         AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
-        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
-            AND c.user_nick_name LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        <if test="queryDTO.userId != null">
+            AND c.user_id = #{queryDTO.userId}
         </if>
         GROUP BY c.user_id, c.user_nick_name
         ORDER BY literatureCount DESC, userNickName ASC
@@ -119,8 +105,8 @@
         LEFT JOIN literature l ON c.literature_id = l.id
         WHERE c.parent_id = 0
         AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
-        <if test="queryDTO.searchKey != null and queryDTO.searchKey != ''">
-            AND l.title LIKE CONCAT('%', #{queryDTO.searchKey}, '%')
+        <if test="queryDTO.literatureId != null">
+            AND c.literature_id = #{queryDTO.literatureId}
         </if>
         GROUP BY c.literature_id, l.title
         ORDER BY studentCount DESC, title ASC

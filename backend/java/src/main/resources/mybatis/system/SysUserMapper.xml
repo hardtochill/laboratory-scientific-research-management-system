@@ -124,7 +124,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		from sys_user
 		<where>
 			<if test="graduateFlag != null">and graduate_flag = #{graduateFlag}</if>
-			<if test="nickName != null">and nick_name like concat('%',#{nickName},'%')</if>
+			<if test="nickName != null and nickName != ''">and nick_name like concat('%',#{nickName},'%')</if>
 		</where>
 		order by user_id asc
 	</select>

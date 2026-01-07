@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 public class StatisticQueryDTO {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String searchKey;
-    private String sortField;
-    private String sortOrder;
+    // 目标用户ID
+    private Long userId;
+    // 目标文献ID
+    private Long literatureId;
 }

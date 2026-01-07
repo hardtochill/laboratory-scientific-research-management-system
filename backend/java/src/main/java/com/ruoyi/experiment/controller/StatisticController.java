@@ -58,12 +58,14 @@ public class StatisticController extends BaseController {
     public void export(
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime,
-            @RequestParam(required = false) String searchKey,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long literatureId,
             HttpServletResponse response) {
         StatisticQueryDTO queryDTO = new StatisticQueryDTO();
         queryDTO.setStartTime(startTime);
         queryDTO.setEndTime(endTime);
-        queryDTO.setSearchKey(searchKey);
+        queryDTO.setUserId(userId);
+        queryDTO.setLiteratureId(literatureId);
         statisticService.exportStatistics(queryDTO, response);
     }
 }

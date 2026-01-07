@@ -15,11 +15,49 @@
           style="width: 400px"
         ></el-date-picker>
       </el-form-item>
-      <el-form-item v-if="activeTab === 'student'" label="学生昵称" prop="searchKey">
-        <el-input v-model="queryParams.searchKey" placeholder="请输入学生昵称" clearable style="width: 200px" @keyup.enter="handleQuery" />
+      <el-form-item v-if="activeTab === 'student'" label="学生昵称" prop="userId">
+        <el-select
+          v-model="queryParams.userId"
+          filterable
+          remote
+          reserve-keyword
+          placeholder="请输入学生昵称"
+          :remote-method="remoteSearchUser"
+          :loading="userLoading"
+          style="width: 240px"
+          @change="handleSelectUser"
+          @clear="handleClearUser"
+          clearable
+        >
+          <el-option
+            v-for="item in userOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item v-if="activeTab === 'literature'" label="文献名称" prop="searchKey">
-        <el-input v-model="queryParams.searchKey" placeholder="请输入文献名称" clearable style="width: 200px" @keyup.enter="handleQuery" />
+      <el-form-item v-if="activeTab === 'literature'" label="文献名称" prop="literatureId">
+        <el-select
+          v-model="queryParams.literatureId"
+          filterable
+          remote
+          reserve-keyword
+          placeholder="请输入文献名称"
+          :remote-method="remoteSearchLiterature"
+          :loading="literatureLoading"
+          style="width: 240px"
+          @change="handleSelectLiterature"
+          @clear="handleClearLiterature"
+          clearable
+        >
+          <el-option
+            v-for="item in literatureOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
@@ -93,6 +131,8 @@
 
 <script setup name="LiteratureStatistic">
 import { listStudentStatistics, listLiteratureStatistics, getStudentReadingDetail, getLiteratureReadingDetail, exportStatistics } from "@/api/statistic/statistic"
+import { getSelectableUsers } from "@/api/system/user"
+import { getSelectableLiteratures } from "@/api/literature/literature"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
@@ -113,6 +153,12 @@ const expandedStudentIds = ref([])
 const expandedLiteratureIds = ref([])
 const studentLiteratureMap = ref({})
 const literatureStudentMap = ref({})
+const userOptions = ref([])
+const userLoading = ref(false)
+const selectedUserNickName = ref('')
+const literatureOptions = ref([])
+const literatureLoading = ref(false)
+const selectedLiteratureName = ref('')
 
 const timeShortcuts = [
   { text: '今天', value: () => {
@@ -151,9 +197,8 @@ const data = reactive({
     pageSize: 10,
     startTime: undefined,
     endTime: undefined,
-    searchKey: undefined,
-    sortField: undefined,
-    sortOrder: undefined
+    userId: undefined,
+    literatureId: undefined,
   }
 })
 
@@ -196,14 +241,20 @@ function handleQuery() {
 
 function resetQuery() {
   dateRange.value = []
-  queryParams.value.searchKey = undefined
+  queryParams.value.userId = undefined
+  queryParams.value.literatureId = undefined
+  selectedUserNickName.value = ''
+  selectedLiteratureName.value = ''
   proxy.resetForm("queryRef")
   getDefaultDateRange()
 }
 
 function handleTabChange(tab) {
   queryParams.value.pageNum = 1
-  queryParams.value.searchKey = undefined
+  queryParams.value.userId = undefined
+  queryParams.value.literatureId = undefined
+  selectedUserNickName.value = ''
+  selectedLiteratureName.value = ''
   expandedStudentIds.value = []
   expandedLiteratureIds.value = []
   studentLiteratureMap.value = {}
@@ -223,9 +274,7 @@ async function getStudentList() {
       pageSize: queryParams.value.pageSize,
       startTime: queryParams.value.startTime,
       endTime: queryParams.value.endTime,
-      searchKey: queryParams.value.searchKey,
-      sortField: queryParams.value.sortField,
-      sortOrder: queryParams.value.sortOrder
+      userId: queryParams.value.userId,
     }
     const res = await listStudentStatistics(params)
     loading.value = false
@@ -245,9 +294,7 @@ async function getLiteratureList() {
       pageSize: queryParams.value.pageSize,
       startTime: queryParams.value.startTime,
       endTime: queryParams.value.endTime,
-      searchKey: queryParams.value.searchKey,
-      sortField: queryParams.value.sortField,
-      sortOrder: queryParams.value.sortOrder
+      literatureId: queryParams.value.literatureId,
     }
     const res = await listLiteratureStatistics(params)
     loading.value = false
@@ -311,7 +358,8 @@ async function handleExport() {
     const res = await exportStatistics(
       queryParams.value.startTime,
       queryParams.value.endTime,
-      queryParams.value.searchKey
+      queryParams.value.userId,
+      queryParams.value.literatureId
     )
     const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const link = document.createElement('a')
@@ -323,6 +371,62 @@ async function handleExport() {
   } catch (error) {
     proxy.$modal.msgError("导出失败")
   }
+}
+
+async function remoteSearchUser(query) {
+  userLoading.value = true
+  try {
+    const res = await getSelectableUsers({ nickName: query || '' })
+    userOptions.value = res.data.map(user => ({
+      value: user.userId,
+      label: `${user.nickName}(${user.userName})`
+    }))
+  } catch (error) {
+    proxy.$modal.msgError("搜索用户失败")
+  } finally {
+    userLoading.value = false
+  }
+}
+
+function handleSelectUser(user) {
+  const found = userOptions.value.find(item => item.value === user)
+  if (found) {
+    selectedUserNickName.value = found.label
+  }
+}
+
+function handleClearUser() {
+  queryParams.value.userId = undefined
+  selectedUserNickName.value = ''
+  userOptions.value = []
+}
+
+async function remoteSearchLiterature(query) {
+  literatureLoading.value = true
+  try {
+    const res = await getSelectableLiteratures({ literatureTitle: query || '' })
+    literatureOptions.value = res.data.map(lit => ({
+      value: lit.id,
+      label: lit.title
+    }))
+  } catch (error) {
+    proxy.$modal.msgError("搜索文献失败")
+  } finally {
+    literatureLoading.value = false
+  }
+}
+
+function handleSelectLiterature(literature) {
+  const found = literatureOptions.value.find(item => item.value === literature)
+  if (found) {
+    selectedLiteratureName.value = found.label
+  }
+}
+
+function handleClearLiterature() {
+  queryParams.value.literatureId = undefined
+  selectedLiteratureName.value = ''
+  literatureOptions.value = []
 }
 
 onMounted(() => {

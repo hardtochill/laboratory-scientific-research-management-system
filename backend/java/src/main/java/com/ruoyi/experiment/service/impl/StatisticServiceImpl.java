@@ -28,9 +28,6 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public List<StudentReadStatisticsVO> selectStudentReadingStatistics(StatisticQueryDTO queryDTO) {
-        if ("student".equals(queryDTO.getSortField())) {
-            queryDTO.setSortField("literatureCount");
-        }
         return statisticMapper.selectStudentReadingStatistics(queryDTO);
     }
 
@@ -41,9 +38,6 @@ public class StatisticServiceImpl implements StatisticService {
 
     @Override
     public List<LiteratureReadStatisticsVO> selectLiteratureReadingStatistics(StatisticQueryDTO queryDTO) {
-        if ("literature".equals(queryDTO.getSortField())) {
-            queryDTO.setSortField("studentCount");
-        }
         return statisticMapper.selectLiteratureReadingStatistics(queryDTO);
     }
 

@@ -105,7 +105,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select id,title
         from literature
         <where>
-            <if test="literatureTitle != null">
+            <if test="literatureTitle != null and literatureTitle != ''">
                 and title like concat('%', #{literatureTitle}, '%')
             </if>
         </where>

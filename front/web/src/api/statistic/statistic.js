@@ -32,11 +32,11 @@ export function getLiteratureReadingDetail(literatureId, startTime, endTime) {
   })
 }
 
-export function exportStatistics(startTime, endTime, searchKey) {
+export function exportStatistics(startTime, endTime, userId, literatureId) {
   return request({
     url: '/statistic/export',
     method: 'get',
-    params: { startTime, endTime, searchKey },
+    params: { startTime, endTime, userId, literatureId },
     responseType: 'blob'
   })
 }
