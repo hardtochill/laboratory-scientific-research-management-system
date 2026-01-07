@@ -191,4 +191,10 @@ public interface ISysUserService
      */
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName);
 
+
+    /**
+     * 查询可参与任务的用户（用于前端用户选择）
+     */
+    List<SysUser> getSelectableUsers(String nickName);
+
 }

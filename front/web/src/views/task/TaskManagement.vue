@@ -366,7 +366,8 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers, getSelectableUsers } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers } from '@/api/task/task'
+import { getSelectableUsers } from '@/api/system/user'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'

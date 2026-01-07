@@ -222,5 +222,12 @@ public class SysUserController extends BaseController
         userService.insertUserAuth(userId, roleIds);
         return success();
     }
-
+    /**
+     * 获取未毕业用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listSelectableUsers")
+    public AjaxResult getSelectableUsers(String nickName) {
+        List<SysUser> users = userService.getSelectableUsers(nickName);
+        return AjaxResult.success(users);
+    }
 }

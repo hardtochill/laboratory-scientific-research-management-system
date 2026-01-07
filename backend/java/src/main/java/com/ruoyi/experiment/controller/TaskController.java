@@ -105,13 +105,4 @@ public class TaskController extends BaseController {
         List<SysUser> users = taskService.getParticipantUsersByTaskId(taskId);
         return AjaxResult.success(users);
     }
-
-    /**
-     * 获取未毕业用户列表（用于前端用户选择）
-     */
-    @GetMapping("/listSelectableUsers")
-    public AjaxResult getSelectableUsers(String nickName) {
-        List<SysUser> users = taskService.getSelectableUsers(nickName);
-        return AjaxResult.success(users);
-    }
 }

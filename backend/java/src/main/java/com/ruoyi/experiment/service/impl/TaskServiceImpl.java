@@ -242,11 +242,6 @@ public class TaskServiceImpl implements TaskService {
         return taskUserMapper.selectUsersByTaskId(taskId);
     }
 
-    @Override
-    public List<SysUser> getSelectableUsers(String nickName) {
-        // 查询未毕业的用户（支持模糊匹配）
-        return sysUserMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
-    }
     /**
      * 计算任务的进度条及是否有子任务
      * @param tasks
