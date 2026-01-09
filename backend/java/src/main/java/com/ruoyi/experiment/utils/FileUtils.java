@@ -33,6 +33,19 @@ public class FileUtils {
             "rar", "zip", ".gz", ".bz2",
             // pdf
             "pdf"};
+    
+    // 投稿文件允许的扩展名
+    public static final String[] SUBMISSION_ALLOWED_EXTENSION = {
+            // 图片
+            "gif", "jpg", "jpeg", "png",
+            // word excel powerpoint
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
+            // 压缩文件
+            "rar", "zip", ".gz", ".bz2",
+            // pdf
+            "pdf",
+            // 代码文件
+            "java", "py", "cpp", "c", "h", "js", "html", "css"};
     /**
      * 上传任务文件
      */
@@ -50,6 +63,13 @@ public class FileUtils {
      */
     public static String uploadCommentFile(String commentBaseDir, MultipartFile file) throws Exception{
         return uploadFile(commentBaseDir,file,Comment_ALLOWED_EXTENSION);
+    }
+    
+    /**
+     * 上传投稿文件
+     */
+    public static String uploadSubmissionFile(String submissionBaseDir, MultipartFile file) throws Exception{
+        return uploadFile(submissionBaseDir,file,SUBMISSION_ALLOWED_EXTENSION);
     }
     public static String uploadFile(String baseDir, MultipartFile file,String[] allowedExtension) throws Exception{
         // 文件名称长度校验

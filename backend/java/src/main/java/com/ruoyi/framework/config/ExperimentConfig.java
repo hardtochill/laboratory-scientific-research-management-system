@@ -24,4 +24,9 @@ public class ExperimentConfig {
      */
     @Value("${experiment.comment.baseDir}")
     private String commentBaseDir;
+    /**
+     * 投稿文件存储路径
+     */
+    @Value("${experiment.submission.baseDir}")
+    private String submissionBaseDir;
 }

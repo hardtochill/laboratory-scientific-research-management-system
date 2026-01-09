@@ -1,18 +1,20 @@
-package com.ruoyi.experiment.pojo.entity;
+package com.ruoyi.experiment.pojo.dto;
 
+import com.ruoyi.experiment.pojo.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 /**
- * 投稿计划
+ * 投稿计划DTO
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubmissionPlan extends BaseEntity{
+public class SubmissionPlanDTO{
     /**
      * 投稿计划ID
      */
@@ -20,15 +22,8 @@ public class SubmissionPlan extends BaseEntity{
      /**
      * 投稿计划名称
      */
+     @NotBlank
     private String name;
-    /**
-     * 创建用户id
-     */
-    private Long createUserId;
-    /**
-     * 创建用户昵称
-     */
-    private String createUserNickName;
     /**
      * 投稿类型：学术论文、专利、软件著作权
      */

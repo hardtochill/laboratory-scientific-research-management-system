@@ -24,6 +24,9 @@ experiment:
   # 评论文件存储路径
   comment:
     baseDir: ${ruoyi.profile}/comment
+  # 投稿文件存储路径
+  submission:
+    baseDir: ${ruoyi.profile}/submission
 
 # 开发环境配置
 server:
