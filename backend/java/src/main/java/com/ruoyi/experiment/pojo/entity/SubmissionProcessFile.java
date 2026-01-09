@@ -14,31 +14,31 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class SubmissionProcessFile extends BaseEntity{
     /**
-     * id
+     * 主键ID
      */
-    public Long id;
+    private Long id;
     /**
-     * 关联流程id
+     * 所属的投稿流程ID
      */
     private Long processId;
     /**
      * 文件名
      */
-    public String fileName;
+    private String fileName;
     /**
      * 文件路径
      */
-    public String filePath;
+    private String filePath;
     /**
      * 文件类型
      */
-    public String fileType;
+    private String fileType;
     /**
      * 文件大小，单位是B
      */
-    public Integer fileSize;
+    private Integer fileSize;
     /**
      * 上传时间
      */
-    public LocalDateTime uploadTime;
+    private LocalDateTime uploadTime;
 }
