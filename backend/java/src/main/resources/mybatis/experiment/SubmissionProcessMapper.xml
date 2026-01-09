@@ -3,5 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.SubmissionProcessMapper">
+    <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.SubmissionProcess">
+        insert into submission_process (plan_id, name, reviewer_user_id, reviewer_user_nick_name, status, remark, process_create_time, create_time, update_time)
+        values (#{planId}, #{name}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{remark}, #{processCreateTime}, #{createTime}, #{updateTime})
+    </insert>
 
+    <update id="update" parameterType="com.ruoyi.experiment.pojo.entity.SubmissionProcess">
+        update submission_process
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="reviewerUserId != null">reviewer_user_id = #{reviewerUserId},</if>
+            <if test="reviewerUserNickName != null and reviewerUserNickName != ''">reviewer_user_nick_name = #{reviewerUserNickName},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteByProcessId">
+        delete from submission_process
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteByPlanId">
+        delete from submission_process
+        where plan_id = #{planId}
+    </delete>
 </mapper>

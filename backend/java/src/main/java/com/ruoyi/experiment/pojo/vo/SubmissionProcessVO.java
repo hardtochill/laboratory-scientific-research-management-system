@@ -1,16 +1,17 @@
-package com.ruoyi.experiment.pojo.entity;
+package com.ruoyi.experiment.pojo.vo;
 
+import com.ruoyi.experiment.pojo.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubmissionProcess extends BaseEntity{
+public class SubmissionProcessVO{
     /**
      * 投稿流程ID
      */
@@ -43,4 +44,8 @@ public class SubmissionProcess extends BaseEntity{
      * 流程创建时间
      */
     private LocalDateTime processCreateTime;
+    /**
+     * 关联的文件
+     */
+    List<SubmissionProcessFileVO> files;
 }
