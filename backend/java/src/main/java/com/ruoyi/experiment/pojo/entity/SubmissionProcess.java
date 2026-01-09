@@ -19,7 +19,7 @@ public class SubmissionProcess extends BaseEntity{
      */
     private Long planId;
     /**
-     * 流程名称，例如：待送审、一审、、二审等
+     * 流程名称，例如：一审、、二审等
      */
      private String name;
     /**
@@ -31,7 +31,7 @@ public class SubmissionProcess extends BaseEntity{
       */
      private String reviewerUserNickName;
      /**
-      * 审核状态：1待发起审核、2审核中、3审核通过、4审核不通过
+      * 审核状态：1待发起内部审核、2内部审核中、3内部审核通过、4内部审核不通过
       */
      private Integer status;
     /**

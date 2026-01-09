@@ -4,19 +4,19 @@ package com.ruoyi.experiment.enums;
  */
 public enum SubmissionProcessStatusEnum {
     /**
-     * 待发起审核
+     * 待发起内部审核
      */
     WAITING_SUBMIT_REVIEW(1),
     /**
-     * 审核中
+     * 内部审核中
      */
     REVIEWING(2),
     /**
-     * 审核通过
+     * 内部审核通过
      */
     REVIEW_PASSED(3),
     /**
-     * 审核不通过
+     * 内部审核不通过
      */
     REVIEW_FAILED(4);
     /**
