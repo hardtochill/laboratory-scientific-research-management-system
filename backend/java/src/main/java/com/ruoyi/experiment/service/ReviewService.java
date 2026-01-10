@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
 
@@ -14,7 +15,7 @@ public interface ReviewService {
      * @param review 审核信息
      * @return 审核列表
      */
-    List<ReviewVO> listReviews(Review review);
+    List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO);
     
     /**
      * 查询审核详情

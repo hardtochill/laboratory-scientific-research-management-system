@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.controller;
 
+import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
 import com.ruoyi.experiment.service.ReviewService;
@@ -21,9 +22,9 @@ public class ReviewController extends BaseController {
      * 查询审核列表
      */
     @GetMapping("/list")
-    public TableDataInfo listReviews(Review review) {
+    public TableDataInfo listReviews(ReviewQueryDTO reviewQueryDTO) {
         startPage();
-        List<ReviewVO> list = reviewService.listReviews(review);
+        List<ReviewVO> list = reviewService.listReviews(reviewQueryDTO);
         return getDataTable(list);
     }
 

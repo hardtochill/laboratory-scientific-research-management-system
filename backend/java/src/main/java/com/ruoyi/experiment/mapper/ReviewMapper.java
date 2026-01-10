@@ -2,6 +2,7 @@ package com.ruoyi.experiment.mapper;
 
 import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
+import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
 import org.apache.ibatis.annotations.Mapper;
@@ -17,10 +18,10 @@ import java.util.List;
 public interface ReviewMapper {
     /**
      * 查询审核列表
-     * @param review 审核信息
+     * @param reviewQueryDTO 审核信息
      * @return 审核列表
      */
-    List<ReviewVO> selectReviewList(Review review);
+    List<ReviewVO> selectReviewList(ReviewQueryDTO reviewQueryDTO);
     
     /**
      * 查询审核

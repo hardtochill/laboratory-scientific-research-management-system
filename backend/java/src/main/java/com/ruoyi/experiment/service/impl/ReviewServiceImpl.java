@@ -6,6 +6,7 @@ import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
 import com.ruoyi.experiment.enums.ReviewStatusEnum;
 import com.ruoyi.experiment.mapper.ReviewMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
+import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
@@ -26,8 +27,8 @@ public class ReviewServiceImpl implements ReviewService {
     private final SubmissionProcessMapper submissionProcessMapper;
 
     @Override
-    public List<ReviewVO> listReviews(Review review) {
-        return reviewMapper.selectReviewList(review);
+    public List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO) {
+        return reviewMapper.selectReviewList(reviewQueryDTO);
     }
 
     @Override
