@@ -1,5 +1,6 @@
-package com.ruoyi.experiment.pojo.entity;
+package com.ruoyi.experiment.pojo.vo;
 
+import com.ruoyi.experiment.pojo.entity.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Review extends BaseEntity{
+public class ReviewVO{
     /**
      * 审核ID
      */
@@ -45,14 +46,6 @@ public class Review extends BaseEntity{
      * 审核状态：1待审核、2审核通过、3审核不通过
      */
      private Integer status;
-    /**
-     * 被审核人备注
-     */
-     private String reviewedRemark;
-     /**
-      * 审核人备注
-      */
-     private String reviewerRemark;
     /**
      * 审核发起时间
      */

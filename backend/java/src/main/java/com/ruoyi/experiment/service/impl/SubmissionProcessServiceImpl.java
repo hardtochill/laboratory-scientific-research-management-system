@@ -134,7 +134,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
         review.setStatus(ReviewStatusEnum.PENDING.getValue());
         review.setReviewedRemark(reviewedRemark);
         review.setReviewerRemark(null);
-        review.setReviewTime(null);
+        review.setReviewCreateTime(null);
         reviewMapper.insert(review);
     }
 }

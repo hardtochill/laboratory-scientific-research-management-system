@@ -3,5 +3,44 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.ReviewMapper">
+    <select id="selectReviewList" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
+        select id, plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status,review_create_time,review_finish_time
+        from review
+        <where>
+            <if test="planId != null">and plan_id = #{planId}</if>
+            <if test="processId != null">and process_id = #{processId}</if>
+            <if test="reviewedUserId != null">and reviewed_user_id = #{reviewedUserId}</if>
+            <if test="reviewerUserId != null">and reviewer_user_id = #{reviewerUserId}</if>
+            <if test="status != null">and status = #{status}</if>
+            <if test="reviewCreateTimeStart != null">and review_create_time &gt;= #{reviewCreateTimeStart}</if>
+            <if test="reviewCreateTimeEnd != null">and review_create_time &lt;= #{reviewCreateTimeEnd}</if>
+        </where>
+        order by review_create_time desc
+    </select>
 
+    <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.Review">
+        insert into review (plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status, reviewed_remark, reviewer_remark, review_time, create_time, update_time)
+        values (#{planId}, #{processId}, #{reviewedUserId}, #{reviewedUserNickName}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{reviewedRemark}, #{reviewerRemark}, #{reviewTime}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update" parameterType="com.ruoyi.experiment.pojo.entity.Review">
+        update review
+        <set>
+            <if test="status != null">status = #{status},</if>
+            <if test="reviewerRemark != null and reviewerRemark != ''">reviewer_remark = #{reviewerRemark},</if>
+            <if test="reviewFinishTime != null">review_finish_time = #{reviewFinishTime},</if>
+            update_time = #{updateTime}
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteReviewById">
+        delete from review
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteReviewByProcessId">
+        delete from review
+        where process_id = #{processId}
+    </delete>
 </mapper>
