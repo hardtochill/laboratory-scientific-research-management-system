@@ -3,6 +3,7 @@ package com.ruoyi.project.system.service;
 import java.util.List;
 import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.domain.vo.UserDetailVO;
+import com.ruoyi.project.system.domain.vo.UserVO;
 
 /**
  * 用户 业务层
@@ -196,7 +197,7 @@ public interface ISysUserService
     /**
      * 查询可参与任务的用户（用于前端用户选择）
      */
-    List<SysUser> getSelectableUsers(String nickName);
+    List<UserVO> getSelectableUsers(String nickName);
 
     /**
      * 获取用户详细信息

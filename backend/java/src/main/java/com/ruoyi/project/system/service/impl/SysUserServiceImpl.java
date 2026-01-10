@@ -7,6 +7,7 @@ import javax.validation.Validator;
 
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.project.system.domain.vo.UserDetailVO;
+import com.ruoyi.project.system.domain.vo.UserVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -468,7 +469,7 @@ public class SysUserServiceImpl implements ISysUserService
         return successMsg.toString();
     }
     @Override
-    public List<SysUser> getSelectableUsers(String nickName) {
+    public List<UserVO> getSelectableUsers(String nickName) {
         // 查询未毕业的用户（支持模糊匹配）
         return userMapper.selectUsersByGraduateFlagAndNickName(UserGraduateFlagEnum.UNGRADUATED.getValue(), nickName);
     }

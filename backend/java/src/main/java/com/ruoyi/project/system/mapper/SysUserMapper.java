@@ -3,6 +3,7 @@ package com.ruoyi.project.system.mapper;
 import java.util.List;
 
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
+import com.ruoyi.project.system.domain.vo.UserVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.ruoyi.project.system.domain.SysUser;
@@ -139,13 +140,7 @@ public interface SysUserMapper
     public SysUser checkEmailUnique(String email);
 
     /**
-     * 查询未毕业的用户
-     */
-    @Select("select user_id,nick_name,user_name from sys_user where graduate_flag = #{graduateFlag}")
-    List<SysUser> selectUsersByGraduateFlag(Integer graduateFlag);
-
-    /**
      * 根据毕业状态和昵称查询用户列表
      */
-    List<SysUser> selectUsersByGraduateFlagAndNickName(Integer graduateFlag,String nickName);
+    List<UserVO> selectUsersByGraduateFlagAndNickName(Integer graduateFlag, String nickName);
 }

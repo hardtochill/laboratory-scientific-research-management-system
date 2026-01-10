@@ -3,6 +3,8 @@ package com.ruoyi.project.system.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.project.system.domain.vo.UserVO;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -227,8 +229,7 @@ public class SysUserController extends BaseController
      */
     @GetMapping("/listSelectableUsers")
     public AjaxResult getSelectableUsers(String nickName) {
-        List<SysUser> users = userService.getSelectableUsers(nickName);
-        return AjaxResult.success(users);
+        return AjaxResult.success(userService.getSelectableUsers(nickName));
     }
     /**
      * 获取评论用户的信息
