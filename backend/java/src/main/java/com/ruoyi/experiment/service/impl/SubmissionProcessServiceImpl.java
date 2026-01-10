@@ -13,6 +13,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.Review;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import com.ruoyi.experiment.service.SubmissionProcessService;
@@ -134,7 +135,17 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
         review.setStatus(ReviewStatusEnum.PENDING.getValue());
         review.setReviewedRemark(reviewedRemark);
         review.setReviewerRemark(null);
-        review.setReviewCreateTime(null);
+        review.setReviewCreateTime(LocalDateTime.now());
+        review.setReviewFinishTime(null);
         reviewMapper.insert(review);
+    }
+
+    @Override
+    public SubmissionProcessDetailVO getSubmissionProcessDetail(Long id) {
+        SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
+        // 关联文件列表
+        List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(id);
+        vo.setFiles(submissionProcessFiles);
+        return vo;
     }
 }

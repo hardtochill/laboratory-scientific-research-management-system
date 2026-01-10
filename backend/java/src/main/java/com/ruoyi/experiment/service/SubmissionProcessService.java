@@ -3,6 +3,7 @@ package com.ruoyi.experiment.service;
 import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 
 import java.util.List;
@@ -43,4 +44,11 @@ public interface SubmissionProcessService {
      * @param reviewedRemark 被审核人备注
      */
     void submitForReview(Long processId, String reviewedRemark);
+
+     /**
+     * 查询投稿计划详情
+     * @param id 投稿流程ID
+     * @return 投稿计划详情
+     */
+    SubmissionProcessDetailVO getSubmissionProcessDetail(Long id);
 }

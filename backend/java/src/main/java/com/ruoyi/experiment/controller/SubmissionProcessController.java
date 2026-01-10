@@ -2,6 +2,7 @@ package com.ruoyi.experiment.controller;
 
 import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import com.ruoyi.experiment.service.SubmissionProcessService;
 import com.ruoyi.framework.web.controller.BaseController;
@@ -26,6 +27,13 @@ public class SubmissionProcessController extends BaseController {
         startPage();
         List<SubmissionProcessVO> list = submissionProcessService.listSubmissionProcessesByPlanId(planId);
         return getDataTable(list);
+    }
+    /**
+     * 查询投稿流程详情
+     */
+     @GetMapping("/detail/{id}")
+    public AjaxResult getSubmissionProcessDetail(@PathVariable("id") Long id) {
+        return success(submissionProcessService.getSubmissionProcessDetail(id));
     }
 
     /**

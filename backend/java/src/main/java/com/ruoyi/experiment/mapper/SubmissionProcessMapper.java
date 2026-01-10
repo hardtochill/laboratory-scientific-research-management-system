@@ -3,6 +3,7 @@ package com.ruoyi.experiment.mapper;
 import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -65,4 +66,11 @@ public interface SubmissionProcessMapper {
      */
     @Update("update submission_process set status = #{status} where id = #{id}")
     void updateStatus(@Param("id") Long id, @Param("status") Integer status);
+    /**
+     * 查询投稿计划详情
+     * @param id 投稿流程ID
+     * @return 投稿计划详情
+     */
+    @Select("select * from submission_process where id = #{id}")
+    SubmissionProcessDetailVO selectDetailByProcessId(Long id);
 }

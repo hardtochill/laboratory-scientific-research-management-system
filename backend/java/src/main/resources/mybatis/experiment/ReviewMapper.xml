@@ -19,8 +19,8 @@
     </select>
 
     <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.Review">
-        insert into review (plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status, reviewed_remark, reviewer_remark, review_time, create_time, update_time)
-        values (#{planId}, #{processId}, #{reviewedUserId}, #{reviewedUserNickName}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{reviewedRemark}, #{reviewerRemark}, #{reviewTime}, #{createTime}, #{updateTime})
+        insert into review (plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status, reviewed_remark, reviewer_remark, review_create_time, review_finish_time, create_time, update_time)
+        values (#{planId}, #{processId}, #{reviewedUserId}, #{reviewedUserNickName}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{reviewedRemark}, #{reviewerRemark}, #{reviewCreateTime},#{reviewFinishTime}, #{createTime}, #{updateTime})
     </insert>
 
     <update id="update" parameterType="com.ruoyi.experiment.pojo.entity.Review">
