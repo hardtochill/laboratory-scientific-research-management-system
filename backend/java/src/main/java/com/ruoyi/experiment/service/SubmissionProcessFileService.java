@@ -1,8 +1,10 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * 投稿流程文件Service接口
@@ -26,4 +28,12 @@ public interface SubmissionProcessFileService {
      * @param id 投稿流程文件ID
      */
     void deleteFile(Long id);
+
+    /**
+     * 获取流程关联的所有文件
+     *
+     * @param processId 投稿流程ID
+     * @return 投稿流程文件列表
+     */
+    List<SubmissionProcessFileVO> getProcessFiles(Long processId);
 }

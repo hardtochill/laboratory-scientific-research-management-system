@@ -10,6 +10,7 @@ import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.service.SubmissionProcessFileService;
 import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
@@ -23,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -103,5 +105,10 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
             log.error("文件删除失败", e);
             throw new ServiceException("文件删除失败");
         }
+    }
+
+    @Override
+    public List<SubmissionProcessFileVO> getProcessFiles(Long processId) {
+        return submissionProcessFileMapper.selectByProcessId(processId);
     }
 }

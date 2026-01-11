@@ -23,13 +23,20 @@ public interface SubmissionProcessFileMapper {
      */
      @Select("select * from submission_process_file where id = #{id}")
     SubmissionProcessFile selectByFileId(@Param("id") Long id);
+    /**
+     * 查询投稿流程的所有文件
+     * @param processId 投稿流程ID
+     * @return 投稿流程文件列表
+     */
+    @Select("select * from submission_process_file where process_id = #{processId}")
+    List<SubmissionProcessFileVO> selectByProcessId(Long processId);
 
     /**
      * 查询投稿流程的所有文件
      * @param processId 投稿流程ID
      * @return 投稿流程文件列表
      */
-    List<SubmissionProcessFileVO> selectByProcessId(@Param("processId") Long processId);
+    List<SubmissionProcessFileVO> selectVOListByProcessId(@Param("processId") Long processId);
 
     /**
      * 查询文件路径

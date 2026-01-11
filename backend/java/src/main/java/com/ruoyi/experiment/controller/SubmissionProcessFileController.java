@@ -14,6 +14,13 @@ import javax.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 public class SubmissionProcessFileController extends BaseController {
     private final SubmissionProcessFileService submissionProcessFileService;
+    /**
+     * 获取流程关联的所有文件
+     */
+    @GetMapping("/list/{processId}")
+    public AjaxResult getSubmissionProcessFiles(@PathVariable Long processId) {
+        return success(submissionProcessFileService.getProcessFiles(processId));
+    }
 
     /**
      * 上传投稿流程文件

@@ -44,7 +44,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
         List<SubmissionProcessVO> submissionProcessVOs = submissionProcessMapper.selectByPlanId(planId);
         for (SubmissionProcessVO submissionProcessVO : submissionProcessVOs) {
             // 关联文件列表
-            List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(
+            List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(
                     submissionProcessVO.getId());
             submissionProcessVO.setFiles(submissionProcessFiles);
         }
@@ -144,7 +144,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     public SubmissionProcessDetailVO getSubmissionProcessDetail(Long id) {
         SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
         // 关联文件列表
-        List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(id);
+        List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);
         vo.setFiles(submissionProcessFiles);
         return vo;
     }
