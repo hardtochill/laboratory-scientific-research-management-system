@@ -29,7 +29,7 @@ public interface SubmissionProcessFileMapper {
      * @return 投稿流程文件列表
      */
     @Select("select * from submission_process_file where process_id = #{processId}")
-    List<SubmissionProcessFileVO> selectByProcessId(Long processId);
+    List<SubmissionProcessFile> selectByProcessId(Long processId);
 
     /**
      * 查询投稿流程的所有文件

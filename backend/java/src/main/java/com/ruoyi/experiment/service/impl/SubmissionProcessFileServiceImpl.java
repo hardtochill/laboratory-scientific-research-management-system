@@ -108,7 +108,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
     }
 
     @Override
-    public List<SubmissionProcessFileVO> getProcessFiles(Long processId) {
+    public List<SubmissionProcessFile> getProcessFiles(Long processId) {
         return submissionProcessFileMapper.selectByProcessId(processId);
     }
 }

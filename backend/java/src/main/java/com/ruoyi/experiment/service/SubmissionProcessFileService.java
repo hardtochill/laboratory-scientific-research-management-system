@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,5 +36,5 @@ public interface SubmissionProcessFileService {
      * @param processId 投稿流程ID
      * @return 投稿流程文件列表
      */
-    List<SubmissionProcessFileVO> getProcessFiles(Long processId);
+    List<SubmissionProcessFile> getProcessFiles(Long processId);
 }
