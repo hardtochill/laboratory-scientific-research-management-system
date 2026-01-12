@@ -3,6 +3,7 @@ package com.ruoyi.experiment.controller;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import com.ruoyi.experiment.service.SubmissionPlanService;
 import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
@@ -26,6 +27,13 @@ public class SubmissionPlanController extends BaseController {
         startPage();
         List<SubmissionPlan> list = submissionPlanService.listSubmissionPlans(submissionPlanQueryDTO);
         return getDataTable(list);
+    }
+    /**
+     * 查询投稿计划-用于前端选择
+     */
+    @GetMapping("/listForSelect")
+    public AjaxResult listSubmissionPlansForSelect(String name) {
+        return success(submissionPlanService.listSubmissionPlansForSelect(name));
     }
 
     /**

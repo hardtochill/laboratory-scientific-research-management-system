@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -52,4 +53,10 @@ public interface SubmissionPlanMapper {
      * @return 影响行数
      */
     int deleteById(@Param("id") Long id);
+    /**
+     * 查询投稿计划-用于前端选择
+     * @param name 投稿计划名称
+     * @return 投稿计划列表
+     */
+    List<SubmissionPlanVO> selectVOList(String name);
 }

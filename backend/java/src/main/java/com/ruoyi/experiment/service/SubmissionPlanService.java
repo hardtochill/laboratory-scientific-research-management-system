@@ -4,6 +4,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 
 import java.util.List;
 
@@ -42,4 +43,10 @@ public interface SubmissionPlanService {
      * @param id 投稿计划ID
      */
     void deleteSubmissionPlan(Long id);
+    /**
+     * 查询投稿计划-用于前端选择
+     * @param name 投稿计划名称
+     * @return 投稿计划列表
+     */
+    List<SubmissionPlanVO> listSubmissionPlansForSelect(String name);
 }

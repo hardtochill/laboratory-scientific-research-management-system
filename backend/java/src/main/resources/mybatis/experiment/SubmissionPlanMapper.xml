@@ -11,9 +11,16 @@
             <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
             <if test="createUserId != null">and create_user_id = #{createUserId}</if>
             <if test="createUserNickName != null and createUserNickName != ''">and create_user_nick_name like concat('%', #{createUserNickName}, '%')</if>
+            <if test="type != null">and type = #{type}</if>
             <if test="status != null">and status = #{status}</if>
         </where>
         order by create_time desc
+    </select>
+    <select id="selectVOList" resultType="com.ruoyi.experiment.pojo.vo.SubmissionPlanVO">
+        select id, name from submission_plan
+        <where>
+            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+        </where>
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="com.ruoyi.experiment.pojo.entity.SubmissionPlan">

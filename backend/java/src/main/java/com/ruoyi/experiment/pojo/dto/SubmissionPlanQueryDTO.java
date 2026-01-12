@@ -31,6 +31,10 @@ public class SubmissionPlanQueryDTO{
      */
     private String createUserNickName;
     /**
+     * 投稿类型
+     */
+    private Integer type;
+    /**
      * 投稿状态：1待送审、2审核中、3发表成功、4发表失败
      */
     private Integer status;

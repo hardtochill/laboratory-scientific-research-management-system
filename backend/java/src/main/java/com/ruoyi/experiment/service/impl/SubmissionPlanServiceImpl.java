@@ -11,6 +11,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import com.ruoyi.experiment.service.SubmissionPlanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,5 +82,10 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
 
         // 删除投稿计划
         submissionPlanMapper.deleteById(id);
+    }
+
+    @Override
+    public List<SubmissionPlanVO> listSubmissionPlansForSelect(String name) {
+        return submissionPlanMapper.selectVOList(name);
     }
 }

@@ -1,18 +1,26 @@
 <template>
   <div class="submission-management">
     <!-- 查询表单 -->
-    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="100px" class="query-form">
       <el-form-item label="计划名称" prop="name">
-        <el-input v-model="queryParams.name" placeholder="请输入计划名称" clearable style="width: 240px"
-          @keyup.enter="handleQuery" />
+        <el-select v-model="queryParams.name" placeholder="请选择计划名称" clearable style="width: 240px"
+          filterable remote reserve-keyword :remote-method="querySelectablePlans" :loading="planLoading">
+          <el-option v-for="plan in selectablePlans" :key="plan.id" :label="plan.name" :value="plan.id" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="创建用户" prop="createUserId">
+        <el-select v-model="queryParams.createUserId" placeholder="请选择创建用户" clearable style="width: 240px"
+          filterable remote reserve-keyword :remote-method="querySelectableCreators" :loading="creatorLoading">
+          <el-option v-for="creator in selectableCreators" :key="creator.userId" :label="`${creator.nickName}(${creator.userName})`" :value="creator.userId" />
+        </el-select>
       </el-form-item>
       <el-form-item label="投稿类型" prop="type">
-        <el-input v-model="queryParams.type" placeholder="请输入投稿类型" clearable style="width: 240px"
-          @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="投稿期刊" prop="journal">
-        <el-input v-model="queryParams.journal" placeholder="请输入投稿期刊" clearable style="width: 240px"
-          @keyup.enter="handleQuery" />
+        <el-select v-model="queryParams.type" placeholder="请选择投稿类型" clearable style="width: 240px"
+          @change="handleQuery">
+          <el-option label="学术论文" :value="SUBMISSION_TYPE.ACADEMIC_PAPER" />
+          <el-option label="专利" :value="SUBMISSION_TYPE.PATENT" />
+          <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
+        </el-select>
       </el-form-item>
       <el-form-item label="计划状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="请选择计划状态" clearable style="width: 240px">
@@ -299,8 +307,8 @@
 
         <!-- 审核人 -->
         <el-form-item label="审核人" prop="reviewerUserId">
-          <el-select v-model="processFormData.reviewerUserId" placeholder="请选择审核人" filterable remote reserve-keyword style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading">
-            <el-option v-for="user in selectableUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+          <el-select v-model="processFormData.reviewerUserId" placeholder="请选择审核人" filterable remote reserve-keyword style="width: 100%;" :remote-method="querySelectableReviewers" :loading="reviewerLoading">
+            <el-option v-for="user in selectableReviewers" :key="user.userId" :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
           </el-select>
         </el-form-item>
 
@@ -411,7 +419,7 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan } from '@/api/submission/submissionPlan'
+import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect } from '@/api/submission/submissionPlan'
 import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail } from '@/api/submission/submissionProcess'
 import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles,downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { getSelectableUsers } from '@/api/system/user'
@@ -533,9 +541,11 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
+    id: undefined,
     name: undefined,
+    createUserId: undefined,
+    createUserNickName: undefined,
     type: undefined,
-    journal: undefined,
     status: undefined
   },
   total: 0
@@ -616,11 +626,18 @@ const currentProcessForReview = ref(null)
 const submitReviewForm = reactive({
   reviewedRemark: ''
 })
-const submitReviewFormRef = ref(null)
 
-// 可选用户列表
-const selectableUsers = ref([])
-const userLoading = ref(false)
+// 可选审核人列表
+const selectableReviewers = ref([])
+const reviewerLoading = ref(false)
+
+// 投稿计划名称列表（用于下拉选择）
+const selectablePlans = ref([])
+const planLoading = ref(false)
+
+// 创建用户列表（用于下拉选择）
+const selectableCreators = ref([])
+const creatorLoading = ref(false)
 
 // 加载投稿计划列表
 const loadSubmissionPlans = async () => {
@@ -654,6 +671,7 @@ const resetQuery = () => {
     pageNum: 1,
     pageSize: 10,
     name: undefined,
+    createUserNickName: undefined,
     type: undefined,
     journal: undefined,
     status: undefined
@@ -918,7 +936,7 @@ const handleProcessFormSubmit = async () => {
   try {
     await processFormRef.value.validate()
     // 从用户列表中获取审核人的nickName
-    const selectedUser = selectableUsers.value.find(user => user.userId === processFormData.reviewerUserId)
+    const selectedUser = selectableReviewers.value.find(user => user.userId === processFormData.reviewerUserId)
     const submitData = {
       ...processFormData,
       reviewerUserNickName: selectedUser ? selectedUser.nickName : ''
@@ -1152,27 +1170,44 @@ const handleSubmitReviewDialogClose = () => {
   submitReviewForm.reviewedRemark = ''
 }
 
-// 查询可选用户
-const querySelectableUsers = async (query) => {
-  userLoading.value = true
+// 查询可选审核人
+const querySelectableReviewers = async (query) => {
+  reviewerLoading.value = true
   try {
     const response = await getSelectableUsers({
       nickName: query
     })
-    selectableUsers.value = response.data || []
+    selectableReviewers.value = response.data || []
   } catch (error) {
-    console.error('获取用户列表失败:', error)
+    console.error('获取审核人列表失败:', error)
   } finally {
-    userLoading.value = false
+    reviewerLoading.value = false
   }
 }
 
-// 初始化用户列表
-const initUserList = async () => {
+// 查询可选投稿计划
+const querySelectablePlans = async (query) => {
+  planLoading.value = true
   try {
-    await querySelectableUsers('')
+    const response = await listSubmissionPlansForSelect({ name: query })
+    selectablePlans.value = response.data || []
   } catch (error) {
-    console.error('初始化用户列表失败:', error)
+    console.error('获取投稿计划列表失败:', error)
+  } finally {
+    planLoading.value = false
+  }
+}
+
+// 查询可选创建用户
+const querySelectableCreators = async (query) => {
+  creatorLoading.value = true
+  try {
+    const response = await getSelectableUsers({ nickName: query })
+    selectableCreators.value = response.data || []
+  } catch (error) {
+    console.error('获取创建用户列表失败:', error)
+  } finally {
+    creatorLoading.value = false
   }
 }
 
@@ -1200,7 +1235,6 @@ const downloadFile = async (fileId, fileName) => {
 // 页面加载时初始化数据
 onMounted(async () => {
   await loadSubmissionPlans()
-  await initUserList()
 })
 </script>
 

@@ -42,3 +42,12 @@ export function deleteSubmissionPlan(id) {
     method: 'delete'
   })
 }
+
+// 查询投稿计划名称列表（用于下拉选择）
+export function listSubmissionPlansForSelect(query) {
+  return request({
+    url: '/submissionPlan/listForSelect',
+    method: 'get',
+    params: query
+  })
+}
