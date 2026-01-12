@@ -6,18 +6,38 @@
       <el-tab-pane label="我要审核" name="toReview">
         <!-- 查询表单 -->
         <el-form :model="toReviewQueryParams" ref="toReviewQueryRef" :inline="true" label-width="80px" class="query-form">
-          <el-form-item label="计划名称" prop="planName">
-            <el-input v-model="toReviewQueryParams.planName" placeholder="请输入计划名称" clearable style="width: 240px"
-              @keyup.enter="handleToReviewQuery" />
-          </el-form-item>
-          <el-form-item label="流程名称" prop="processName">
-            <el-input v-model="toReviewQueryParams.processName" placeholder="请输入流程名称" clearable style="width: 240px"
-              @keyup.enter="handleToReviewQuery" />
+          <el-form-item label="投稿计划" prop="planId">
+            <el-select v-model="toReviewQueryParams.planId" placeholder="请选择投稿计划" filterable remote
+              :remote-method="querySelectableSubmissionPlans" :loading="submissionPlanLoading"
+              clearable style="width: 240px" @change="handleToReviewQuery">
+              <el-option v-for="plan in selectableSubmissionPlans" :key="plan.id" :label="plan.name" :value="plan.id" />
+            </el-select>
           </el-form-item>
           <el-form-item label="审核状态" prop="status">
             <el-select v-model="toReviewQueryParams.status" placeholder="请选择审核状态" clearable style="width: 240px">
               <el-option label="待审核" :value="1" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="申请人" prop="reviewedUserId">
+            <el-select v-model="toReviewQueryParams.reviewedUserId" placeholder="请选择申请人" filterable remote
+              :remote-method="querySelectableApplicants" :loading="applicantLoading"
+              clearable style="width: 240px" @change="handleToReviewQuery">
+              <el-option v-for="user in selectableApplicants" :key="user.userId" :label="user.nickName" :value="user.userId" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="发起时间" prop="dateRange">
+            <el-segmented v-model="selectedTimeRange" :options="timeRangeOptions" @change="handleTimeRangeChange" style="margin-right: 20px;" />
+            <el-date-picker
+              v-model="dateRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              @change="handleDateChange"
+              style="width: 400px;"
+              clearable
+            ></el-date-picker>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="Search" @click="handleToReviewQuery">搜索</el-button>
@@ -67,19 +87,40 @@
       <el-tab-pane label="审核记录" name="reviewed">
         <!-- 查询表单 -->
         <el-form :model="reviewedQueryParams" ref="reviewedQueryRef" :inline="true" label-width="80px" class="query-form">
-          <el-form-item label="计划名称" prop="planName">
-            <el-input v-model="reviewedQueryParams.planName" placeholder="请输入计划名称" clearable style="width: 240px"
-              @keyup.enter="handleReviewedQuery" />
-          </el-form-item>
-          <el-form-item label="流程名称" prop="processName">
-            <el-input v-model="reviewedQueryParams.processName" placeholder="请输入流程名称" clearable style="width: 240px"
-              @keyup.enter="handleReviewedQuery" />
+          <el-form-item label="投稿计划" prop="planId">
+            <el-select v-model="reviewedQueryParams.planId" placeholder="请选择投稿计划" filterable remote
+              :remote-method="querySelectableSubmissionPlans" :loading="submissionPlanLoading"
+              clearable style="width: 240px" @change="handleReviewedQuery">
+              <el-option v-for="plan in selectableSubmissionPlans" :key="plan.id" :label="plan.name" :value="plan.id" />
+            </el-select>
           </el-form-item>
           <el-form-item label="审核状态" prop="status">
             <el-select v-model="reviewedQueryParams.status" placeholder="请选择审核状态" clearable style="width: 240px">
+              <el-option label="全部" :value="0" />
               <el-option label="审核通过" :value="2" />
               <el-option label="审核不通过" :value="3" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="申请人" prop="reviewedUserId">
+            <el-select v-model="reviewedQueryParams.reviewedUserId" placeholder="请选择申请人" filterable remote
+              :remote-method="querySelectableApplicants" :loading="applicantLoading"
+              clearable style="width: 240px" @change="handleReviewedQuery">
+              <el-option v-for="user in selectableApplicants" :key="user.userId" :label="user.nickName" :value="user.userId" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="发起时间" prop="dateRange">
+            <el-segmented v-model="selectedTimeRange" :options="timeRangeOptions" @change="handleTimeRangeChange" style="margin-right: 20px;" />
+            <el-date-picker
+              v-model="dateRange"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              @change="handleDateChange"
+              style="width: 400px;"
+              clearable
+            ></el-date-picker>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" icon="Search" @click="handleReviewedQuery">搜索</el-button>
@@ -206,11 +247,14 @@
 import { ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listReviews, getReview, approveReview, rejectReview } from '@/api/review/review'
+import { listSubmissionPlansForSelect } from '@/api/submission/submissionPlan'
+import { getSelectableUsers } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
 import { Document, Check, CircleClose } from '@element-plus/icons-vue'
 
 // 审核状态枚举
 const REVIEW_STATUS = {
+  ALL: 0,
   PENDING: 1,
   PASSED: 2,
   FAILED: 3
@@ -249,6 +293,25 @@ const getReviewStatusText = (status) => {
 // 标签页
 const activeTab = ref('toReview')
 
+// 投稿计划相关
+const selectableSubmissionPlans = ref([])
+const submissionPlanLoading = ref(false)
+
+// 申请人相关
+const selectableApplicants = ref([])
+const applicantLoading = ref(false)
+
+// 时间范围相关
+const dateRange = ref([])
+const timeRangeOptions = ref([
+  { label: '今天', value: 'today' },
+  { label: '本周', value: 'week' },
+  { label: '本月', value: 'month' },
+  { label: '本季度', value: 'quarter' },
+  { label: '本年', value: 'year' }
+])
+const selectedTimeRange = ref('')
+
 // 我要审核 - 数据和分页
 const toReviewList = ref([])
 const toReviewLoading = ref(true)
@@ -256,9 +319,12 @@ const toReviewData = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    planName: undefined,
+    planId: undefined,
     processName: undefined,
-    status: 1
+    reviewedUserId: undefined,
+    reviewCreateTimeStart: undefined,
+    reviewCreateTimeEnd: undefined,
+    status: REVIEW_STATUS.PENDING
   },
   total: 0
 })
@@ -272,14 +338,132 @@ const reviewedData = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    planName: undefined,
+    planId: undefined,
     processName: undefined,
-    status: undefined
+    reviewedUserId: undefined,
+    reviewCreateTimeStart: undefined,
+    reviewCreateTimeEnd: undefined,
+    status: REVIEW_STATUS.ALL
   },
   total: 0
 })
 
 const { queryParams: reviewedQueryParams, total: reviewedTotal } = toRefs(reviewedData)
+
+// 查询可选投稿计划
+const querySelectableSubmissionPlans = async (query) => {
+  submissionPlanLoading.value = true
+  try {
+    const response = await listSubmissionPlansForSelect({ name: query })
+    selectableSubmissionPlans.value = response.data || []
+  } catch (error) {
+    console.error('获取投稿计划列表失败:', error)
+  } finally {
+    submissionPlanLoading.value = false
+  }
+}
+
+// 查询可选申请人
+const querySelectableApplicants = async (query) => {
+  applicantLoading.value = true
+  try {
+    const response = await getSelectableUsers({ nickName: query })
+    selectableApplicants.value = response.data || []
+  } catch (error) {
+    console.error('获取申请人列表失败:', error)
+  } finally {
+    applicantLoading.value = false
+  }
+}
+
+// 时间范围变化处理
+const handleTimeRangeChange = () => {
+  const now = new Date()
+  let startDate = new Date()
+  let endDate = new Date()
+  
+  switch (selectedTimeRange.value) {
+    case 'today':
+      // 今天
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(23, 59, 59, 999)
+      break
+    case 'week':
+      // 本周（周一到周日）
+      const dayOfWeek = now.getDay() || 7 // 将周日(0)转为7
+      startDate.setDate(now.getDate() - dayOfWeek + 1)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setDate(now.getDate() + (7 - dayOfWeek))
+      endDate.setHours(23, 59, 59, 999)
+      break
+    case 'month':
+      // 本月
+      startDate.setDate(1)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setMonth(now.getMonth() + 1)
+      endDate.setDate(0)
+      endDate.setHours(23, 59, 59, 999)
+      break
+    case 'quarter':
+      // 本季度
+      const quarter = Math.floor(now.getMonth() / 3)
+      startDate.setMonth(quarter * 3)
+      startDate.setDate(1)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setMonth((quarter + 1) * 3)
+      endDate.setDate(0)
+      endDate.setHours(23, 59, 59, 999)
+      break
+    case 'year':
+      // 本年
+      startDate.setMonth(0)
+      startDate.setDate(1)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setMonth(11)
+      endDate.setDate(31)
+      endDate.setHours(23, 59, 59, 999)
+      break
+    default:
+      return
+  }
+  
+  dateRange.value = [
+    startDate.toISOString().slice(0, 19).replace('T', ' '),
+    endDate.toISOString().slice(0, 19).replace('T', ' ')
+  ]
+  
+  // 更新当前标签页的查询参数
+  if (activeTab.value === 'toReview') {
+    toReviewQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
+    toReviewQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+  } else {
+    reviewedQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
+    reviewedQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+  }
+}
+
+// 日期选择变化处理
+const handleDateChange = () => {
+  selectedTimeRange.value = ''
+  
+  if (dateRange.value && dateRange.value.length === 2) {
+    if (activeTab.value === 'toReview') {
+      toReviewQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
+      toReviewQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+    } else {
+      reviewedQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
+      reviewedQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+    }
+  } else {
+    if (activeTab.value === 'toReview') {
+      toReviewQueryParams.value.reviewCreateTimeStart = undefined
+      toReviewQueryParams.value.reviewCreateTimeEnd = undefined
+    } else {
+      reviewedQueryParams.value.reviewCreateTimeStart = undefined
+      reviewedQueryParams.value.reviewCreateTimeEnd = undefined
+    }
+  }
+}
 
 // 详情对话框
 const detailDialogVisible = ref(false)
@@ -294,7 +478,6 @@ const currentReviewForAction = ref(null)
 const reviewForm = reactive({
   reviewerRemark: ''
 })
-const reviewFormRef = ref(null)
 
 // 加载待审核列表
 const loadToReviewList = async () => {
@@ -343,10 +526,16 @@ const resetToReviewQuery = () => {
   toReviewQueryParams.value = {
     pageNum: 1,
     pageSize: 10,
-    planName: undefined,
+    planId: undefined,
     processName: undefined,
-    status: 1
+    reviewedUserId: undefined,
+    reviewCreateTimeStart: undefined,
+    reviewCreateTimeEnd: undefined,
+    status: REVIEW_STATUS.PENDING
   }
+  // 重置时间范围相关状态
+  dateRange.value = []
+  selectedTimeRange.value = ''
   handleToReviewQuery()
 }
 
@@ -363,6 +552,7 @@ const handleToReviewCurrentChange = (newNum) => {
 
 // 查询审核记录
 const handleReviewedQuery = () => {
+  
   reviewedQueryParams.value.pageNum = 1
   loadReviewedList()
 }
@@ -372,10 +562,16 @@ const resetReviewedQuery = () => {
   reviewedQueryParams.value = {
     pageNum: 1,
     pageSize: 10,
-    planName: undefined,
+    planId: undefined,
     processName: undefined,
-    status: undefined
+    reviewedUserId: undefined,
+    reviewCreateTimeStart: undefined,
+    reviewCreateTimeEnd: undefined,
+    status: REVIEW_STATUS.ALL
   }
+  // 重置时间范围相关状态
+  dateRange.value = []
+  selectedTimeRange.value = ''
   handleReviewedQuery()
 }
 
@@ -470,15 +666,27 @@ const formatDate = (row, column, cellValue) => {
 
 // 监听标签页变化
 watch(activeTab, (newVal) => {
+  // 重置时间范围相关状态
+  dateRange.value = []
+  selectedTimeRange.value = ''
+  
+  // 根据标签页设置默认时间范围
   if (newVal === 'toReview') {
+    selectedTimeRange.value = 'today' // 我要审核默认今天
+    handleTimeRangeChange()
     loadToReviewList()
   } else {
+    selectedTimeRange.value = 'week' // 审核记录默认本周
+    handleTimeRangeChange()
     loadReviewedList()
   }
 })
 
 // 页面加载时初始化数据
 onMounted(async () => {
+  // 设置默认时间范围
+  selectedTimeRange.value = 'today' // 初始标签页是我要审核，默认今天
+  handleTimeRangeChange()
   await loadToReviewList()
 })
 </script>

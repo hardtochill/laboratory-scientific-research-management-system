@@ -12,10 +12,14 @@
         left join submission_process process on r.process_id = process.id
         <where>
             <if test="planId != null">and r.plan_id = #{planId}</if>
-            <if test="processId != null">and r.process_id = #{processId}</if>
             <if test="reviewedUserId != null">and r.reviewed_user_id = #{reviewedUserId}</if>
             <if test="reviewerUserId != null">and r.reviewer_user_id = #{reviewerUserId}</if>
-            <if test="status != null">and r.status = #{status}</if>
+            <if test="status != null">
+                <choose>
+                    <when test="status == 0">and r.status != 1</when>
+                    <otherwise>and r.status = #{status}</otherwise>
+                </choose>
+            </if>
             <if test="reviewCreateTimeStart != null">and r.review_create_time &gt;= #{reviewCreateTimeStart}</if>
             <if test="reviewCreateTimeEnd != null">and r.review_create_time &lt;= #{reviewCreateTimeEnd}</if>
         </where>

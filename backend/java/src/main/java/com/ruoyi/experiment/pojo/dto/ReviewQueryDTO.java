@@ -13,15 +13,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReviewQueryDTO extends BaseEntity {
+public class ReviewQueryDTO{
     /**
      * 所属投稿计划ID
      */
      private Long planId;
-    /**
-      * 所属投稿流程ID
-      */
-     private Long processId;
     /**
      * 被审核人ID
      */
