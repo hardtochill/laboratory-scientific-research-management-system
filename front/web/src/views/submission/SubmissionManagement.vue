@@ -272,7 +272,11 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleProcessDialogClose">关闭</el-button>
-          <el-button type="primary" @click="handleProcessEdit">修改</el-button>
+          <el-tooltip :content="currentProcess?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法修改' : '审核成功，无法修改'" placement="top">
+            <el-button type="primary" @click="handleProcessEdit" :disabled="currentProcess?.status === PROCESS_STATUS.REVIEWING || currentProcess?.status === PROCESS_STATUS.REVIEW_PASSED">
+              修改
+            </el-button>
+          </el-tooltip>
         </div>
       </template>
     </el-dialog>
@@ -321,7 +325,7 @@
         </div>
 
         <!-- 文件上传区域 -->
-        <div class="upload-section">
+        <div class="upload-section" v-if="currentProcessForFile?.status !== PROCESS_STATUS.REVIEWING && currentProcessForFile?.status !== PROCESS_STATUS.REVIEW_PASSED">
           <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
             :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
             <el-icon class="el-icon--upload">
@@ -367,9 +371,11 @@
                 <el-button link type="primary" @click="downloadFile(row.id, row.fileName+'.'+row.fileType)" :icon="Download">
                   下载
                 </el-button>
-                <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete">
-                  删除
-                </el-button>
+                <el-tooltip :content="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法删除文件' : '审核成功，无法删除文件'" placement="top">
+                  <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" :disabled="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING || currentProcessForFile?.status === PROCESS_STATUS.REVIEW_PASSED">
+                    删除
+                  </el-button>
+                </el-tooltip>
               </template>
             </el-table-column>
           </el-table>
@@ -865,6 +871,21 @@ const handleAddProcess = (plan) => {
 
 // 修改投稿流程
 const handleProcessEdit = () => {
+  if (!currentProcess.value) {
+    ElMessage.error('流程信息不存在')
+    return
+  }
+  
+  const currentStatus = currentProcess.value.status
+  if (currentStatus === PROCESS_STATUS.REVIEWING) {
+    ElMessage.info('审核中，无法修改')
+    return
+  }
+  if (currentStatus === PROCESS_STATUS.REVIEW_PASSED) {
+    ElMessage.info('审核成功，无法修改')
+    return
+  }
+  
   processDialogVisible.value = false
   processFormTitle.value = '修改投稿流程'
   Object.assign(processFormData, {
@@ -997,6 +1018,15 @@ const beforeUpload = (file) => {
 
 // 上传文件
 const handleUploadFiles = async () => {
+  if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEWING) {
+    ElMessage.info('审核中，无法上传文件')
+    return
+  }
+  if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEW_PASSED) {
+    ElMessage.info('审核成功，无法上传文件')
+    return
+  }
+  
   if (fileList.value.length === 0) {
     ElMessage.warning('请选择要上传的文件')
     return
@@ -1051,6 +1081,15 @@ const handleUploadFiles = async () => {
 // 删除文件
 const handleDeleteFile = async (file) => {
   try {
+    if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEWING) {
+      ElMessage.info('审核中，无法删除文件')
+      return
+    }
+    if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEW_PASSED) {
+      ElMessage.info('审核成功，无法删除文件')
+      return
+    }
+    
     await ElMessageBox.confirm('确定要删除该文件吗？', '删除确认', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
