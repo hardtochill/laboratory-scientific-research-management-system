@@ -21,13 +21,15 @@ public interface ReviewMapper {
      * @param reviewQueryDTO 审核信息
      * @return 审核列表
      */
-    List<ReviewVO> selectReviewList(ReviewQueryDTO reviewQueryDTO);
+    List<ReviewVO> selectReviewVOList(ReviewQueryDTO reviewQueryDTO);
     
     /**
      * 查询审核
      * @param id 审核ID
      * @return 审核信息
      */
+    ReviewVO selectVOById(@Param("id") Long id);
+
     @Select("select * from review where id = #{id}")
     Review selectById(@Param("id") Long id);
 

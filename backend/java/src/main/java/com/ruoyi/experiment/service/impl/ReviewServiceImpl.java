@@ -28,12 +28,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO) {
-        return reviewMapper.selectReviewList(reviewQueryDTO);
+        return reviewMapper.selectReviewVOList(reviewQueryDTO);
     }
 
     @Override
-    public Review getReviewById(Long id) {
-        return reviewMapper.selectById(id);
+    public ReviewVO getReviewById(Long id) {
+        return reviewMapper.selectVOById(id);
     }
 
     @Override

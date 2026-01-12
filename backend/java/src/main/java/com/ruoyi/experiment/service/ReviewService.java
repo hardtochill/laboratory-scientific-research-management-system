@@ -12,7 +12,7 @@ import java.util.List;
 public interface ReviewService {
     /**
      * 查询审核列表
-     * @param review 审核信息
+     * @param reviewQueryDTO 审核信息
      * @return 审核列表
      */
     List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO);
@@ -22,7 +22,7 @@ public interface ReviewService {
      * @param id 审核ID
      * @return 审核信息
      */
-    Review getReviewById(Long id);
+    ReviewVO getReviewById(Long id);
 
     /**
      * 审核通过

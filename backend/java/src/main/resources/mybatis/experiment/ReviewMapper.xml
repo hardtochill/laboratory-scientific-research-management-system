@@ -3,19 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.ReviewMapper">
-    <select id="selectReviewList" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
-        select id, plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status,review_create_time,review_finish_time
-        from review
+    <select id="selectReviewVOList" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
+        select r.id, r.plan_id, r.process_id, r.reviewed_user_id, r.reviewed_user_nick_name, r.reviewer_user_id, r.reviewer_user_nick_name, r.status,r.review_create_time,r.review_finish_time,
+                plan.name as plan_name,
+                process.name as process_name
+        from review r
+        left join submission_plan plan on r.plan_id = plan.id
+        left join submission_process process on r.process_id = process.id
         <where>
-            <if test="planId != null">and plan_id = #{planId}</if>
-            <if test="processId != null">and process_id = #{processId}</if>
-            <if test="reviewedUserId != null">and reviewed_user_id = #{reviewedUserId}</if>
-            <if test="reviewerUserId != null">and reviewer_user_id = #{reviewerUserId}</if>
-            <if test="status != null">and status = #{status}</if>
-            <if test="reviewCreateTimeStart != null">and review_create_time &gt;= #{reviewCreateTimeStart}</if>
-            <if test="reviewCreateTimeEnd != null">and review_create_time &lt;= #{reviewCreateTimeEnd}</if>
+            <if test="planId != null">and r.plan_id = #{planId}</if>
+            <if test="processId != null">and r.process_id = #{processId}</if>
+            <if test="reviewedUserId != null">and r.reviewed_user_id = #{reviewedUserId}</if>
+            <if test="reviewerUserId != null">and r.reviewer_user_id = #{reviewerUserId}</if>
+            <if test="status != null">and r.status = #{status}</if>
+            <if test="reviewCreateTimeStart != null">and r.review_create_time &gt;= #{reviewCreateTimeStart}</if>
+            <if test="reviewCreateTimeEnd != null">and r.review_create_time &lt;= #{reviewCreateTimeEnd}</if>
         </where>
-        order by review_create_time desc
+        order by r.review_create_time desc
+    </select>
+    <select id="selectVOById" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
+        select r.*,plan.name as plan_name,process.name as process_name
+        from review r
+        left join submission_plan plan on r.plan_id = plan.id
+        left join submission_process process on r.process_id = process.id
+        where r.id = #{id}
     </select>
 
     <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.Review">
