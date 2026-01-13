@@ -3,6 +3,7 @@ package com.ruoyi.experiment.service.impl;
 import com.github.promeg.pinyinhelper.Pinyin;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.mapper.*;
@@ -29,8 +30,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +65,6 @@ public class LiteratureServiceImpl implements LiteratureService {
         } else {
             queryDTO.setKeywordIdsSize(0);
         }
-        
         return literatureMapper.selectLiteratureList(queryDTO);
     }
     
@@ -133,6 +136,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         Literature literature = new Literature();
         BeanUtils.copyProperties(literatureDTO,literature);
         literature.setIdentifier(identifier);
+        literature.setAuthors(getFormattedAuthors(literatureDTO.getAuthors()));
         literature.setDownloadCount(0);
         literature.setTeacherScoreAvg(BigDecimal.ZERO);
         literature.setTeacherScoreCount(0);
@@ -166,6 +170,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 3.更新文献记录
         Literature literature = new Literature();
         BeanUtils.copyProperties(literatureDTO,literature);
+        literature.setAuthors(getFormattedAuthors(literatureDTO.getAuthors()));
         literature.setIdentifier(identifier);
         literatureMapper.updateLiterature(literature);
         // 4.更新关键词关联
@@ -345,4 +350,58 @@ public class LiteratureServiceImpl implements LiteratureService {
         return identifier.toString();
     }
 
+    /**
+     * 处理作者序列
+     * @param originAuthors
+     * @return
+     */
+    private String getFormattedAuthors(String originAuthors){
+        if (StringUtils.isEmpty(originAuthors)) {
+            return null;
+        }
+
+        originAuthors = originAuthors.trim();
+
+        // 定义人名匹配的正则表达式
+        // 匹配：中文名(2-4字) | 英文名(可带连字符) | 英文姓+名(中间有空格)
+        String namePattern = "[\\u4e00-\\u9fa5]{2,4}|[A-Z][a-z]+(?:[-·][A-Z][a-z]+)*|[A-Z][a-z]+\\s+[A-Z][a-z]+";
+
+        // 先提取所有人名
+        Pattern pattern = Pattern.compile(namePattern);
+        Matcher matcher = pattern.matcher(originAuthors);
+
+        List<String> names = new ArrayList<>();
+        while (matcher.find()) {
+            String name = matcher.group().trim();
+            if (!name.isEmpty()) {
+                names.add(name);
+            }
+        }
+
+        // 如果没有匹配到，使用原始逻辑
+        if (names.isEmpty()) {
+            // 移除所有非字母数字和汉字的字符，并用", "替换
+            return originAuthors.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5]", ", ")
+                    .replaceAll(",{2,}", ", ")  // 去除连续逗号
+                    .trim();
+        }
+
+        // 合并相邻的英文单词
+        List<String> formattedNames = new ArrayList<>();
+        for (int i = 0; i < names.size(); i++) {
+            String current = names.get(i);
+            // 如果是单个英文名，且下一个也是英文名，尝试合并
+            if (current.matches("[A-Z][a-z]+") && i + 1 < names.size()) {
+                String next = names.get(i + 1);
+                if (next.matches("[A-Z][a-z]+") && !current.contains(" ") && !next.contains(" ")) {
+                    // 检查是否是常见的英文名字组合
+                    formattedNames.add(current + " " + next);
+                    i++;  // 跳过下一个
+                    continue;
+                }
+            }
+            formattedNames.add(current);
+        }
+        return String.join(", ", formattedNames);
+    }
 }
