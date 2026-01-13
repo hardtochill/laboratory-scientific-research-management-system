@@ -5,17 +5,25 @@ package com.ruoyi.experiment.enums;
  */
 public enum SubmissionTypeEnum {
     /**
-     * 学术论文
+     * 期刊论文
      */
-    ACADEMIC_PAPER(1, "学术论文"),
+    JOURNAL_PAPER(1, "期刊论文"),
     /**
-     * 专利
+     * 会议论文
      */
-    PATENT(2, "专利"),
+    CONFERENCE_PAPER(2, "会议论文"),
+    /**
+     * 发明专利
+     */
+    INVENTION_PATENT(3, "发明专利"),
+    /**
+     * 实用新型专利
+     */
+    UTILITY_MODEL_PATENT(4, "实用新型专利"),
     /**
      * 软件著作权
      */
-    SOFTWARE_COPYRIGHT(3, "软件著作权");
+    SOFTWARE_COPYRIGHT(5, "软件著作权");
     /**
      * 投稿类型ID
      */

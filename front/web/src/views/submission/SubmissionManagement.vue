@@ -17,8 +17,10 @@
       <el-form-item label="投稿类型" prop="type">
         <el-select v-model="queryParams.type" placeholder="请选择投稿类型" clearable style="width: 240px"
           @change="handleQuery">
-          <el-option label="学术论文" :value="SUBMISSION_TYPE.ACADEMIC_PAPER" />
-          <el-option label="专利" :value="SUBMISSION_TYPE.PATENT" />
+          <el-option label="期刊论文" :value="SUBMISSION_TYPE.JOURNAL_PAPER" />
+          <el-option label="会议论文" :value="SUBMISSION_TYPE.CONFERENCE_PAPER" />
+          <el-option label="发明专利" :value="SUBMISSION_TYPE.INVENTION_PATENT" />
+          <el-option label="实用新型专利" :value="SUBMISSION_TYPE.UTILITY_MODEL_PATENT" />
           <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
         </el-select>
       </el-form-item>
@@ -211,9 +213,11 @@
         <!-- 投稿类型 -->
         <el-form-item label="投稿类型" prop="type">
           <el-select v-model="planFormData.type" placeholder="请选择投稿类型" style="width: 100%;">
-            <el-option label="学术论文" :value="SUBMISSION_TYPE.ACADEMIC_PAPER" />
-            <el-option label="专利" :value="SUBMISSION_TYPE.PATENT" />
-            <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
+           <el-option label="期刊论文" :value="SUBMISSION_TYPE.JOURNAL_PAPER" />
+          <el-option label="会议论文" :value="SUBMISSION_TYPE.CONFERENCE_PAPER" />
+          <el-option label="发明专利" :value="SUBMISSION_TYPE.INVENTION_PATENT" />
+          <el-option label="实用新型专利" :value="SUBMISSION_TYPE.UTILITY_MODEL_PATENT" />
+          <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
           </el-select>
         </el-form-item>
 
@@ -436,9 +440,11 @@ const PLAN_STATUS = {
 
 // 投稿类型枚举
 const SUBMISSION_TYPE = {
-  ACADEMIC_PAPER: 1,
-  PATENT: 2,
-  SOFTWARE_COPYRIGHT: 3
+  JOURNAL_PAPER: 1,
+  CONFERENCE_PAPER: 2,
+  INVENTION_PATENT: 3,
+  UTILITY_MODEL_PATENT: 4,
+  SOFTWARE_COPYRIGHT: 5
 }
 
 // 投稿流程状态枚举
@@ -487,10 +493,14 @@ const getPlanStatusText = (status) => {
 const getSubmissionTypeText = (type) => {
   const numType = parseInt(type)
   switch (numType) {
-    case SUBMISSION_TYPE.ACADEMIC_PAPER:
-      return '学术论文'
-    case SUBMISSION_TYPE.PATENT:
-      return '专利'
+    case SUBMISSION_TYPE.JOURNAL_PAPER:
+      return '期刊论文'
+    case SUBMISSION_TYPE.CONFERENCE_PAPER:
+      return '会议论文'
+    case SUBMISSION_TYPE.INVENTION_PATENT:
+      return '发明专利'
+    case SUBMISSION_TYPE.UTILITY_MODEL_PATENT:
+      return '实用新型专利'
     case SUBMISSION_TYPE.SOFTWARE_COPYRIGHT:
       return '软件著作权'
     default:
