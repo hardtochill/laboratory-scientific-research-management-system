@@ -29,31 +29,31 @@
     <!-- 统计面板 -->
     <div class="statistics-panel" v-if="taskStatistics">
       <div class="statistics-grid">
-        <div class="stat-card pending">
-          <div class="stat-content">
-            <div class="stat-number">{{ taskStatistics.pendingCount || 0 }}</div>
-            <div class="stat-label">未开始</div>
+          <div class="stat-card pending" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PENDING }">
+            <div class="stat-content">
+              <div class="stat-number">{{ taskStatistics.pendingCount || 0 }}</div>
+              <div class="stat-label">未开始</div>
+            </div>
+          </div>
+          <div class="stat-card processing" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PROCESSING }">
+            <div class="stat-content">
+              <div class="stat-number">{{ taskStatistics.processingCount || 0 }}</div>
+              <div class="stat-label">进行中</div>
+            </div>
+          </div>
+          <div class="stat-card finished" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.FINISHED }">
+            <div class="stat-content">
+              <div class="stat-number">{{ taskStatistics.finishedCount || 0 }}</div>
+              <div class="stat-label">已完成</div>
+            </div>
+          </div>
+          <div class="stat-card skipped" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.SKIPPED }">
+            <div class="stat-content">
+              <div class="stat-number">{{ taskStatistics.skippedCount || 0 }}</div>
+              <div class="stat-label">已跳过</div>
+            </div>
           </div>
         </div>
-        <div class="stat-card processing">
-          <div class="stat-content">
-            <div class="stat-number">{{ taskStatistics.processingCount || 0 }}</div>
-            <div class="stat-label">进行中</div>
-          </div>
-        </div>
-        <div class="stat-card finished">
-          <div class="stat-content">
-            <div class="stat-number">{{ taskStatistics.finishedCount || 0 }}</div>
-            <div class="stat-label">已完成</div>
-          </div>
-        </div>
-        <div class="stat-card skipped">
-          <div class="stat-content">
-            <div class="stat-number">{{ taskStatistics.skippedCount || 0 }}</div>
-            <div class="stat-label">已跳过</div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <el-card>
@@ -382,6 +382,9 @@ const TASK_STATUS = {
   FINISHED: 3,
   SKIPPED: 4
 }
+
+// 将TASK_STATUS暴露给模板
+const taskStatusEnum = TASK_STATUS
 
 // 任务状态类型映射
 const getStatusType = (status) => {
@@ -1396,6 +1399,14 @@ onMounted(async () => {
 .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 强调效果样式 */
+.stat-card.highlighted {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  border-width: 2px;
+  transition: all 0.3s ease;
 }
 
 .stat-card.pending {
