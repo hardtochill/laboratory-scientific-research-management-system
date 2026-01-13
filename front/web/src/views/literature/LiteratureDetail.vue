@@ -226,7 +226,7 @@
 
         <!-- 通用评论对话框 -->
         <el-dialog v-model="showCommentDialog" :title="commentDialogTitle" width="600px" @close="closeCommentDialog">
-            <el-form ref="commentFormRef" :model="commentForm" label-width="80px">
+            <el-form ref="commentFormRef" :model="commentForm" label-width="80px" :rules="commentRules">
                 <el-form-item :label="commentFormLabel" prop="content">
                     <el-input v-model="commentForm.content" type="textarea" :rows="4" maxlength="500" show-word-limit
                         :placeholder="`请输入${commentFormType === 'comment' ? '评论' : '回复'}内容（最多500字）`"></el-input>
@@ -240,16 +240,14 @@
                         子评论只能设置为公开
                     </div>
                 </el-form-item>
-                <el-form-item label="关联文件">
-                    <el-upload ref="commentUploadRef" 
-                              action="#" 
-                              :auto-upload="false" 
-                              v-model:file-list="commentForm.files"
-                              :on-change="handleFileChange"
-                              :on-remove="handleFileRemove"
-                              multiple>
-                        <el-button type="primary">选择文件</el-button>
-                    </el-upload>
+                <el-form-item label="关联文件" prop="files">
+                    <el-tooltip :content="commentFormType === 'reply' ? '回复时可不上传文件' : '请至少上传一个关联文件'" placement="top">
+                        <el-upload ref="commentUploadRef" action="#" :auto-upload="false"
+                            v-model:file-list="commentForm.files" :on-change="handleFileChange"
+                            :on-remove="handleFileRemove" multiple>
+                            <el-button type="primary">选择文件</el-button>
+                        </el-upload>
+                    </el-tooltip>
                 </el-form-item>
             </el-form>
             <template #footer>
@@ -355,6 +353,23 @@ const commentForm = ref({
   content: '',
   visibleType: 1, // 1: 仅自己可见, 2: 公开
   files: []
+})
+const commentFormRef = ref(null) // 评论表单引用
+
+// 评论表单验证规则
+const commentRules = ref({
+  content: [{ required: true, message: '请输入评论内容', trigger: 'blur' }],
+  files: [{ 
+    validator: (rule, value, callback) => {
+      // 仅在发表一级评论时强制要求上传文件
+      if (commentFormType.value === 'comment' && (!commentForm.value.files || commentForm.value.files.length === 0)) {
+        callback(new Error('请至少上传一个关联文件'))
+      } else {
+        callback()
+      }
+    }, 
+    trigger: 'change' 
+  }]
 })
 const commentFormType = ref('comment') // 'comment' | 'reply'
 const commentUploadRef = ref(null) // 文件上传组件引用
@@ -559,11 +574,21 @@ function openCommentDialog() {
     parentCommentId.value = null
     targetCommentUserId.value = null
     showCommentDialog.value = true
+    
+    // 清除表单验证错误
+    if (commentFormRef.value) {
+        commentFormRef.value.clearValidate()
+    }
 }
 
 /** 打开回复对话框 */
 function openReplyDialog(targetCommentId) {
     commentFormType.value = 'reply'
+    
+    // 清除表单验证错误
+    if (commentFormRef.value) {
+        commentFormRef.value.clearValidate()
+    }
     commentForm.value.content = ''
     commentForm.value.visibleType = 2
     commentForm.value.files = []
@@ -624,6 +649,11 @@ function closeCommentDialog() {
     parentCommentId.value = null
     targetCommentUserId.value = null
     targetCommentUserNickName.value = null
+    
+    // 清除表单验证错误
+    if (commentFormRef.value) {
+        commentFormRef.value.clearValidate()
+    }
     
     // 手动清空上传组件的文件列表
     const uploadRef = commentUploadRef.value
@@ -785,13 +815,15 @@ async function submitComment() {
         return
     }
     
-    if (!commentForm.value.content.trim()) {
-        ElMessage.warning(`请输入${commentFormType.value === 'comment' ? '评论' : '回复'}内容`)
+    // 使用表单验证
+    if (!commentFormRef.value) {
         return
     }
     
-    if (commentForm.value.content.length > 500) {
-        ElMessage.warning(`${commentFormType.value === 'comment' ? '评论' : '回复'}内容不能超过500字`)
+    try {
+        await commentFormRef.value.validate()
+    } catch (error) {
+        // 验证失败，表单会自动显示错误信息
         return
     }
     
