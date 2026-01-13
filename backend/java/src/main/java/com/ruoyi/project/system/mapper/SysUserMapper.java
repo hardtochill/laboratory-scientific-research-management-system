@@ -2,12 +2,11 @@ package com.ruoyi.project.system.mapper;
 
 import java.util.List;
 
-import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
-import com.ruoyi.project.system.domain.vo.UserVO;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import com.ruoyi.project.system.domain.SysUser;
-import org.apache.ibatis.annotations.Select;
 
 /**
  * 用户表 数据层
@@ -142,5 +141,5 @@ public interface SysUserMapper
     /**
      * 根据毕业状态和昵称查询用户列表
      */
-    List<UserVO> selectUsersByGraduateFlagAndNickName(Integer graduateFlag, String nickName);
+    List<UserForSelectVO> selectVOForSelect(UserForSelectQueryDTO queryDTO);
 }

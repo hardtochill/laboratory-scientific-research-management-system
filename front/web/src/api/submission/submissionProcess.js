@@ -53,3 +53,12 @@ export function getSubmissionProcessDetail(id) {
     method: 'get'
   })
 }
+
+// 获取可供选择的审核人用户列表
+export function getSelectableReviewerUsers(params) {
+  return request({
+    url: '/submissionProcess/listReviewerUsersForSelect',
+    method: 'get',
+    params
+  })
+}

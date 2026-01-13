@@ -72,4 +72,11 @@ public class SubmissionProcessController extends BaseController {
         submissionProcessService.submitForReview(processId, reviewedRemark);
         return success();
     }
+    /**
+     * 获取审核人用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listReviewerUsersForSelect")
+    public AjaxResult listReviewerUsersForSelect(String nickName) {
+        return AjaxResult.success(submissionProcessService.listReviewerUsersForSelect(nickName));
+    }
 }

@@ -51,3 +51,12 @@ export function listSubmissionPlansForSelect(query) {
     params: query
   })
 }
+
+// 获取可供选择的创建用户列表
+export function getSelectableCreateUsers(params) {
+  return request({
+    url: '/submissionPlan/listCreateUsersForSelect',
+    method: 'get',
+    params
+  })
+}

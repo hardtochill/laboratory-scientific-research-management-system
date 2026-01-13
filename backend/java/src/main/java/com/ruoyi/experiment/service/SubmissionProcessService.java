@@ -5,6 +5,7 @@ import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 import java.util.List;
 
@@ -51,4 +52,9 @@ public interface SubmissionProcessService {
      * @return 投稿计划详情
      */
     SubmissionProcessDetailVO getSubmissionProcessDetail(Long id);
+
+    /**
+     * 获取审核人用户列表（用于前端用户选择）
+     */
+    List<UserForSelectVO> listReviewerUsersForSelect(String nickName);
 }

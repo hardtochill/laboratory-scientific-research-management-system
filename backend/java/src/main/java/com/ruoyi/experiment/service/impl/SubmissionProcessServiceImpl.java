@@ -3,8 +3,10 @@ package com.ruoyi.experiment.service.impl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
+import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
 import com.ruoyi.experiment.enums.ReviewStatusEnum;
+import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.SubmissionPlanMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.mapper.ReviewMapper;
@@ -17,6 +19,8 @@ import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import com.ruoyi.experiment.service.SubmissionProcessService;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -147,5 +151,14 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
         List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);
         vo.setFiles(submissionProcessFiles);
         return vo;
+    }
+
+    @Override
+    public List<UserForSelectVO> listReviewerUsersForSelect(String nickName) {
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        queryDTO.setRoleKey(RoleEnums.TEACHER.getRoleKey());
+        return userMapper.selectVOForSelect(queryDTO);
     }
 }

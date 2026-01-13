@@ -47,6 +47,14 @@ public class TaskController extends BaseController {
     }
 
     /**
+     * 获取用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listUsersForSelect")
+    public AjaxResult listUsersForSelect(String nickName) {
+        return AjaxResult.success(taskService.listUsersForSelect(nickName));
+    }
+
+    /**
      * 根据任务ID获取任务详情
      *
      * @param taskId 任务ID

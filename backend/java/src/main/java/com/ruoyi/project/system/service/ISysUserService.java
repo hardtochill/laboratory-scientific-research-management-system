@@ -2,8 +2,9 @@ package com.ruoyi.project.system.service;
 
 import java.util.List;
 import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import com.ruoyi.project.system.domain.vo.UserDetailVO;
-import com.ruoyi.project.system.domain.vo.UserVO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 /**
  * 用户 业务层
@@ -192,12 +193,6 @@ public interface ISysUserService
      * @return 结果
      */
     public String importUser(List<SysUser> userList, Boolean isUpdateSupport, String operName);
-
-
-    /**
-     * 查询可参与任务的用户（用于前端用户选择）
-     */
-    List<UserVO> getSelectableUsers(String nickName);
 
     /**
      * 获取用户详细信息

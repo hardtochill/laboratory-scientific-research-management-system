@@ -67,3 +67,11 @@ export function getTaskParticipantUsers(taskId) {
   })
 }
 
+// 获取可供选择的用户列表
+export function getSelectableUsers(params) {
+  return request({
+    url: '/task/listUsersForSelect',
+    method: 'get',
+    params
+  })
+}

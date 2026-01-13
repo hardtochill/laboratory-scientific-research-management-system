@@ -2,6 +2,8 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.experiment.enums.RoleEnums;
+import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.StatisticMapper;
 import com.ruoyi.experiment.pojo.dto.StatisticQueryDTO;
 import com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO;
@@ -9,6 +11,9 @@ import com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO;
 import com.ruoyi.experiment.service.StatisticService;
 import com.ruoyi.framework.web.page.TableDataInfo;
 import com.ruoyi.framework.web.page.TableSupport;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
+import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StatisticServiceImpl implements StatisticService {
     private final StatisticMapper statisticMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<StudentReadStatisticsVO> selectStudentReadingStatistics(StatisticQueryDTO queryDTO) {
@@ -125,6 +131,15 @@ public class StatisticServiceImpl implements StatisticService {
         } catch (Exception e) {
             throw new ServiceException("导出统计失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<UserForSelectVO> listUsersForSelect(String nickName) {
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        queryDTO.setRoleKey(RoleEnums.STUDENT.getRoleKey());
+        return userMapper.selectVOForSelect(queryDTO);
     }
 
     private void createStudentSheetHeader(Sheet sheet) {

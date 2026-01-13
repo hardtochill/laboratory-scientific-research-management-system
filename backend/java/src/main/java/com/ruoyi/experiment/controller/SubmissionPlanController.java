@@ -37,6 +37,14 @@ public class SubmissionPlanController extends BaseController {
     }
 
     /**
+     * 获取创建用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listCreateUsersForSelect")
+    public AjaxResult listCreateUsersForSelect(String nickName) {
+        return AjaxResult.success(submissionPlanService.listCreateUsersForSelect(nickName));
+    }
+
+    /**
      * 创建投稿计划
      */
     @PostMapping("/add")

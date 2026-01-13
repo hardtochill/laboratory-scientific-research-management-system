@@ -423,10 +423,9 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect } from '@/api/submission/submissionPlan'
-import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail } from '@/api/submission/submissionProcess'
+import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect,getSelectableCreateUsers } from '@/api/submission/submissionPlan'
+import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail,getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
 import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles,downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
-import { getSelectableUsers } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
 import { CaretRight, CaretBottom, Plus, Switch, Delete, Document, Files, Check, UploadFilled, Download } from '@element-plus/icons-vue'
 
@@ -1184,7 +1183,7 @@ const handleSubmitReviewDialogClose = () => {
 const querySelectableReviewers = async (query) => {
   reviewerLoading.value = true
   try {
-    const response = await getSelectableUsers({
+    const response = await getSelectableReviewerUsers({
       nickName: query
     })
     selectableReviewers.value = response.data || []
@@ -1212,7 +1211,7 @@ const querySelectablePlans = async (query) => {
 const querySelectableCreators = async (query) => {
   creatorLoading.value = true
   try {
-    const response = await getSelectableUsers({ nickName: query })
+    const response = await getSelectableCreateUsers({ nickName: query })
     selectableCreators.value = response.data || []
   } catch (error) {
     console.error('获取创建用户列表失败:', error)

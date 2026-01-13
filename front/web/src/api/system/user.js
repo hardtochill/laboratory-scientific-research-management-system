@@ -127,15 +127,6 @@ export function updateAuthRole(data) {
   })
 }
 
-// 获取可供选择的用户列表
-export function getSelectableUsers(params) {
-  return request({
-    url: '/system/user/listSelectableUsers',
-    method: 'get',
-    params
-  })
-}
-
 // 获取用户详情
 export function getUserDetail(userId) {
   return request({

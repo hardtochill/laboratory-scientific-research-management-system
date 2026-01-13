@@ -175,8 +175,7 @@
 </template>
 
 <script setup name="LiteratureStatistic">
-import { listStudentStatistics, listLiteratureStatistics, getStudentReadingDetail, getLiteratureReadingDetail, exportStatistics } from "@/api/statistic/statistic"
-import { getSelectableUsers } from "@/api/system/user"
+import { listStudentStatistics, listLiteratureStatistics, getStudentReadingDetail, getLiteratureReadingDetail, exportStatistics,getSelectableUsers } from "@/api/statistic/statistic"
 import { getSelectableLiteratures } from "@/api/literature/literature"
 import { getUserDetail } from "@/api/system/user"
 import { parseTime } from "@/utils/ruoyi"

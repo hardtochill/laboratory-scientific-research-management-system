@@ -17,8 +17,6 @@ export function getReview(id) {
   })
 }
 
-// 审核相关接口已精简，仅保留后端提供的接口
-
 // 审核通过
 export function approveReview(id, reviewerRemark = '') {
   return request({
@@ -38,5 +36,14 @@ export function rejectReview(id, reviewerRemark = '') {
     params: {
       reviewerRemark: reviewerRemark
     }
+  })
+}
+
+// 获取可供选择的用户列表
+export function getSelectableReviewedUsers(params) {
+  return request({
+    url: '/review/listReviewedUsersForSelect',
+    method: 'get',
+    params
   })
 }

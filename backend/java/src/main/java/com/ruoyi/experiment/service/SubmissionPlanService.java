@@ -5,6 +5,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 import java.util.List;
 
@@ -49,4 +50,10 @@ public interface SubmissionPlanService {
      * @return 投稿计划列表
      */
     List<SubmissionPlanVO> listSubmissionPlansForSelect(String name);
+
+     /**
+      * 获取创建用户列表（用于前端用户选择）
+      */
+    List<UserForSelectVO> listCreateUsersForSelect(String nickName);
+
 }

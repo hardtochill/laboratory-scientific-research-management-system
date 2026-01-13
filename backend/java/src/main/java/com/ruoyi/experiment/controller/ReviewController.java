@@ -29,6 +29,14 @@ public class ReviewController extends BaseController {
     }
 
     /**
+     * 获取可选申请人用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listReviewedUsersForSelect")
+    public AjaxResult listReviewedUsersForSelect(String nickName) {
+        return AjaxResult.success(reviewService.listReviewedUsersForSelect(nickName));
+    }
+
+    /**
      * 查询审核详情
      */
     @GetMapping("/{id}")

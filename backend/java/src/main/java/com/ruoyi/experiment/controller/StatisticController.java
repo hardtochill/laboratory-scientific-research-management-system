@@ -8,6 +8,7 @@ import com.ruoyi.experiment.service.StatisticService;
 import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.framework.web.page.TableDataInfo;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,14 @@ public class StatisticController extends BaseController {
     public TableDataInfo literatureList(StatisticQueryDTO queryDTO) {
         startPage();
         return getDataTable(statisticService.selectLiteratureReadingStatistics(queryDTO));
+    }
+
+    /**
+     * 获取用户列表（用于前端用户选择）
+     */
+    @GetMapping("/listUsersForSelect")
+    public AjaxResult listUsersForSelect(String nickName) {
+        return AjaxResult.success(statisticService.listUsersForSelect(nickName));
     }
 
     @GetMapping("/student/{studentId}")

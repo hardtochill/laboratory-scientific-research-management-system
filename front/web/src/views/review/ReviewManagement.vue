@@ -246,9 +246,8 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listReviews, getReview, approveReview, rejectReview } from '@/api/review/review'
+import { listReviews, getReview, approveReview, rejectReview,getSelectableReviewedUsers } from '@/api/review/review'
 import { listSubmissionPlansForSelect } from '@/api/submission/submissionPlan'
-import { getSelectableUsers } from '@/api/system/user'
 import { parseTime } from '@/utils/ruoyi'
 import { Document, Check, CircleClose } from '@element-plus/icons-vue'
 
@@ -367,7 +366,7 @@ const querySelectableSubmissionPlans = async (query) => {
 const querySelectableApplicants = async (query) => {
   applicantLoading.value = true
   try {
-    const response = await getSelectableUsers({ nickName: query })
+    const response = await getSelectableReviewedUsers({ nickName: query })
     selectableApplicants.value = response.data || []
   } catch (error) {
     console.error('获取申请人列表失败:', error)

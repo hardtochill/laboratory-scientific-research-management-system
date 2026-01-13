@@ -18,8 +18,9 @@ import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
-import com.ruoyi.framework.web.domain.R;
 import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TaskServiceImpl implements TaskService {
     private final TaskMapper taskMapper;
-    private final SysUserMapper sysUserMapper;
+    private final SysUserMapper userMapper;
     private final TaskUserMapper taskUserMapper;
     private final TaskFileMapper taskFileMapper;
     private final ExperimentConfig experimentConfig;
@@ -131,7 +132,7 @@ public class TaskServiceImpl implements TaskService {
         }
         // 3.验证参与用户组
         if (!CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())) {
-            List<Long> userIds = sysUserMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
+            List<Long> userIds = userMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
             if(null==userIds || userIds.size()!=taskDTO.getParticipantUserIds().size()){
                 throw new ServiceException("参与用户不存在");
             }
@@ -163,7 +164,7 @@ public class TaskServiceImpl implements TaskService {
         BeanUtils.copyProperties(taskDTO,task);
         // 3.验证参与用户组
         if (!CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())) {
-            List<Long> userIds = sysUserMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
+            List<Long> userIds = userMapper.selectUserIdsByIds(taskDTO.getParticipantUserIds());
             if(null==userIds || userIds.size()!=taskDTO.getParticipantUserIds().size()){
                 throw new ServiceException("参与用户不存在");
             }
@@ -240,6 +241,14 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<SysUser> getParticipantUsersByTaskId(Long taskId) {
         return taskUserMapper.selectUsersByTaskId(taskId);
+    }
+
+    @Override
+    public List<UserForSelectVO> listUsersForSelect(String nickName) {
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        return userMapper.selectVOForSelect(queryDTO);
     }
 
     /**

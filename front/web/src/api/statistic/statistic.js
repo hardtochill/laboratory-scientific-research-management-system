@@ -40,3 +40,12 @@ export function exportStatistics(startTime, endTime, userId, literatureId) {
     responseType: 'blob'
   })
 }
+
+// 获取可供选择的用户列表
+export function getSelectableUsers(params) {
+  return request({
+    url: '/statistic/listUsersForSelect',
+    method: 'get',
+    params
+  })
+}

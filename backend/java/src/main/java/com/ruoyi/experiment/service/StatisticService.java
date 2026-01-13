@@ -4,6 +4,7 @@ import com.ruoyi.experiment.pojo.dto.StatisticQueryDTO;
 import com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO;
 import com.ruoyi.framework.web.page.TableDataInfo;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
@@ -19,4 +20,9 @@ public interface StatisticService {
     List<LiteratureReadStatisticsVO.StudentReadDetail> selectLiteratureStudentDetail(Long literatureId, LocalDateTime startTime, LocalDateTime endTime);
 
     void exportStatistics(StatisticQueryDTO queryDTO, HttpServletResponse response);
+
+    /**
+     * 获取用户列表（用于前端用户选择）
+     */
+    List<UserForSelectVO> listUsersForSelect(String nickName);
 }

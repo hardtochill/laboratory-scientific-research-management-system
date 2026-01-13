@@ -3,8 +3,10 @@ package com.ruoyi.experiment.service.impl;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.experiment.constant.SubmissionConstants;
+import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.SubmissionPlanStatusEnum;
 import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
+import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.SubmissionPlanMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
@@ -13,6 +15,9 @@ import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import com.ruoyi.experiment.service.SubmissionPlanService;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
+import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +32,7 @@ import java.util.List;
 public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     private final SubmissionPlanMapper submissionPlanMapper;
     private final SubmissionProcessMapper submissionProcessMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<SubmissionPlan> listSubmissionPlans(SubmissionPlanQueryDTO submissionPlanQueryDTO) {
@@ -87,5 +93,12 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     @Override
     public List<SubmissionPlanVO> listSubmissionPlansForSelect(String name) {
         return submissionPlanMapper.selectVOList(name);
+    }
+
+    @Override
+    public List<UserForSelectVO> listCreateUsersForSelect(String nickName) {
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        return userMapper.selectVOForSelect(queryDTO);
     }
 }

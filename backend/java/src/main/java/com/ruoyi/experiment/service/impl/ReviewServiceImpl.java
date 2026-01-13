@@ -4,6 +4,7 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
 import com.ruoyi.experiment.enums.ReviewStatusEnum;
+import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.ReviewMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
@@ -11,6 +12,9 @@ import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
 import com.ruoyi.experiment.service.ReviewService;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
+import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +29,7 @@ import java.util.List;
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewMapper reviewMapper;
     private final SubmissionProcessMapper submissionProcessMapper;
+    private final SysUserMapper userMapper;
 
     @Override
     public List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO) {
@@ -88,5 +93,13 @@ public class ReviewServiceImpl implements ReviewService {
             throw new RuntimeException("投稿流程不存在");
         }
         submissionProcessMapper.updateStatus(submissionProcess.getId(), SubmissionProcessStatusEnum.REVIEW_FAILED.getValue());
+    }
+
+    @Override
+    public List<UserForSelectVO> listReviewedUsersForSelect(String nickName) {
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        return userMapper.selectVOForSelect(queryDTO);
     }
 }

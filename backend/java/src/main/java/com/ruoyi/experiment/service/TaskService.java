@@ -6,6 +6,7 @@ import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.project.system.domain.SysUser;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 import java.util.List;
 
@@ -64,4 +65,9 @@ public interface TaskService {
      * @return 参与用户列表
      */
     List<SysUser> getParticipantUsersByTaskId(Long taskId);
+
+     /**
+      * 获取用户列表（用于前端用户选择）
+      */
+    List<UserForSelectVO> listUsersForSelect(String nickName);
 }

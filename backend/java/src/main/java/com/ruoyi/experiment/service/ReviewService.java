@@ -3,6 +3,7 @@ package com.ruoyi.experiment.service;
 import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
 import java.util.List;
 
@@ -37,4 +38,9 @@ public interface ReviewService {
      * @param reviewerRemark 审核人备注
      */
     void rejectReview(Long id, String reviewerRemark);
+
+     /**
+      * 获取用户列表（用于前端用户选择）
+      */
+    List<UserForSelectVO> listReviewedUsersForSelect(String nickName);
 }

@@ -366,8 +366,7 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers } from '@/api/task/task'
-import { getSelectableUsers } from '@/api/system/user'
+import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
@@ -694,16 +693,6 @@ const querySelectableUsers = async (query) => {
 // 处理下拉框获取焦点事件（加载所有未毕业用户）
 const handleSelectFocus = async () => {
   await querySelectableUsers('')
-}
-
-// 初始化用户列表
-const initUserList = async () => {
-  try {
-    const response = await getSelectableUsers()
-    ungraduatedUsers.value = response.data || []
-  } catch (error) {
-    console.error('初始化用户列表失败:', error)
-  }
 }
 
 // 分页变化处理
@@ -1133,7 +1122,6 @@ const handleFileDialogClose = () => {
 // 页面加载时初始化数据
 onMounted(async () => {
   loadParentTasks()
-  await initUserList()
   checkUserRoles() // 检查用户角色权限
 })
 </script>

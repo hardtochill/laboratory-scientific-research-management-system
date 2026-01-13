@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
-import com.ruoyi.project.system.domain.vo.UserVO;
+import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,8 +56,8 @@ public class SysUserController extends BaseController
         startPage();
         List<SysUser> list = userService.selectUserList(user);
         return getDataTable(list);
-    }
-
+    } 
+    
     @Log(title = "用户管理", businessType = BusinessType.EXPORT)
     @PreAuthorize("@ss.hasPermi('system:user:export')")
     @PostMapping("/export")
@@ -223,13 +223,6 @@ public class SysUserController extends BaseController
     {
         userService.insertUserAuth(userId, roleIds);
         return success();
-    }
-    /**
-     * 获取未毕业用户列表（用于前端用户选择）
-     */
-    @GetMapping("/listSelectableUsers")
-    public AjaxResult getSelectableUsers(String nickName) {
-        return AjaxResult.success(userService.getSelectableUsers(nickName));
     }
     /**
      * 获取评论用户的信息
