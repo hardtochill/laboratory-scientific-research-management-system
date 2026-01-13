@@ -122,43 +122,62 @@
     </el-dialog>
 
     <!-- 上传文献对话框 -->
-    <el-dialog title="上传文献" v-model="uploadOpen" width="600px" append-to-body>
-      <el-form :model="uploadForm" :rules="uploadRules" ref="uploadRef" label-width="100px" enctype="multipart/form-data">
+    <el-dialog title="上传文献" v-model="uploadOpen" width="800px" append-to-body>
+      <el-form :model="uploadForm" :rules="uploadRules" ref="uploadRef" label-width="100px"
+        enctype="multipart/form-data" :inline="true">
         <el-form-item label="文献名称" prop="title">
           <el-input v-model="uploadForm.title" placeholder="请输入文献名称" maxlength="255" show-word-limit />
         </el-form-item>
         <el-form-item label="文献作者" prop="authors">
           <el-input v-model="uploadForm.authors" placeholder="多个作者请用逗号分隔" maxlength="255" show-word-limit />
         </el-form-item>
-        <el-form-item label="文献来源" prop="journal">
+        <el-form-item label="发表期刊" prop="journal">
           <el-input v-model="uploadForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
         </el-form-item>
         <el-form-item label="发表时间" prop="publishTime">
-          <el-date-picker v-model="uploadForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="文献摘要" prop="abstract">
-          <el-input v-model="uploadForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000" show-word-limit />
+          <el-date-picker v-model="uploadForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 250px;" />
         </el-form-item>
         <el-form-item label="关键词" prop="keywordIds">
-          <el-select v-model="uploadForm.keywordIds" multiple filterable remote placeholder="请选择关键词" :remote-method="remoteMethod" :loading="keywordLoading" style="width: 100%">
+          <el-select v-model="uploadForm.keywordIds" multiple filterable remote placeholder="请选择关键词"
+            :remote-method="remoteMethod" :loading="keywordLoading" style="width: 250px;">
             <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
           </el-select>
         </el-form-item>
+       <el-row>
+          <el-form-item label="文献摘要" prop="abstract" style="width: 100%;">
+            <el-input v-model="uploadForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000"
+              show-word-limit style="width: 100%;" />
+          </el-form-item>
+        </el-row>
         <el-form-item label="文献文件" prop="file">
-          <el-upload ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :on-remove="onRemove" :auto-upload="false" drag>
-            <el-icon class="el-icon--upload" style="height: 5px;">
-              <upload-filled />
-            </el-icon>
-            <div class="el-upload__text">
-              将PDF文件拖到此处，或<em>点击上传</em>
-            </div>
-            <template #tip>
-              <div class="el-upload__tip">
-                仅支持PDF格式，文件大小不超过50MB
-              </div>
-            </template>
+          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top">
+          <el-upload ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange"
+            :on-remove="onRemove" :auto-upload="false" accept=".pdf">
+            <el-button type="primary">选择文件</el-button>
           </el-upload>
+          </el-tooltip>
         </el-form-item>
+        <el-row>
+          <!-- 新增评论相关字段 -->
+          <el-form-item label="第一条评论" prop="firstComment" style="margin-bottom: 20px; width: 100%;">
+            <el-input v-model="uploadForm.firstComment" type="textarea" :rows="3" maxlength="500" show-word-limit
+              placeholder="请输入评论内容（最多500字）"></el-input>
+          </el-form-item>
+       </el-row>
+        <el-form-item label="评论可见范围" prop="commentVisibleType">
+          <el-radio-group v-model="uploadForm.commentVisibleType">
+           <el-radio :label="1">仅自己可见</el-radio>
+            <el-radio :label="2">公开</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-row>
+          <el-form-item label="评论关联文件" prop="commentFiles" style="width: 100%;">
+              <el-upload ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList"
+                :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple>
+                <el-button type="primary">选择文件</el-button>
+              </el-upload>
+            </el-form-item>
+        </el-row>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -198,6 +217,9 @@ const keywordOptions = ref([])
 const selectedKeywords = ref([])
 const keywordLoading = ref(false)
 const fileList = ref([])
+
+// 评论文件列表
+const commentFileList = ref([])
 
 // 列显隐信息
 const columns = ref([
@@ -245,7 +267,11 @@ const data = reactive({
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
-    file: undefined
+    file: undefined,
+    // 新增评论相关字段
+    firstComment: undefined,
+    commentVisibleType: 2, // 默认公开
+    commentFiles: []
   },
   uploadRules: {
     title: [{ required: true, message: "请输入文献名称", trigger: "blur" }],
@@ -253,6 +279,18 @@ const data = reactive({
       validator: (rule, value, callback) => {
         if (!uploadForm.value.file) {
           callback(new Error('请上传文献文件'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'change' 
+    }],
+    // 新增评论相关验证规则
+    firstComment: [{ required: true, message: "请输入评论内容", trigger: "blur" }],
+    commentFiles: [{ 
+      validator: (rule, value, callback) => {
+        if (!uploadForm.value.commentFiles || uploadForm.value.commentFiles.length === 0) {
+          callback(new Error('请至少上传一个评论关联文件'))
         } else {
           callback()
         }
@@ -459,9 +497,13 @@ function resetUploadForm() {
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
-    file: undefined
+    file: undefined,
+    firstComment: undefined,
+    commentVisibleType: 2, // 默认公开
+    commentFiles: []
   }
   fileList.value = []
+  commentFileList.value = []
   proxy.resetForm("uploadRef")
 }
 
@@ -501,11 +543,23 @@ async function submitUpload() {
         
         formData.append('file', uploadForm.value.file)
         
+        // 新增评论相关字段
+        formData.append('firstComment', uploadForm.value.firstComment || '')
+        formData.append('commentVisibleType', uploadForm.value.commentVisibleType)
+        
+        // 处理评论文件
+        if (uploadForm.value.commentFiles && uploadForm.value.commentFiles.length > 0) {
+          uploadForm.value.commentFiles.forEach((file, index) => {
+            formData.append('commentFiles', file)
+          })
+        }
+        
         // 调用后端的add方法
         await addLiterature(formData)
         
         uploadOpen.value = false
-        fileList.value = [] // 清空文件列表
+        fileList.value = [] // 清空文献文件列表
+        commentFileList.value = [] // 清空评论文件列表
         proxy.$modal.msgSuccess("上传成功")
         getList()
       } catch (error) {
@@ -588,6 +642,20 @@ function onExceed(files, fileList) {
   uploadForm.value.file = newFile
   
   return false // 返回false阻止自动上传，由我们手动控制
+}
+
+/** 评论文件选择变化处理 */
+function handleCommentFileChange(file, fileList) {
+  // 将文件添加到表单数据中
+  const rawFiles = fileList.map(item => item.raw).filter(raw => raw)
+  uploadForm.value.commentFiles = rawFiles
+}
+
+/** 评论文件移除处理 */
+function handleCommentFileRemove(file, fileList) {
+  // 更新表单数据中的文件列表
+  const rawFiles = fileList.map(item => item.raw).filter(raw => raw)
+  uploadForm.value.commentFiles = rawFiles
 }
 
 /** 关键词远程搜索 */

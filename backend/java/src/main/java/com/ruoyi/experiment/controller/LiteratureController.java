@@ -78,7 +78,11 @@ public class LiteratureController extends BaseController {
             @RequestParam(value = "publishTime", required = false) LocalDate publishTime,
             @RequestParam(value = "abstract", required = false) String abstractText,
             @RequestParam(value = "keywordIds", required = false) List<Long> keywordIds,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "firstComment") String firstComment,
+            @RequestParam(value = "commentFiles") List<MultipartFile> commentFiles
+            ,@RequestParam(value = "commentVisibleType") Integer commentVisibleType
+    ) {
 
         LiteratureDTO literatureDTO = new LiteratureDTO();
         literatureDTO.setTitle(title);
@@ -88,6 +92,9 @@ public class LiteratureController extends BaseController {
         literatureDTO.setAbstractText(abstractText);
         literatureDTO.setKeywordIds(keywordIds);
         literatureDTO.setFile(file);
+        literatureDTO.setFirstComment(firstComment);
+        literatureDTO.setCommentFiles(commentFiles);
+        literatureDTO.setCommentVisibleType(commentVisibleType);
 
         literatureService.addLiterature(literatureDTO);
         return AjaxResult.success("添加成功");

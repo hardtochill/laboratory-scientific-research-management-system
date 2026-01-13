@@ -53,4 +53,16 @@ public class LiteratureDTO {
      * 文献文件
      */
      private MultipartFile file;
+    /**
+     * 第一条评论
+     */
+    private String firstComment;
+    /**
+     * 评论关联文件
+     */
+    private List<MultipartFile> commentFiles;
+    /**
+     * 评论可见范围
+     */
+    private Integer commentVisibleType;
 }

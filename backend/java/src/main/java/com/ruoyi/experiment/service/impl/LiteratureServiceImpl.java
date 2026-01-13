@@ -6,13 +6,13 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
+import com.ruoyi.experiment.constant.CommentConstants;
+import com.ruoyi.experiment.enums.CommentVisibleTypeEnum;
 import com.ruoyi.experiment.mapper.*;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
-import com.ruoyi.experiment.pojo.entity.Literature;
-import com.ruoyi.experiment.pojo.entity.LiteratureFile;
-import com.ruoyi.experiment.pojo.entity.LiteratureScore;
+import com.ruoyi.experiment.pojo.entity.*;
 import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
 import com.ruoyi.experiment.pojo.vo.KeywordVO;
@@ -46,6 +46,8 @@ public class LiteratureServiceImpl implements LiteratureService {
     private final LiteratureFileMapper literatureFileMapper;
     private final KeywordMapper keywordMapper;
     private final ExperimentConfig experimentConfig;
+    private final CommentMapper commentMapper;
+    private final CommentFileMapper commentFileMapper;
     
     @Override
     public List<LiteratureVO> selectLiteratureList(LiteratureQueryDTO queryDTO) {
@@ -150,7 +152,41 @@ public class LiteratureServiceImpl implements LiteratureService {
         literatureMapper.insertLiterature(literature);
         // 4.插入keyword记录
         addKeywordsToLiterature(literature.getId(),literatureDTO.getKeywordIds());
-        // 5.保存文件
+        // 5.插入评论记录
+        Comment comment = new Comment();
+        comment.setParentId(CommentConstants.FIRST_PARENT_COMMENT_ID);
+        comment.setLiteratureId(literature.getId());
+        comment.setUserId(SecurityUtils.getUserId());
+        comment.setUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        comment.setCommentContent(literatureDTO.getFirstComment());
+        comment.setCommentTime(LocalDateTime.now());
+        comment.setLikeCount(0);
+        comment.setVisibleType(literatureDTO.getCommentVisibleType());
+        commentMapper.insert(comment);
+        // 6.保存评论文件
+        List<CommentFile> commentFileList = new ArrayList<>();
+        List<MultipartFile> fileList = literatureDTO.getCommentFiles();
+        if(!CollectionUtils.isEmpty(fileList)){
+            try{
+                for (MultipartFile file : fileList) {
+                    String filePath;
+                    filePath = FileUtils.uploadCommentFile(experimentConfig.getCommentBaseDir(), file);
+                    CommentFile commentFile = new CommentFile();
+                    commentFile.setCommentId(comment.getId());
+                    commentFile.setFileName(com.ruoyi.common.utils.file.FileUtils.getNameNotSuffix(file.getOriginalFilename()));
+                    commentFile.setFilePath(filePath);
+                    commentFile.setFileType(FileUploadUtils.getExtension(file));
+                    commentFile.setFileSize((int)file.getSize());
+
+                    commentFileList.add(commentFile);
+                }
+            }catch (Exception e){
+                log.error("评论文件上传失败", e);
+                throw new ServiceException("评论文件上传失败");
+            }
+            commentFileMapper.insertBatch(commentFileList);
+        }
+        // 7.保存文献文件
         uploadLiterature(literature.getId(),literatureDTO.getTitle(),literatureDTO.getFile());
     }
 
