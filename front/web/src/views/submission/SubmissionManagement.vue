@@ -306,7 +306,9 @@
 
         <!-- 流程名称 -->
         <el-form-item label="流程名称" prop="name">
-          <el-input v-model="processFormData.name" placeholder="请输入流程名称" maxlength="50" show-word-limit />
+          <el-select v-model="processFormData.name" placeholder="请选择流程名称" style="width: 100%;">
+            <el-option v-for="process in PROCESS_NAME_ENUM" :key="process.value" :label="process.label" :value="process.value" />
+          </el-select>
         </el-form-item>
 
         <!-- 审核人 -->
@@ -453,6 +455,17 @@ const PROCESS_STATUS = {
   REVIEW_PASSED: 3,
   REVIEW_FAILED: 4
 }
+
+// 投稿流程名称枚举（展示顺序：一审、二审、三审、校稿、四审、五审、六审）
+const PROCESS_NAME_ENUM = [
+  { label: '一审', value: '一审' },
+  { label: '二审', value: '二审' },
+  { label: '三审', value: '三审' },
+  { label: '校稿', value: '校稿' },
+  { label: '四审', value: '四审' },
+  { label: '五审', value: '五审' },
+  { label: '六审', value: '六审' }
+]
 
 // 获取投稿计划状态类型
 const getPlanStatusType = (status) => {
@@ -612,8 +625,7 @@ const processFormData = reactive({
 
 const processFormRules = reactive({
   name: [
-    { required: true, message: '请输入流程名称', trigger: 'blur' },
-    { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
+    { required: true, message: '请选择流程名称', trigger: 'change' },
   ],
   reviewerUserId: [
     { required: true, message: '请选择审核人', trigger: 'change' }
@@ -837,8 +849,6 @@ const handlePlanFormSubmit = async () => {
     loadSubmissionPlans()
   } catch (error) {
     if (error === false) return
-    ElMessage.error('保存失败：' + (error.message || '未知错误'))
-    console.error('保存投稿计划失败:', error)
   }
 }
 
@@ -965,8 +975,6 @@ const handleProcessFormSubmit = async () => {
     }
   } catch (error) {
     if (error === false) return
-    ElMessage.error('保存失败：' + (error.message || '未知错误'))
-    console.error('保存投稿流程失败:', error)
   }
 }
 
