@@ -25,7 +25,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="计划状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择计划状态" clearable style="width: 240px">
+        <el-select v-model="queryParams.status" placeholder="请选择计划状态" clearable style="width: 240px" @change="handleQuery">
           <el-option label="待送审" :value="1" />
           <el-option label="审核中" :value="2" />
           <el-option label="发表成功" :value="3" />

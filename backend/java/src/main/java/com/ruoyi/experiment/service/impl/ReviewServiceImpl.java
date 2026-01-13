@@ -33,6 +33,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO) {
+        reviewQueryDTO.setReviewerUserId(SecurityUtils.getUserId());
         return reviewMapper.selectReviewVOList(reviewQueryDTO);
     }
 

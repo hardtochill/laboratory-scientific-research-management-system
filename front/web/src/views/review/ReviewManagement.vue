@@ -95,7 +95,7 @@
             </el-select>
           </el-form-item>
           <el-form-item label="审核状态" prop="status">
-            <el-select v-model="reviewedQueryParams.status" placeholder="请选择审核状态" clearable style="width: 240px">
+            <el-select v-model="reviewedQueryParams.status" placeholder="请选择审核状态" clearable style="width: 240px" @change="handleReviewedQuery">
               <el-option label="全部" :value="0" />
               <el-option label="审核通过" :value="2" />
               <el-option label="审核不通过" :value="3" />
@@ -425,7 +425,6 @@ const handleTimeRangeChange = () => {
     default:
       return
   }
-  
   // 格式化日期时间为本地时间字符串（YYYY-MM-DD HH:mm:ss）
   const formatDateTime = (date) => {
     const year = date.getFullYear()
@@ -446,9 +445,11 @@ const handleTimeRangeChange = () => {
   if (activeTab.value === 'toReview') {
     toReviewQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
     toReviewQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+    handleToReviewQuery()
   } else {
     reviewedQueryParams.value.reviewCreateTimeStart = dateRange.value[0]
     reviewedQueryParams.value.reviewCreateTimeEnd = dateRange.value[1]
+    handleReviewedQuery()
   }
 }
 
@@ -472,6 +473,11 @@ const handleDateChange = () => {
       reviewedQueryParams.value.reviewCreateTimeStart = undefined
       reviewedQueryParams.value.reviewCreateTimeEnd = undefined
     }
+  }
+  if (activeTab.value === 'toReview') {
+    handleToReviewQuery()
+  } else {
+    handleReviewedQuery()
   }
 }
 
@@ -562,7 +568,7 @@ const handleToReviewCurrentChange = (newNum) => {
 
 // 查询审核记录
 const handleReviewedQuery = () => {
-  
+  reviewedQueryParams.value.status = reviewedQueryParams.value.status || REVIEW_STATUS.ALL
   reviewedQueryParams.value.pageNum = 1
   loadReviewedList()
 }

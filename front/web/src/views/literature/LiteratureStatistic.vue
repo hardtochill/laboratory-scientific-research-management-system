@@ -283,6 +283,7 @@ function handleDateChange(val) {
     queryParams.value.startTime = undefined
     queryParams.value.endTime = undefined
   }
+  handleQuery()
 }
 
 function handleTimeRangeChange(val) {
@@ -310,6 +311,7 @@ function handleTimeRangeChange(val) {
   dateRange.value = [startStr, endStr]
   queryParams.value.startTime = startStr
   queryParams.value.endTime = endStr
+  handleQuery()
 }
 
 function disabledDate(time) {

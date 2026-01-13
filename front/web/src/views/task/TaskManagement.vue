@@ -7,7 +7,7 @@
           @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item label="任务状态" prop="taskStatus">
-        <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px">
+        <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px" @change="handleQuery">
           <el-option label="未开始" :value="1" />
           <el-option label="进行中" :value="2" />
           <el-option label="已完成" :value="3" />
