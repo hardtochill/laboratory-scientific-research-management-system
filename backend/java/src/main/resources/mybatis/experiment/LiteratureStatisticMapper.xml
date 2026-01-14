@@ -11,7 +11,12 @@
             MAX(c.comment_time) as lastReadTime
         FROM comment c
         WHERE c.parent_id = 0
-        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.startTime != null">
+            AND c.comment_time &gt; #{queryDTO.startTime}
+        </if>
+        <if test="queryDTO.endTime != null">
+            AND c.comment_time &lt; #{queryDTO.endTime}
+        </if>
         <if test="queryDTO.userId != null">
             AND c.user_id = #{queryDTO.userId}
         </if>
@@ -33,9 +38,12 @@
             COUNT(*) as readCount
         FROM comment c
         LEFT JOIN literature l ON c.literature_id = l.id
-        WHERE c.parent_id = 0
-        AND c.user_id = #{userId}
-        AND c.comment_time BETWEEN #{startTime} AND #{endTime}
+        <where>
+            c.parent_id = 0
+            AND c.user_id = #{userId}
+            <if test="startTime!=null">and c.comment_time &gt; #{startTime}</if>
+            <if test="endTime!=null">and c.comment_time &lt; #{endTime}</if>
+        </where>
         GROUP BY c.literature_id, l.title
         ORDER BY readCount DESC, lastReadTime DESC
     </select>
@@ -54,7 +62,12 @@
         FROM comment c
         LEFT JOIN literature l ON c.literature_id = l.id
         WHERE c.parent_id = 0
-        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.startTime != null">
+            AND c.comment_time &gt; #{queryDTO.startTime}
+        </if>
+        <if test="queryDTO.endTime != null">
+            AND c.comment_time &lt; #{queryDTO.endTime}
+        </if>
         <if test="queryDTO.literatureId != null">
             AND c.literature_id = #{queryDTO.literatureId}
         </if>
@@ -69,9 +82,12 @@
             MAX(c.comment_time) as lastReadTime,
             COUNT(*) as readCount
         FROM comment c
-        WHERE c.parent_id = 0
-        AND c.literature_id = #{literatureId}
-        AND c.comment_time BETWEEN #{startTime} AND #{endTime}
+        <where>
+            c.parent_id = 0
+            AND c.literature_id = #{literatureId}
+            <if test="startTime!=null">AND c.comment_time &gt; #{startTime}</if>
+            <if test="endTime!=null">AND c.comment_time &lt; #{endTime}</if>
+        </where>
         GROUP BY c.user_id, c.user_nick_name
         ORDER BY readCount DESC, lastReadTime DESC
     </select>
@@ -83,7 +99,12 @@
             COUNT(DISTINCT c.literature_id) as literatureCount
         FROM comment c
         WHERE c.parent_id = 0
-        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.startTime != null">
+            AND c.comment_time &gt; #{queryDTO.startTime}
+        </if>
+        <if test="queryDTO.endTime != null">
+            AND c.comment_time &lt; #{queryDTO.endTime}
+        </if>
         <if test="queryDTO.userId != null">
             AND c.user_id = #{queryDTO.userId}
         </if>
@@ -105,7 +126,12 @@
         FROM comment c
         LEFT JOIN literature l ON c.literature_id = l.id
         WHERE c.parent_id = 0
-        AND c.comment_time BETWEEN #{queryDTO.startTime} AND #{queryDTO.endTime}
+        <if test="queryDTO.startTime != null">
+            AND c.comment_time &gt; #{queryDTO.startTime}
+        </if>
+        <if test="queryDTO.endTime != null">
+            AND c.comment_time &lt; #{queryDTO.endTime}
+        </if>
         <if test="queryDTO.literatureId != null">
             AND c.literature_id = #{queryDTO.literatureId}
         </if>

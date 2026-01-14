@@ -276,6 +276,7 @@ function getDefaultDateRange() {
 }
 
 function handleDateChange(val) {
+  selectedTimeRange.value = ''
   if (val && val.length === 2) {
     queryParams.value.startTime = val[0]
     queryParams.value.endTime = val[1]
