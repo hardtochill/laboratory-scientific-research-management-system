@@ -45,24 +45,19 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="时间范围" prop="dateRange">
-        <el-segmented class="time-range-segmented" v-model="selectedTimeRange" :options="timeRangeOptions" @change="handleTimeRangeChange"/>
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          :disabled-date="disabledDate"
-          @change="handleDateChange"
-          style="width: 400px; margin-left: 20px;"
-        ></el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
+      <el-row>
+        <el-form-item label="时间范围" prop="dateRange">
+          <el-segmented class="time-range-segmented" v-model="selectedTimeRange" :options="timeRangeOptions"
+            @change="handleTimeRangeChange" />
+          <el-date-picker v-model="dateRange" type="datetimerange" range-separator="至" start-placeholder="开始日期"
+            end-placeholder="结束日期" value-format="YYYY-MM-DD HH:mm:ss" :disabled-date="disabledDate"
+            @change="handleDateChange" style="width: 400px; margin-left: 20px;"></el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-row>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
@@ -210,41 +205,11 @@ const userInfoLoading = ref(false)
 const selectedTimeRange = ref('week')
 
 const timeRangeOptions = [
-  { label: '今天', value: 'today' },
-  { label: '最近一周', value: 'week' },
-  { label: '最近一个月', value: 'month' },
-  { label: '最近三个月', value: 'quarter' },
-]
-
-const timeShortcuts = [
-  { text: '今天', value: () => {
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
-    const start = new Date()
-    start.setHours(0, 0, 0, 0)
-    return [start, end]
-  }},
-  { text: '最近一周', value: () => {
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
-    const start = new Date()
-    start.setTime(start.getTime() - 7 * 24 * 60 * 60 * 1000)
-    return [start, end]
-  }},
-  { text: '最近一个月', value: () => {
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
-    const start = new Date()
-    start.setTime(start.getTime() - 30 * 24 * 60 * 60 * 1000)
-    return [start, end]
-  }},
-  { text: '最近三个月', value: () => {
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
-    const start = new Date()
-    start.setTime(start.getTime() - 90 * 24 * 60 * 60 * 1000)
-    return [start, end]
-  }}
+   { label: '今天', value: 'today' },
+  { label: '本周', value: 'week' },
+  { label: '本月', value: 'month' },
+  { label: '本季度', value: 'quarter' },
+  { label: '本年', value: 'year' }
 ]
 
 const data = reactive({
@@ -305,6 +270,9 @@ function handleTimeRangeChange(val) {
     case 'quarter':
       start.setTime(start.getTime() - 90 * 24 * 60 * 60 * 1000)
       break
+    case 'year':
+      start.setTime(start.getTime() - 365 * 24 * 60 * 60 * 1000)
+      break
   }
 
   const startStr = parseTime(start, '{y}-{m}-{d} {h}:{i}:{s}')
@@ -335,10 +303,18 @@ function resetQuery() {
   dateRange.value = []
   queryParams.value.userId = undefined
   queryParams.value.literatureId = undefined
+  queryParams.value.startTime = undefined
+  queryParams.value.endTime = undefined
+
   selectedUserNickName.value = ''
   selectedLiteratureName.value = ''
+
+  dateRange.value = []
+  selectedTimeRange.value = ''
+
   proxy.resetForm("queryRef")
-  getDefaultDateRange()
+
+  handleQuery()
 }
 
 function handleTabChange(tab) {
