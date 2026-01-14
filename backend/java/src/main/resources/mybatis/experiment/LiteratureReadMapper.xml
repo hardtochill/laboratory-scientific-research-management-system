@@ -26,7 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                 from literature_keyword lk2
                 where lk2.literature_id = l.id
                 and lk2.keyword_id in
-                <foreach collection="queryDTO.keywordIds" item="keywordId" open="(" close=")" separator=",">
+                <foreach collection="keywordIds" item="keywordId" open="(" close=")" separator=",">
                     #{keywordId}
                 </foreach>
                 ) = #{keywordIdsSize}
