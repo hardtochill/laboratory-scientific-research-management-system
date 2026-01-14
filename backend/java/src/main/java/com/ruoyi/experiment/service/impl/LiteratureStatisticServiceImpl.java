@@ -2,15 +2,12 @@ package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
-import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
-import com.ruoyi.experiment.mapper.StatisticMapper;
-import com.ruoyi.experiment.pojo.dto.StatisticQueryDTO;
+import com.ruoyi.experiment.mapper.LiteratureStatisticMapper;
+import com.ruoyi.experiment.pojo.dto.LiteratureStatisticQueryDTO;
 import com.ruoyi.experiment.pojo.vo.LiteratureReadStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.StudentReadStatisticsVO;
-import com.ruoyi.experiment.service.StatisticService;
-import com.ruoyi.framework.web.page.TableDataInfo;
-import com.ruoyi.framework.web.page.TableSupport;
+import com.ruoyi.experiment.service.LiteratureStatisticService;
 import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
@@ -28,35 +25,35 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class StatisticServiceImpl implements StatisticService {
-    private final StatisticMapper statisticMapper;
+public class LiteratureStatisticServiceImpl implements LiteratureStatisticService {
+    private final LiteratureStatisticMapper literatureStatisticMapper;
     private final SysUserMapper userMapper;
 
     @Override
-    public List<StudentReadStatisticsVO> selectStudentReadingStatistics(StatisticQueryDTO queryDTO) {
-        return statisticMapper.selectStudentReadingStatistics(queryDTO);
+    public List<StudentReadStatisticsVO> selectStudentReadingStatistics(LiteratureStatisticQueryDTO queryDTO) {
+        return literatureStatisticMapper.selectStudentReadingStatistics(queryDTO);
     }
 
     @Override
     public List<StudentReadStatisticsVO.LiteratureReadDetail> selectStudentLiteratureDetail(Long studentId, LocalDateTime startTime, LocalDateTime endTime) {
-        return statisticMapper.selectStudentLiteratureDetail(studentId, startTime, endTime);
+        return literatureStatisticMapper.selectStudentLiteratureDetail(studentId, startTime, endTime);
     }
 
     @Override
-    public List<LiteratureReadStatisticsVO> selectLiteratureReadingStatistics(StatisticQueryDTO queryDTO) {
-        return statisticMapper.selectLiteratureReadingStatistics(queryDTO);
+    public List<LiteratureReadStatisticsVO> selectLiteratureReadingStatistics(LiteratureStatisticQueryDTO queryDTO) {
+        return literatureStatisticMapper.selectLiteratureReadingStatistics(queryDTO);
     }
 
     @Override
     public List<LiteratureReadStatisticsVO.StudentReadDetail> selectLiteratureStudentDetail(Long literatureId, LocalDateTime startTime, LocalDateTime endTime) {
-        return statisticMapper.selectLiteratureStudentDetail(literatureId, startTime, endTime);
+        return literatureStatisticMapper.selectLiteratureStudentDetail(literatureId, startTime, endTime);
     }
 
     @Override
-    public void exportStatistics(StatisticQueryDTO queryDTO, HttpServletResponse response) {
+    public void exportStatistics(LiteratureStatisticQueryDTO queryDTO, HttpServletResponse response) {
         try {
-            List<StudentReadStatisticsVO> studentList = statisticMapper.selectStudentStatisticsForExport(queryDTO);
-            List<LiteratureReadStatisticsVO> literatureList = statisticMapper.selectLiteratureStatisticsForExport(queryDTO);
+            List<StudentReadStatisticsVO> studentList = literatureStatisticMapper.selectStudentStatisticsForExport(queryDTO);
+            List<LiteratureReadStatisticsVO> literatureList = literatureStatisticMapper.selectLiteratureStatisticsForExport(queryDTO);
 
             String fileName = "文献阅读统计_" +
                     queryDTO.getStartTime().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" +
@@ -79,7 +76,7 @@ public class StatisticServiceImpl implements StatisticService {
                 row.createCell(0).setCellValue(student.getUserNickName());
                 row.createCell(1).setCellValue(student.getLiteratureCount());
 
-                List<StudentReadStatisticsVO.LiteratureReadDetail> details = statisticMapper.selectStudentLiteratureDetail(
+                List<StudentReadStatisticsVO.LiteratureReadDetail> details = literatureStatisticMapper.selectStudentLiteratureDetail(
                         student.getUserId(), queryDTO.getStartTime(), queryDTO.getEndTime());
 
                 StringBuilder literatureInfo = new StringBuilder();
@@ -103,7 +100,7 @@ public class StatisticServiceImpl implements StatisticService {
                 row.createCell(1).setCellValue(literature.getKeywords());
                 row.createCell(2).setCellValue(literature.getStudentCount());
 
-                List<LiteratureReadStatisticsVO.StudentReadDetail> details = statisticMapper.selectLiteratureStudentDetail(
+                List<LiteratureReadStatisticsVO.StudentReadDetail> details = literatureStatisticMapper.selectLiteratureStudentDetail(
                         literature.getLiteratureId(), queryDTO.getStartTime(), queryDTO.getEndTime());
 
                 StringBuilder studentInfo = new StringBuilder();
