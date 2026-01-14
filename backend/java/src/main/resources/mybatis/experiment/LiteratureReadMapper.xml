@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.LiteratureReadMapper">
+    <select id="selectLiteratureReadList" resultType="com.ruoyi.experiment.pojo.vo.LiteratureReadVO">
+        select
+            c.literature_id as literatureId,
+            l.title,
+            (
+                SELECT GROUP_CONCAT(k.keyword_name ORDER BY k.usage_count DESC SEPARATOR ', ')
+                FROM literature_keyword lk
+                LEFT JOIN keyword k ON lk.keyword_id = k.id
+                WHERE lk.literature_id = c.literature_id
+            ) as keywords,
+            COUNT(*) as readCount,
+            MAX(c.comment_time) as lastReadTime
+        from comment c left join literature l on c.literature_id=l.id
+        <where>
+            c.parent_id = 0
+            AND c.user_id = #{userId}
+            <if test="literatureId!=null">and c.literature_id=#{literatureId}</if>
+            <if test="keywordIdsSize!=null and keywordIdsSize>0">
+                and (
+                select count(distinct lk2.keyword_id)
+                from literature_keyword lk2
+                where lk2.literature_id = l.id
+                and lk2.keyword_id in
+                <foreach collection="queryDTO.keywordIds" item="keywordId" open="(" close=")" separator=",">
+                    #{keywordId}
+                </foreach>
+                ) = #{keywordIdsSize}
+            </if>
+            <if test="startTime!=null">AND c.comment_time &gt; #{startTime}</if>
+            <if test="endTime!=null">AND c.comment_time &lt; #{endTime}</if>
+        </where>
+        group by c.literature_id,l.title
+        order by readCount DESC, lastReadTime DESC
+    </select>
+</mapper>
