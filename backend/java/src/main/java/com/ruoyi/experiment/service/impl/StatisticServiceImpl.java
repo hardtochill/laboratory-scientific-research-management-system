@@ -138,7 +138,6 @@ public class StatisticServiceImpl implements StatisticService {
         UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
         queryDTO.setNickName(nickName);
         queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
-        queryDTO.setRoleKey(RoleEnums.STUDENT.getRoleKey());
         return userMapper.selectVOForSelect(queryDTO);
     }
 

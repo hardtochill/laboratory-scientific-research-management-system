@@ -1,13 +1,13 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="100px">
-      <el-form-item v-if="activeTab === 'student'" label="学生昵称" prop="userId">
+      <el-form-item v-if="activeTab === 'student'" label="用户昵称" prop="userId">
         <el-select
           v-model="queryParams.userId"
           filterable
           remote
           reserve-keyword
-          placeholder="请输入学生昵称"
+          placeholder="请输入用户昵称"
           :remote-method="remoteSearchUser"
           :loading="userLoading"
           style="width: 240px"
@@ -73,7 +73,7 @@
     </el-row>
 
     <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-      <el-tab-pane label="按学生统计" name="student">
+      <el-tab-pane label="按用户统计" name="student">
         <el-table v-loading="loading" :data="studentList" @expand-change="handleStudentExpand" row-key="userId" :default-expand-all="false" :key="studentTableKey" fit>
           <el-table-column type="expand" width="50">
             <template #default="{ row }">
@@ -96,7 +96,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="userNickName" label="学生昵称" min-width="150" align="center" />
+          <el-table-column prop="userNickName" label="用户昵称" min-width="150" align="center" />
           <el-table-column prop="literatureCount" label="阅读文献数量" width="150" align="center" sortable />
           <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="150" align="center" />
         </el-table>
@@ -109,7 +109,7 @@
             <template #default="{ row }">
               <div v-if="expandedLiteratureIds.includes(row.literatureId)" class="literature-detail">
                 <el-table :data="literatureStudentMap[row.literatureId]" border size="small">
-                  <el-table-column prop="userNickName" label="学生昵称" min-width="150" align="center" />
+                  <el-table-column prop="userNickName" label="用户昵称" min-width="150" align="center" />
                   <el-table-column prop="readCount" label="阅读次数" min-width="150" align="center" sortable />
                   <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="200" align="center">
                     <template #default="{ row: detail }">
@@ -127,7 +127,7 @@
           </el-table-column>
           <el-table-column prop="title" label="文献名称" min-width="180" :show-overflow-tooltip="true" align="center" />
           <el-table-column prop="keywords" label="关键词" min-width="180" :show-overflow-tooltip="true" align="center" />
-          <el-table-column prop="studentCount" label="阅读学生数量" width="180" align="center" sortable />
+          <el-table-column prop="studentCount" label="阅读用户数量" width="180" align="center" sortable />
         </el-table>
         <pagination v-show="literatureTotal > 0" :total="literatureTotal" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize" @pagination="getLiteratureList" />
       </el-tab-pane>
@@ -371,7 +371,7 @@ async function getStudentList() {
     studentTotal.value = res.total
   } catch (error) {
     loading.value = false
-    proxy.$modal.msgError("获取学生统计失败")
+    proxy.$modal.msgError("获取用户统计失败")
   }
 }
 
@@ -403,7 +403,7 @@ async function handleStudentExpand(row, expanded) {
         const res = await getStudentReadingDetail(userId, queryParams.value.startTime, queryParams.value.endTime)
         studentLiteratureMap.value[userId] = res.data
       } catch (error) {
-        proxy.$modal.msgError("获取学生阅读详情失败")
+        proxy.$modal.msgError("获取用户阅读详情失败")
       }
     }
     if (!expandedStudentIds.value.includes(userId)) {
