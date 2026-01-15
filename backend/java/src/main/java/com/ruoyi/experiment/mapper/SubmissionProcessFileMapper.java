@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -57,6 +58,28 @@ public interface SubmissionProcessFileMapper {
      * @param id 投稿流程文件ID
      * @return 影响行数
      */
+    @Delete("delete from submission_process_file where id = #{id}")
     int delete(@Param("id") Long id);
 
+     /**
+      * 删除投稿流程文件
+      * @param processId 投稿流程ID
+      * @return 影响行数
+      */
+     @Delete("delete from submission_process_file where process_id = #{processId}")
+     void deleteByProcessId(@Param("processId") Long processId);
+
+    /**
+     * 查询投稿流程的所有文件
+     * @param processIds 投稿流程ID列表
+     * @return 投稿流程文件列表
+     */
+    List<SubmissionProcessFile> selectByProcessIds(List<Long> processIds);
+
+     /**
+      * 删除投稿流程文件
+      * @param ids 投稿流程文件ID列表
+      * @return 影响行数
+      */
+    void deleteByIds(List<Long> ids);
 }

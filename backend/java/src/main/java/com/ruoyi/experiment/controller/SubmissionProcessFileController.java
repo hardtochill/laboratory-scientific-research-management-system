@@ -27,8 +27,9 @@ public class SubmissionProcessFileController extends BaseController {
      */
     @PostMapping("/upload")
     public AjaxResult uploadSubmissionProcessFile(@RequestParam("processId") Long processId, 
-                                                @RequestParam("file") MultipartFile file) {
-        submissionProcessFileService.uploadFile(processId, file);
+                                                @RequestParam("file") MultipartFile file,
+                                                @RequestParam("tag") Integer tag) {
+        submissionProcessFileService.uploadFile(processId, file, tag);
         return success();
     }
     /**

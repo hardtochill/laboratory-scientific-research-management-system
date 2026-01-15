@@ -5,10 +5,7 @@ import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -59,6 +56,7 @@ public interface SubmissionProcessMapper {
      * @param planId 投稿计划ID
      * @return 影响行数
      */
+    @Delete("delete from submission_process where plan_id = #{planId}")
     int deleteByPlanId(@Param("planId") Long planId);
 
     /**

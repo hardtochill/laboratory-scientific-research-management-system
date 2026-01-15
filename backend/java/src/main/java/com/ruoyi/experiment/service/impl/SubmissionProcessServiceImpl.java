@@ -3,10 +3,7 @@ package com.ruoyi.experiment.service.impl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
-import com.ruoyi.experiment.enums.RoleEnums;
-import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
-import com.ruoyi.experiment.enums.ReviewStatusEnum;
-import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
+import com.ruoyi.experiment.enums.*;
 import com.ruoyi.experiment.mapper.SubmissionPlanMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.mapper.ReviewMapper;
@@ -15,10 +12,13 @@ import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.Review;
+import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import com.ruoyi.experiment.service.SubmissionProcessService;
+import com.ruoyi.experiment.utils.FileUtils;
+import com.ruoyi.framework.config.ExperimentConfig;
 import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
@@ -28,8 +28,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -40,8 +45,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     private final ReviewMapper reviewMapper;
     private final SubmissionProcessFileMapper submissionProcessFileMapper;
     private final SysUserMapper userMapper;
-
-    // todo 所有涉及审核人相关逻辑，都要检查用户是否毕业
+    private final ExperimentConfig experimentConfig;
 
     @Override
     public List<SubmissionProcessVO> listSubmissionProcessesByPlanId(Long planId) {
@@ -50,7 +54,44 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
             // 关联文件列表
             List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(
                     submissionProcessVO.getId());
-            submissionProcessVO.setFiles(submissionProcessFiles);
+            // 文件分类
+            if(SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcessVO.getName())){ // 一审
+                // 提交给期刊的文件
+                List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
+                // 原始数据与程序
+                List<SubmissionProcessFileVO> rawDataAndProgramFiles = new ArrayList<>();
+                for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                    if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                        journalSubmissionFiles.add(submissionProcessFile);
+                    }else if(SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())){
+                        rawDataAndProgramFiles.add(submissionProcessFile);
+                    }
+                }
+                submissionProcessVO.setJournalSubmissionFiles(journalSubmissionFiles);
+                submissionProcessVO.setRawDataAndProgramFiles(rawDataAndProgramFiles);
+            }else if(SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcessVO.getName())){ // 校稿
+                // 最终稿
+                submissionProcessVO.setFinalDraftFiles(submissionProcessFiles);
+            }else{ // n审
+                // 审稿意见
+                List<SubmissionProcessFileVO> reviewCommentsFiles = new ArrayList<>();
+                // 提交给期刊的文件
+                List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
+                // 补充数据
+                List<SubmissionProcessFileVO> supplementaryDataFiles = new ArrayList<>();
+                for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                    if(SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())){
+                        reviewCommentsFiles.add(submissionProcessFile);
+                    }else if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                        journalSubmissionFiles.add(submissionProcessFile);
+                    }else if(SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())){
+                        supplementaryDataFiles.add(submissionProcessFile);
+                    }
+                }
+                submissionProcessVO.setReviewCommentsFiles(reviewCommentsFiles);
+                submissionProcessVO.setJournalSubmissionFiles(journalSubmissionFiles);
+                submissionProcessVO.setSupplementaryDataFiles(supplementaryDataFiles);
+            }
         }
         return submissionProcessVOs;
     }
@@ -101,10 +142,26 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSubmissionProcess(Long id) {
-        // todo 删除投稿流程的关联文件，本地文件+数据库记录
+        List<SubmissionProcessFile> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(id);
 
-        // 删除投稿流程
+        // 1.删除关联文件记录
+        submissionProcessFileMapper.deleteByProcessId(id);
+
+        // 2.删除投稿流程记录
         submissionProcessMapper.deleteByProcessId(id);
+
+        // 3.删除物理文件
+        for (SubmissionProcessFile submissionProcessFile : submissionProcessFiles) {
+            Path filePath = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getSubmissionBaseDir(), submissionProcessFile.getFilePath()));
+            try {
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+            } catch (Exception e) {
+                log.error("文件删除失败", e);
+                throw new ServiceException("文件删除失败");
+            }
+        }
     }
 
     @Override
@@ -149,7 +206,44 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
         SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
         // 关联文件列表
         List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);
-        vo.setFiles(submissionProcessFiles);
+        // 文件分类
+        if(SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(vo.getName())){ // 一审
+            // 提交给期刊的文件
+            List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
+            // 原始数据与程序
+            List<SubmissionProcessFileVO> rawDataAndProgramFiles = new ArrayList<>();
+            for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                    journalSubmissionFiles.add(submissionProcessFile);
+                }else if(SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())){
+                    rawDataAndProgramFiles.add(submissionProcessFile);
+                }
+            }
+            vo.setJournalSubmissionFiles(journalSubmissionFiles);
+            vo.setRawDataAndProgramFiles(rawDataAndProgramFiles);
+        }else if(SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(vo.getName())){ // 校稿
+            // 最终稿
+            vo.setFinalDraftFiles(submissionProcessFiles);
+        }else{ // n审
+            // 审稿意见
+            List<SubmissionProcessFileVO> reviewCommentsFiles = new ArrayList<>();
+            // 提交给期刊的文件
+            List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
+            // 补充数据
+            List<SubmissionProcessFileVO> supplementaryDataFiles = new ArrayList<>();
+            for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                if(SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())){
+                    reviewCommentsFiles.add(submissionProcessFile);
+                }else if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                    journalSubmissionFiles.add(submissionProcessFile);
+                }else if(SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())){
+                    supplementaryDataFiles.add(submissionProcessFile);
+                }
+            }
+            vo.setReviewCommentsFiles(reviewCommentsFiles);
+            vo.setJournalSubmissionFiles(journalSubmissionFiles);
+            vo.setSupplementaryDataFiles(supplementaryDataFiles);
+        }
         return vo;
     }
 

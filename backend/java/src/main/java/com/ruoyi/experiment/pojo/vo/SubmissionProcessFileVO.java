@@ -28,4 +28,8 @@ public class SubmissionProcessFileVO{
      * 文件大小
      */
      private Integer fileSize;
+    /**
+     * 文件标签
+     */
+     private Integer tag;
 }

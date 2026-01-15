@@ -22,6 +22,10 @@ public class SubmissionProcessFile extends BaseEntity{
      */
     private Long processId;
     /**
+     * 文件标签
+     */
+    private Integer tag;
+    /**
      * 文件名
      */
     private String fileName;

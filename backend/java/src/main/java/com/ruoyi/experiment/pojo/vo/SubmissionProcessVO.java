@@ -21,7 +21,7 @@ public class SubmissionProcessVO{
      */
     private Long planId;
     /**
-     * 流程名称，例如：一审、、二审等
+     * 流程名称，例如：一审、二审等
      */
      private String name;
      /**
@@ -33,7 +33,23 @@ public class SubmissionProcessVO{
      */
     private LocalDateTime processCreateTime;
     /**
-     * 关联的文件
+     * 一审/n审-提交给期刊的文件
      */
-    List<SubmissionProcessFileVO> files;
+    private List<SubmissionProcessFileVO> journalSubmissionFiles;
+     /**
+      * 一审-原始数据与程序
+      */
+    private List<SubmissionProcessFileVO> rawDataAndProgramFiles;
+    /**
+     * n审-审稿意见
+     */
+     private List<SubmissionProcessFileVO> reviewCommentsFiles;
+     /**
+      * n审-补充数据
+      */
+     private List<SubmissionProcessFileVO> supplementaryDataFiles;
+    /**
+     * 校稿-最终稿
+     */
+     private List<SubmissionProcessFileVO> finalDraftFiles;
 }

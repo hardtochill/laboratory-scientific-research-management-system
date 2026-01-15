@@ -15,9 +15,10 @@ public interface SubmissionProcessFileService {
      * 上传投稿流程文件
      * @param processId 投稿流程ID
      * @param file 上传的文件
+     * @param tag 文件标签
      * @return 投稿流程文件信息
      */
-    void uploadFile(Long processId, MultipartFile file);
+    void uploadFile(Long processId, MultipartFile file, Integer tag);
 
     /**
      * 下载文件

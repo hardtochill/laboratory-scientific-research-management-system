@@ -4,19 +4,30 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.SubmissionProcessFileMapper">
     <select id="selectVOListByProcessId" resultType="com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO">
-        select id, file_name,file_type, file_size
+        select id, file_name,file_type, file_size,tag
         from submission_process_file
         where process_id = #{processId}
         order by create_time desc
     </select>
+    <select id="selectByProcessIds" resultType="com.ruoyi.experiment.pojo.entity.SubmissionProcessFile">
+        select *
+        from submission_process_file
+        where process_id in
+        <foreach collection="processIds" item="processId" open="(" close=")" separator=",">
+            #{processId}
+        </foreach>
+    </select>
 
     <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.SubmissionProcessFile">
-        insert into submission_process_file (process_id, file_name, file_path, file_type, file_size, upload_time, create_time, update_time)
-        values (#{processId}, #{fileName}, #{filePath}, #{fileType}, #{fileSize}, #{uploadTime}, #{createTime}, #{updateTime})
+        insert into submission_process_file (process_id, tag,file_name, file_path, file_type, file_size, upload_time, create_time, update_time)
+        values (#{processId}, #{tag},#{fileName}, #{filePath}, #{fileType}, #{fileSize}, #{uploadTime}, #{createTime}, #{updateTime})
     </insert>
-    <delete id="delete">
+    <delete id="deleteByIds">
         delete from submission_process_file
-        where id = #{id}
+        where id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
     </delete>
 
 </mapper>

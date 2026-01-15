@@ -35,7 +35,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
     private final SubmissionProcessMapper submissionProcessMapper;
     private final ExperimentConfig experimentConfig;
     @Override
-    public void uploadFile(Long processId, MultipartFile file) {
+    public void uploadFile(Long processId, MultipartFile file, Integer tag) {
         // 1.校验流程是否存在
          SubmissionProcess process = submissionProcessMapper.selectByProcessId(processId);
         if (process == null) {
@@ -53,6 +53,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
         // 2. 保存文件信息到数据库
         SubmissionProcessFile submissionProcessFile = new SubmissionProcessFile();
         submissionProcessFile.setProcessId(processId);
+        submissionProcessFile.setTag(tag);
         submissionProcessFile.setFileName(com.ruoyi.common.utils.file.FileUtils.getNameNotSuffix(file.getOriginalFilename()));
         submissionProcessFile.setFilePath(filePath);
         submissionProcessFile.setFileType(FileUploadUtils.getExtension(file));

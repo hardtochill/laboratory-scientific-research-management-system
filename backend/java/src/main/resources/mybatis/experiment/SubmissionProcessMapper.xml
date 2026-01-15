@@ -25,8 +25,4 @@
         where id = #{id}
     </delete>
 
-    <delete id="deleteByPlanId">
-        delete from submission_process
-        where plan_id = #{planId}
-    </delete>
 </mapper>
