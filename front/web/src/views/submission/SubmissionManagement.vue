@@ -118,13 +118,20 @@
                     </el-tag>
                   </div>
                   
-                  <!-- 关联文件展示 -->
-                  <div v-if="process.files && process.files.length > 0" class="related-files">
-                    <span class="files-label">关联文件：</span>
-                    <el-button v-for="file in process.files" :key="file.id" type="text" class="file-link"
-                        @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
-                        {{ file.fileName }}.{{ file.fileType }}
-                    </el-button>
+                  <!-- 关联文件展示（按tag分类） -->
+                  <div class="related-files">
+                    <div v-for="tag in PROCESS_TAG_CONFIG[process.name]" :key="tag" class="tag-file-group">
+                      <el-row>
+                        <span class="files-label">{{ FILE_TAG_TEXT[tag] }}：</span>
+                        <div v-if="getFilesByTag(process, tag).length > 0" class="tag-file-list">
+                          <el-button v-for="file in getFilesByTag(process, tag)" :key="file.id" type="text"
+                            class="file-link" @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                            {{ file.fileName }}.{{ file.fileType }}
+                          </el-button>
+                        </div>
+                        <span v-else class="no-files">-</span>
+                      </el-row>
+                    </div>
                   </div>
                   
                   <div class="process-actions">
@@ -252,7 +259,7 @@
     <!-- 投稿流程详情对话框 -->
     <el-dialog v-model="processDialogVisible" :title="processDialogTitle" width="600px" :before-close="handleProcessDialogClose">
       <div v-if="currentProcess" class="process-detail">
-        <el-descriptions :column="1" border>
+        <el-descriptions :column="1" border :label-width="120">
           <el-descriptions-item label="流程名称">
             {{ currentProcess.name }}
           </el-descriptions-item>
@@ -271,13 +278,20 @@
             {{ currentProcess.remark || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="关联文件">
-            <div v-if="currentProcess.files && currentProcess.files.length > 0" class="related-files">
-              <el-button v-for="file in currentProcess.files" :key="file.id" type="text" class="file-link"
-                  @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
-                  {{ file.fileName }}.{{ file.fileType }}
-              </el-button>
+            <div class="related-files">
+              <div v-for="tag in PROCESS_TAG_CONFIG[currentProcess.name]" :key="tag" class="tag-file-group">
+                <el-row>
+                  <div class="tag-label">{{ FILE_TAG_TEXT[tag] }}：</div>
+                <div v-if="getFilesByTag(currentProcess, tag).length > 0" class="tag-file-list">
+                  <el-button v-for="file in getFilesByTag(currentProcess, tag)" :key="file.id" type="text" class="file-link"
+                      @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                      {{ file.fileName }}.{{ file.fileType }}
+                  </el-button>
+                </div>
+                <span v-else class="no-files">-</span>
+                </el-row>
+              </div>
             </div>
-            <span v-else>-</span>
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -337,63 +351,56 @@
         <div class="process-info">
           <h4>流程：{{ currentProcessForFile.name }}</h4>
         </div>
-
-        <!-- 文件上传区域 -->
-        <div class="upload-section" v-if="currentProcessForFile?.status !== PROCESS_STATUS.REVIEWING && currentProcessForFile?.status !== PROCESS_STATUS.REVIEW_PASSED">
-          <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
-            :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
-            <el-icon class="el-icon--upload">
-              <UploadFilled />
-            </el-icon>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
-            </div>
-            <template #tip>
-              <div class="el-upload__tip">
-                支持java、py、pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
-              </div>
-            </template>
-          </el-upload>
-          <div class="upload-actions">
-            <el-button type="primary" @click="handleUploadFiles" :loading="uploading" :disabled="fileList.length === 0">
-              {{ uploading ? '上传中...' : '上传文件' }}
-            </el-button>
-          </div>
-        </div>
-
-        <!-- 文件列表 -->
+        <!-- 文件列表（按tag分类） -->
         <div class="file-list-section">
           <h4>已上传文件</h4>
-          <el-table :data="processFileList" stripe style="width: 100%" v-loading="fileLoading">
-            <el-table-column prop="fileName" label="文件名" min-width="200">
-              <template #default="{ row }">
-                <span class="file-name">{{ row.fileName }}.{{ row.fileType }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="fileSize" label="文件大小" width="120">
-              <template #default="{ row }">
-                {{ formatFileSize(row.fileSize) || '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="uploadTime" label="上传时间" width="160">
-              <template #default="{ row }">
-                {{ parseTime(row.createTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150" fixed="right">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="downloadFile(row.id, row.fileName+'.'+row.fileType)" :icon="Download">
-                  下载
-                </el-button>
-                <el-tooltip :content="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法删除文件' : '审核成功，无法删除文件'" placement="top">
-                  <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" :disabled="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING || currentProcessForFile?.status === PROCESS_STATUS.REVIEW_PASSED">
-                    删除
+          <div v-if="currentProcessForFile" class="tag-file-sections">
+            <template v-for="(tag, index) in PROCESS_TAG_CONFIG[currentProcessForFile.name]" :key="tag">
+              <div class="tag-file-section">
+                <div class="tag-title-container">
+                  <h5 class="tag-section-title">{{ FILE_TAG_TEXT[tag] }}</h5>
+                  <el-button v-if="currentProcessForFile?.status !== PROCESS_STATUS.REVIEWING && currentProcessForFile?.status !== PROCESS_STATUS.REVIEW_PASSED" 
+                    type="primary" size="small" @click="openUploadDialog(tag)" :icon="UploadFilled" style="margin-right: 8px;">
+                    上传
                   </el-button>
-                </el-tooltip>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div v-if="processFileList.length === 0 && !fileLoading" class="no-files">
+                </div>
+              <el-table :data="getFilesByTagFromList(processFileList, tag)" stripe style="width: 100%" v-loading="fileLoading">
+                <el-table-column prop="fileName" label="文件名" min-width="200">
+                  <template #default="{ row }">
+                    <span class="file-name">{{ row.fileName }}.{{ row.fileType }}</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="fileSize" label="文件大小" width="120">
+                  <template #default="{ row }">
+                    {{ formatFileSize(row.fileSize) || '-' }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="uploadTime" label="上传时间" width="160">
+                  <template #default="{ row }">
+                    {{ parseTime(row.createTime) }}
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="150" fixed="right">
+                  <template #default="{ row }">
+                    <el-button link type="primary" @click="downloadFile(row.id, row.fileName+'.'+row.fileType)" :icon="Download">
+                      下载
+                    </el-button>
+                    <el-tooltip :content="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法删除文件' : '审核成功，无法删除文件'" placement="top">
+                      <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" :disabled="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING || currentProcessForFile?.status === PROCESS_STATUS.REVIEW_PASSED">
+                        删除
+                      </el-button>
+                    </el-tooltip>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div v-if="getFilesByTagFromList(processFileList, tag).length === 0 && !fileLoading" class="no-files">
+                <el-empty description="暂无文件" />
+              </div>
+              </div>
+              <el-divider v-if="index < PROCESS_TAG_CONFIG[currentProcessForFile.name].length - 1" />
+            </template>
+          </div>
+          <div v-else-if="!fileLoading" class="no-files">
             <el-empty description="暂无文件" />
           </div>
         </div>
@@ -401,6 +408,36 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleFileDialogClose">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 新的文件上传对话框 -->
+    <el-dialog v-model="uploadDialogVisible" :title="`上传${FILE_TAG_TEXT[currentUploadTag]}`" width="600px" :before-close="handleUploadDialogClose">
+      <div class="upload-dialog-content">
+        <el-upload ref="uploadRef" :file-list="tempFileList" :auto-upload="false" 
+          :on-change="(file, fileList) => tempFileList.value = fileList" 
+          :on-remove="(file, fileList) => tempFileList.value = fileList" 
+          :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+          <el-icon class="el-icon--upload">
+            <UploadFilled />
+          </el-icon>
+          <div class="el-upload__text">
+            将文件拖到此处，或<em>点击上传</em>
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">
+              支持java、py、pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
+            </div>
+          </template>
+        </el-upload>
+      </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleUploadDialogClose">取消</el-button>
+          <el-button type="primary" @click="handleTempFileUpload" :loading="tempUploading">
+            {{ tempUploading ? '上传中...' : '确定' }}
+          </el-button>
         </div>
       </template>
     </el-dialog>
@@ -423,7 +460,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs } from 'vue'
+import { ref, onMounted, reactive, toRefs, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect,getSelectableCreateUsers } from '@/api/submission/submissionPlan'
 import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail,getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
@@ -454,6 +491,35 @@ const PROCESS_STATUS = {
   REVIEWING: 2,
   REVIEW_PASSED: 3,
   REVIEW_FAILED: 4
+}
+
+// 投稿流程文件标签枚举
+const FILE_TAG = {
+  JOURNAL_SUBMISSION: 1, // 提交给期刊的文件
+  RAW_DATA_AND_PROGRAM: 2, // 原始数据与程序
+  REVIEW_COMMENTS: 3, // 审稿意见
+  SUPPLEMENTARY_DATA: 4, // 补充数据
+  FINAL_DRAFT: 5 // 最终稿
+}
+
+// 流程名称对应的文件标签配置
+const PROCESS_TAG_CONFIG = {
+  '一审': [FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.RAW_DATA_AND_PROGRAM],
+  '二审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '三审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '四审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '五审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '六审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '校稿': [FILE_TAG.FINAL_DRAFT]
+}
+
+// 文件标签文本映射
+const FILE_TAG_TEXT = {
+  [FILE_TAG.JOURNAL_SUBMISSION]: '提交给期刊的文件',
+  [FILE_TAG.RAW_DATA_AND_PROGRAM]: '原始数据与程序',
+  [FILE_TAG.REVIEW_COMMENTS]: '审稿意见',
+  [FILE_TAG.SUPPLEMENTARY_DATA]: '补充数据',
+  [FILE_TAG.FINAL_DRAFT]: '最终稿'
 }
 
 // 投稿流程名称枚举（展示顺序：一审、二审、三审、校稿、四审、五审、六审）
@@ -636,10 +702,16 @@ const processFormRules = reactive({
 const fileDialogVisible = ref(false)
 const currentProcessForFile = ref(null)
 const processFileList = ref([])
-const fileList = ref([])
+const tagFileLists = ref({}) // 按tag分类的文件列表
 const fileLoading = ref(false)
 const uploading = ref(false)
 const uploadRef = ref(null)
+
+// 新的文件上传对话框相关
+const uploadDialogVisible = ref(false)
+const currentUploadTag = ref(null) // 当前上传的tag
+const tempFileList = ref([]) // 临时文件列表
+const tempUploading = ref(false)
 
 // 发起审核对话框
 const submitReviewDialogVisible = ref(false)
@@ -743,6 +815,38 @@ const loadProcesses = async (plan) => {
       plan.loading = false
     }
   }
+}
+
+// 根据tag获取文件列表
+const getFilesByTag = (process, tag) => {
+  // 优先从后端返回的分类文件列表中获取
+  if (process.journalSubmissionFiles && tag === FILE_TAG.JOURNAL_SUBMISSION) {
+    return process.journalSubmissionFiles
+  } else if (process.rawDataAndProgramFiles && tag === FILE_TAG.RAW_DATA_AND_PROGRAM) {
+    return process.rawDataAndProgramFiles
+  } else if (process.reviewCommentsFiles && tag === FILE_TAG.REVIEW_COMMENTS) {
+    return process.reviewCommentsFiles
+  } else if (process.supplementaryDataFiles && tag === FILE_TAG.SUPPLEMENTARY_DATA) {
+    return process.supplementaryDataFiles
+  } else if (process.finalDraftFiles && tag === FILE_TAG.FINAL_DRAFT) {
+    return process.finalDraftFiles
+  }
+  // 兼容旧的files数组
+  return process.files?.filter(file => file.tag === tag) || []
+}
+
+// 检查是否所有tag都至少有一个文件
+const isAllTagsHaveFiles = computed(() => {
+  if (!currentProcessForFile.value) return false
+  const requiredTags = PROCESS_TAG_CONFIG[currentProcessForFile.value.name]
+  return requiredTags.every(tag => 
+    tagFileLists.value[tag] && tagFileLists.value[tag].length > 0
+  )
+})
+
+// 从文件列表中按tag获取文件
+const getFilesByTagFromList = (fileList, tag) => {
+  return fileList.filter(file => file.tag === tag)
 }
 
 // 格式化文件大小
@@ -1022,23 +1126,33 @@ const showFileManagement = async (process) => {
     // 调用getSubmissionProcessFiles接口获取文件列表
     const response = await getSubmissionProcessFiles(process.id)
     processFileList.value = response.data || []
+    // 初始化tagFileLists
+    tagFileLists.value = {}
   } catch (error) {
     ElMessage.error('加载文件列表失败')
     console.error('加载文件列表失败:', error)
     processFileList.value = []
+    tagFileLists.value = {}
   } finally {
     fileLoading.value = false
   }
 }
 
-// 文件变化处理
-const handleFileChange = (file, fileListParam) => {
-  fileList.value = fileListParam
+// 打开上传对话框
+const openUploadDialog = (tag) => {
+  currentUploadTag.value = tag
+  tempFileList.value = [] // 清空临时文件列表
+  uploadDialogVisible.value = true
 }
 
-// 文件移除处理
-const handleFileRemove = (file, fileListParam) => {
-  fileList.value = fileListParam
+// 文件变化处理（按tag分类）
+const handleFileChange = (file, fileListParam, tag) => {
+  tagFileLists.value[tag] = fileListParam
+}
+
+// 文件移除处理（按tag分类）
+const handleFileRemove = (file, fileListParam, tag) => {
+  tagFileLists.value[tag] = fileListParam
 }
 
 // 上传前验证
@@ -1062,37 +1176,53 @@ const handleUploadFiles = async () => {
     return
   }
   
-  if (fileList.value.length === 0) {
-    ElMessage.warning('请选择要上传的文件')
+  // 验证所有tag至少有一个文件
+  if (!isAllTagsHaveFiles.value) {
+    ElMessage.warning('每个文件类型至少需要上传一个文件')
     return
   }
 
   uploading.value = true
   let successCount = 0
   let failCount = 0
+  let totalFiles = 0
   
   try {
-    for (let i = 0; i < fileList.value.length; i++) {
-      const fileItem = fileList.value[i]
-      try {
-        await uploadSubmissionProcessFile(currentProcessForFile.value.id, fileItem)
-        successCount++
-      } catch (error) {
-        failCount++
-        console.error(`文件 ${fileItem.name} 上传失败:`, error)
-        ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+    const processId = currentProcessForFile.value.id
+    const requiredTags = PROCESS_TAG_CONFIG[currentProcessForFile.value.name]
+    
+    // 计算总文件数
+    requiredTags.forEach(tag => {
+      totalFiles += tagFileLists.value[tag]?.length || 0
+    })
+    
+    // 遍历所有tag的文件列表
+    for (const tag of requiredTags) {
+      const files = tagFileLists.value[tag] || []
+      for (const fileItem of files) {
+        try {
+          // 为文件添加tag参数
+          fileItem.tag = tag
+          await uploadSubmissionProcessFile(processId, fileItem,tag)
+          successCount++
+        } catch (error) {
+          failCount++
+          console.error(`文件 ${fileItem.name} 上传失败:`, error)
+          ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+        }
       }
     }
 
     if (successCount > 0 && failCount === 0) {
-      ElMessage.success(`所有文件上传成功 (${successCount}/${fileList.value.length})`)
+      ElMessage.success(`所有文件上传成功 (${successCount}/${totalFiles})`)
     } else if (successCount > 0 && failCount > 0) {
       ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
     } else {
-      ElMessage.error(`文件上传失败 (${failCount}/${fileList.value.length})`)
+      ElMessage.error(`文件上传失败 (${failCount}/${totalFiles})`)
     }
     
-    fileList.value = []
+    // 清空所有tag的文件列表
+    tagFileLists.value = {}
     
     if (successCount > 0) {
       // 上传成功后刷新文件列表
@@ -1153,7 +1283,28 @@ const handleFileDialogClose = () => {
   fileDialogVisible.value = false
   currentProcessForFile.value = null
   processFileList.value = []
-  fileList.value = []
+  tagFileLists.value = {} // 清空所有tag的文件列表
+}
+
+// 关闭上传对话框（取消按钮）
+const handleUploadDialogClose = () => {
+  uploadDialogVisible.value = false
+  tempFileList.value = [] // 清空临时文件列表
+}
+
+// 处理临时文件上传（确定按钮）
+const handleTempFileUpload = () => {
+  if (tempFileList.value.length === 0) {
+    ElMessage.warning('请选择要上传的文件')
+    return
+  }
+  
+  // 将临时文件列表保存到对应的tagFileLists中
+  tagFileLists.value[currentUploadTag.value] = tempFileList.value
+  
+  ElMessage.success('文件已添加到上传列表')
+  uploadDialogVisible.value = false
+  tempFileList.value = [] // 清空临时文件列表
 }
 
 // 发起内部审核
@@ -1425,13 +1576,35 @@ onMounted(async () => {
   font-weight: 600;
 }
 
+.tag-title-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tag-section-title {
+  margin: 0;
+  color: #303133;
+  font-weight: 500;
+  font-size: 15px;
+}
+
 .file-name {
   font-weight: 500;
   color: #409eff;
 }
-
+.files-label {
+  font-size: 15px;
+  color: #606266;
+  margin-top: 5px;
+}
+.tag-label {
+  font-size: 15px;
+  color: #606266;
+  margin-top: 5px;
+}
 .no-files {
-  padding: 40px 0;
   text-align: center;
 }
 

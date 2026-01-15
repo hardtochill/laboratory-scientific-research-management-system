@@ -1,11 +1,11 @@
 import request from '@/utils/request'
 
 // 上传投稿流程文件
-export function uploadSubmissionProcessFile(processId, file) {
+export function uploadSubmissionProcessFile(processId, file,tag) {
   const formData = new FormData()
   formData.append('processId', processId)
   formData.append('file', file.raw || file)
-  
+  formData.append('tag', tag)
   return request({
     url: '/submissionProcessFile/upload',
     method: 'post',
