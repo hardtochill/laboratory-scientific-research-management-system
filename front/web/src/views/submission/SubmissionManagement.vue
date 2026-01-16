@@ -3,15 +3,16 @@
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="100px" class="query-form">
       <el-form-item label="计划名称" prop="name">
-        <el-select v-model="queryParams.name" placeholder="请选择计划名称" clearable style="width: 240px"
-          filterable remote reserve-keyword :remote-method="querySelectablePlans" :loading="planLoading">
+        <el-select v-model="queryParams.name" placeholder="请选择计划名称" clearable style="width: 240px" filterable remote
+          reserve-keyword :remote-method="querySelectablePlans" :loading="planLoading">
           <el-option v-for="plan in selectablePlans" :key="plan.id" :label="plan.name" :value="plan.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="创建用户" prop="createUserId">
-        <el-select v-model="queryParams.createUserId" placeholder="请选择创建用户" clearable style="width: 240px"
-          filterable remote reserve-keyword :remote-method="querySelectableCreators" :loading="creatorLoading">
-          <el-option v-for="creator in selectableCreators" :key="creator.userId" :label="`${creator.nickName}(${creator.userName})`" :value="creator.userId" />
+        <el-select v-model="queryParams.createUserId" placeholder="请选择创建用户" clearable style="width: 240px" filterable
+          remote reserve-keyword :remote-method="querySelectableCreators" :loading="creatorLoading">
+          <el-option v-for="creator in selectableCreators" :key="creator.userId"
+            :label="`${creator.nickName}(${creator.userName})`" :value="creator.userId" />
         </el-select>
       </el-form-item>
       <el-form-item label="投稿类型" prop="type">
@@ -25,7 +26,8 @@
         </el-select>
       </el-form-item>
       <el-form-item label="计划状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择计划状态" clearable style="width: 240px" @change="handleQuery">
+        <el-select v-model="queryParams.status" placeholder="请选择计划状态" clearable style="width: 240px"
+          @change="handleQuery">
           <el-option label="待送审" :value="1" />
           <el-option label="审核中" :value="2" />
           <el-option label="发表成功" :value="3" />
@@ -80,7 +82,8 @@
               </el-tooltip>
               <!-- 计划详情按钮 -->
               <el-tooltip content="投稿计划详情" placement="top">
-                <el-button link type="primary" @click.stop="showPlanDetail(plan)" :icon="Document" style="margin-left: 0px;"></el-button>
+                <el-button link type="primary" @click.stop="showPlanDetail(plan)" :icon="Document"
+                  style="margin-left: 0px;"></el-button>
               </el-tooltip>
               <!-- 修改状态下拉菜单 -->
               <el-tooltip content="更新计划状态" placement="top">
@@ -117,7 +120,7 @@
                       {{ getProcessStatusText(process.status) }}
                     </el-tag>
                   </div>
-                  
+
                   <!-- 关联文件展示（按tag分类） -->
                   <div class="related-files">
                     <div v-for="tag in PROCESS_TAG_CONFIG[process.name]" :key="tag" class="tag-file-group">
@@ -133,23 +136,28 @@
                       </el-row>
                     </div>
                   </div>
-                  
+
                   <div class="process-actions">
                     <!-- 流程详情按钮 -->
                     <el-tooltip content="流程详情" placement="top">
-                      <el-button link type="primary" @click.stop="showProcessDetail(process)" :icon="Document"></el-button>
+                      <el-button link type="primary" @click.stop="showProcessDetail(process)"
+                        :icon="Document"></el-button>
                     </el-tooltip>
                     <!-- 文件管理按钮 -->
                     <el-tooltip content="文件管理" placement="top">
-                      <el-button link type="primary" @click.stop="showFileManagement(process)" :icon="Files"></el-button>
+                      <el-button link type="primary" @click.stop="showFileManagement(process)"
+                        :icon="Files"></el-button>
                     </el-tooltip>
                     <!-- 发起审核按钮 -->
-                    <el-tooltip content="发起内部审核" placement="top" v-if="process.status === 1">
-                      <el-button link type="primary" @click.stop="handleSubmitReview(process)" :icon="Check"></el-button>
+                    <el-tooltip content="发起内部审核" placement="top"
+                      v-if="process.status === PROCESS_STATUS.WAITING_SUBMIT_REVIEW || process.status === PROCESS_STATUS.REVIEW_FAILED">
+                      <el-button link type="primary" @click.stop="handleSubmitReview(process)"
+                        :icon="Check"></el-button>
                     </el-tooltip>
                     <!-- 删除流程按钮 -->
                     <el-tooltip content="删除流程" placement="top">
-                      <el-button link type="danger" @click.stop="handleDeleteProcess(process)" :icon="Delete"></el-button>
+                      <el-button link type="danger" @click.stop="handleDeleteProcess(process)"
+                        :icon="Delete"></el-button>
                     </el-tooltip>
                   </div>
                 </div>
@@ -192,7 +200,7 @@
             {{ parseTime(currentPlan.createTime) }}
           </el-descriptions-item>
           <el-descriptions-item label="参与用户">
-            {{ currentPlan.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-' }}
+            {{currentPlan.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-'}}
           </el-descriptions-item>
           <el-descriptions-item label="备注">
             {{ currentPlan.remark || '-' }}
@@ -209,7 +217,8 @@
 
     <!-- 投稿计划新增/修改对话框 -->
     <el-dialog v-model="planFormVisible" :title="planFormTitle" width="600px" :before-close="handlePlanFormClose">
-      <el-form :model="planFormData" ref="planFormRef" label-width="120px" :rules="planFormRules" class="submission-form">
+      <el-form :model="planFormData" ref="planFormRef" label-width="120px" :rules="planFormRules"
+        class="submission-form">
         <!-- 隐藏字段 -->
         <el-form-item prop="id" style="display: none;">
           <el-input v-model="planFormData.id" type="hidden" />
@@ -223,11 +232,11 @@
         <!-- 投稿类型 -->
         <el-form-item label="投稿类型" prop="type">
           <el-select v-model="planFormData.type" placeholder="请选择投稿类型" style="width: 100%;">
-           <el-option label="期刊论文" :value="SUBMISSION_TYPE.JOURNAL_PAPER" />
-          <el-option label="会议论文" :value="SUBMISSION_TYPE.CONFERENCE_PAPER" />
-          <el-option label="发明专利" :value="SUBMISSION_TYPE.INVENTION_PATENT" />
-          <el-option label="实用新型专利" :value="SUBMISSION_TYPE.UTILITY_MODEL_PATENT" />
-          <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
+            <el-option label="期刊论文" :value="SUBMISSION_TYPE.JOURNAL_PAPER" />
+            <el-option label="会议论文" :value="SUBMISSION_TYPE.CONFERENCE_PAPER" />
+            <el-option label="发明专利" :value="SUBMISSION_TYPE.INVENTION_PATENT" />
+            <el-option label="实用新型专利" :value="SUBMISSION_TYPE.UTILITY_MODEL_PATENT" />
+            <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
           </el-select>
         </el-form-item>
 
@@ -247,7 +256,7 @@
         </el-form-item>
 
         <!-- 参与用户 -->
-         <el-tooltip content="只有参与用户对该投稿计划可见" placement="top">
+        <el-tooltip content="只有参与用户对该投稿计划可见" placement="top">
           <el-form-item label="参与用户" prop="participantUserIds">
             <el-select v-model="planFormData.participantUserIds" multiple filterable remote reserve-keyword
               placeholder="请输入用户名搜索并选择" style="width: 100%;" :remote-method="querySelectableParticipantUser"
@@ -259,7 +268,8 @@
         </el-tooltip>
         <!-- 备注 -->
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="planFormData.remark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255" show-word-limit />
+          <el-input v-model="planFormData.remark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255"
+            show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -271,7 +281,8 @@
     </el-dialog>
 
     <!-- 投稿流程详情对话框 -->
-    <el-dialog v-model="processDialogVisible" :title="processDialogTitle" width="600px" :before-close="handleProcessDialogClose">
+    <el-dialog v-model="processDialogVisible" :title="processDialogTitle" width="600px"
+      :before-close="handleProcessDialogClose">
       <div v-if="currentProcess" class="process-detail">
         <el-descriptions :column="1" border :label-width="120">
           <el-descriptions-item label="流程名称">
@@ -296,13 +307,13 @@
               <div v-for="tag in PROCESS_TAG_CONFIG[currentProcess.name]" :key="tag" class="tag-file-group">
                 <el-row>
                   <div class="tag-label">{{ FILE_TAG_TEXT[tag] }}：</div>
-                <div v-if="getFilesByTag(currentProcess, tag).length > 0" class="tag-file-list">
-                  <el-button v-for="file in getFilesByTag(currentProcess, tag)" :key="file.id" type="text" class="file-link"
-                      @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                  <div v-if="getFilesByTag(currentProcess, tag).length > 0" class="tag-file-list">
+                    <el-button v-for="file in getFilesByTag(currentProcess, tag)" :key="file.id" type="text"
+                      class="file-link" @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
                       {{ file.fileName }}.{{ file.fileType }}
-                  </el-button>
-                </div>
-                <span v-else class="no-files">-</span>
+                    </el-button>
+                  </div>
+                  <span v-else class="no-files">-</span>
                 </el-row>
               </div>
             </div>
@@ -312,18 +323,20 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleProcessDialogClose">关闭</el-button>
-          <el-tooltip :content="currentProcess?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法修改' : '审核成功，无法修改'" placement="top">
-            <el-button type="primary" @click="handleProcessEdit" :disabled="currentProcess?.status === PROCESS_STATUS.REVIEWING || currentProcess?.status === PROCESS_STATUS.REVIEW_PASSED">
-              修改
-            </el-button>
-          </el-tooltip>
+          <el-button
+            v-if="currentProcess?.status === PROCESS_STATUS.WAITING_SUBMIT_REVIEW || currentProcess?.status === PROCESS_STATUS.REVIEW_FAILED"
+            type="primary" @click="handleProcessEdit">
+            修改
+          </el-button>
         </div>
       </template>
     </el-dialog>
 
     <!-- 投稿流程新增/修改对话框 -->
-    <el-dialog v-model="processFormVisible" :title="processFormTitle" width="600px" :before-close="handleProcessFormClose">
-      <el-form :model="processFormData" ref="processFormRef" label-width="120px" :rules="processFormRules" class="process-form">
+    <el-dialog v-model="processFormVisible" :title="processFormTitle" width="600px"
+      :before-close="handleProcessFormClose">
+      <el-form :model="processFormData" ref="processFormRef" label-width="120px" :rules="processFormRules"
+        class="process-form">
         <!-- 隐藏字段 -->
         <el-form-item prop="id" style="display: none;">
           <el-input v-model="processFormData.id" type="hidden" />
@@ -335,20 +348,24 @@
         <!-- 流程名称 -->
         <el-form-item label="流程名称" prop="name">
           <el-select v-model="processFormData.name" placeholder="请选择流程名称" style="width: 100%;">
-            <el-option v-for="process in PROCESS_NAME_ENUM" :key="process.value" :label="process.label" :value="process.value" />
+            <el-option v-for="process in PROCESS_NAME_ENUM" :key="process.value" :label="process.label"
+              :value="process.value" />
           </el-select>
         </el-form-item>
 
         <!-- 审核人 -->
         <el-form-item label="审核人" prop="reviewerUserId">
-          <el-select v-model="processFormData.reviewerUserId" placeholder="请选择审核人" filterable remote reserve-keyword style="width: 100%;" :remote-method="querySelectableReviewers" :loading="reviewerLoading">
-            <el-option v-for="user in selectableReviewers" :key="user.userId" :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+          <el-select v-model="processFormData.reviewerUserId" placeholder="请选择审核人" filterable remote reserve-keyword
+            style="width: 100%;" :remote-method="querySelectableReviewers" :loading="reviewerLoading">
+            <el-option v-for="user in selectableReviewers" :key="user.userId"
+              :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
           </el-select>
         </el-form-item>
 
         <!-- 备注 -->
         <el-form-item label="备注" prop="remark">
-          <el-input v-model="processFormData.remark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255" show-word-limit />
+          <el-input v-model="processFormData.remark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255"
+            show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -360,7 +377,8 @@
     </el-dialog>
 
     <!-- 文件管理对话框 -->
-    <el-dialog v-model="fileDialogVisible" title="投稿文件管理" width="800px" height="500px" :before-close="handleFileDialogClose">
+    <el-dialog v-model="fileDialogVisible" title="投稿文件管理" width="800px" height="500px"
+      :before-close="handleFileDialogClose">
       <div v-if="currentProcessForFile" class="file-management">
         <div class="process-info">
           <h4>流程：{{ currentProcessForFile.name }}</h4>
@@ -373,40 +391,42 @@
               <div class="tag-file-section">
                 <div class="tag-title-container">
                   <h5 class="tag-section-title">{{ FILE_TAG_TEXT[tag] }}</h5>
-                  <el-button v-if="currentProcessForFile?.status !== PROCESS_STATUS.REVIEWING && currentProcessForFile?.status !== PROCESS_STATUS.REVIEW_PASSED" 
-                    type="primary" size="small" @click="openUploadDialog(tag)" :icon="UploadFilled" style="margin-right: 8px;">
+                  <el-button
+                    v-if="currentProcessForFile?.status !== PROCESS_STATUS.REVIEWING && currentProcessForFile?.status !== PROCESS_STATUS.REVIEW_PASSED"
+                    type="primary" size="small" @click="openUploadDialog(tag)" :icon="UploadFilled"
+                    style="margin-right: 8px;">
                     上传
                   </el-button>
                 </div>
-              <el-table :data="getFilesByTagFromList(processFileList, tag)" stripe style="width: 100%" v-loading="fileLoading">
-                <el-table-column prop="fileName" label="文件名" min-width="200">
-                  <template #default="{ row }">
-                    <span class="file-name">{{ row.fileName }}.{{ row.fileType }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="fileSize" label="文件大小" width="120">
-                  <template #default="{ row }">
-                    {{ formatFileSize(row.fileSize) || '-' }}
-                  </template>
-                </el-table-column>
-                <el-table-column prop="uploadTime" label="上传时间" width="160">
-                  <template #default="{ row }">
-                    {{ parseTime(row.createTime) }}
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="150" fixed="right">
-                  <template #default="{ row }">
-                    <el-button link type="primary" @click="downloadFile(row.id, row.fileName+'.'+row.fileType)" :icon="Download">
-                      下载
-                    </el-button>
-                    <el-tooltip :content="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING ? '审核中，无法删除文件' : '审核成功，无法删除文件'" placement="top">
-                      <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" :disabled="currentProcessForFile?.status === PROCESS_STATUS.REVIEWING || currentProcessForFile?.status === PROCESS_STATUS.REVIEW_PASSED">
+                <el-table :data="getFilesByTagFromList(processFileList, tag)" stripe style="width: 100%"
+                  v-loading="fileLoading">
+                  <el-table-column prop="fileName" label="文件名" min-width="200">
+                    <template #default="{ row }">
+                      <span class="file-name">{{ row.fileName }}.{{ row.fileType }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="fileSize" label="文件大小" width="120">
+                    <template #default="{ row }">
+                      {{ formatFileSize(row.fileSize) || '-' }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="uploadTime" label="上传时间" width="160">
+                    <template #default="{ row }">
+                      {{ parseTime(row.createTime) }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="150" fixed="right">
+                    <template #default="{ row }">
+                      <el-button link type="primary" @click="downloadFile(row.id, row.fileName + '.' + row.fileType)"
+                        :icon="Download">
+                        下载
+                      </el-button>
+                      <el-button v-if="currentProcessForFile?.status === PROCESS_STATUS.WAITING_SUBMIT_REVIEW || currentProcessForFile?.status === PROCESS_STATUS.REVIEW_FAILED" link type="danger" @click="handleDeleteFile(row)" :icon="Delete">
                         删除
                       </el-button>
-                    </el-tooltip>
-                  </template>
-                </el-table-column>
-              </el-table>
+                    </template>
+                  </el-table-column>
+                </el-table>
               </div>
               <el-divider v-if="index < PROCESS_TAG_CONFIG[currentProcessForFile.name].length - 1" />
             </template>
@@ -421,12 +441,12 @@
     </el-dialog>
 
     <!-- 新的文件上传对话框 -->
-    <el-dialog v-model="uploadDialogVisible" :title="`上传${FILE_TAG_TEXT[currentUploadTag]}`" width="600px" :before-close="handleUploadDialogClose">
+    <el-dialog v-model="uploadDialogVisible" :title="`上传${FILE_TAG_TEXT[currentUploadTag]}`" width="600px"
+      :before-close="handleUploadDialogClose">
       <div class="upload-dialog-content">
-        <el-upload ref="uploadRef" :file-list="tempFileList" :auto-upload="false" 
-              :on-change="handleTempFileChange" 
-              :on-remove="handleTempFileRemove" 
-              :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+        <el-upload ref="uploadRef" :file-list="tempFileList" :auto-upload="false" :on-change="handleTempFileChange"
+          :on-remove="handleTempFileRemove" :before-upload="beforeUpload" drag multiple
+          accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
           <el-icon class="el-icon--upload">
             <UploadFilled />
           </el-icon>
@@ -451,10 +471,12 @@
     </el-dialog>
 
     <!-- 发起审核对话框 -->
-    <el-dialog v-model="submitReviewDialogVisible" title="发起内部审核" width="400px" :before-close="handleSubmitReviewDialogClose">
+    <el-dialog v-model="submitReviewDialogVisible" title="发起内部审核" width="400px"
+      :before-close="handleSubmitReviewDialogClose">
       <el-form :model="submitReviewForm" ref="submitReviewFormRef" label-width="100px">
         <el-form-item label="审核备注" prop="reviewedRemark">
-          <el-input v-model="submitReviewForm.reviewedRemark" type="textarea" placeholder="请输入审核备注（非必填）" :rows="4" maxlength="255" show-word-limit />
+          <el-input v-model="submitReviewForm.reviewedRemark" type="textarea" placeholder="请输入审核备注（非必填）" :rows="4"
+            maxlength="255" show-word-limit />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -470,9 +492,9 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect,getSelectableCreateUsers } from '@/api/submission/submissionPlan'
-import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail,getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
-import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles,downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
+import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect, getSelectableCreateUsers } from '@/api/submission/submissionPlan'
+import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail, getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
+import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles, downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { parseTime } from '@/utils/ruoyi'
 import { CaretRight, CaretBottom, Plus, Switch, Delete, Document, Files, Check, UploadFilled, Download } from '@element-plus/icons-vue'
 
@@ -813,13 +835,13 @@ const loadProcesses = async (plan) => {
       const response = await listSubmissionProcessesByPlanId(plan.id)
       // 后端接口已经返回了包含关联文件的流程列表
       const processes = response.rows || []
-      
+
       // 确保每个流程都有files字段，避免前端展示时出错
       const processesWithFiles = processes.map(process => ({
         ...process,
         files: process.files || []
       }))
-      
+
       plan.processes = processesWithFiles
     } catch (error) {
       ElMessage.error('加载投稿流程失败')
@@ -852,7 +874,7 @@ const getFilesByTag = (process, tag) => {
 const isAllTagsHaveFiles = computed(() => {
   if (!currentProcessForFile.value) return false
   const requiredTags = PROCESS_TAG_CONFIG[currentProcessForFile.value.name]
-  return requiredTags.every(tag => 
+  return requiredTags.every(tag =>
     tagFileLists.value[tag] && tagFileLists.value[tag].length > 0
   )
 })
@@ -895,11 +917,11 @@ const showProcessDetail = async (process) => {
     // 调用新的getSubmissionProcessDetail接口获取最新的流程详情
     const response = await getSubmissionProcessDetail(process.id)
     const processDetail = response.data
-    
+
     // 后端接口已经返回了包含关联文件的流程详情
     // 确保有files字段，避免前端展示时出错
     processDetail.files = processDetail.files || []
-    
+
     currentProcess.value = processDetail
     processDialogVisible.value = true
   } catch (error) {
@@ -1032,7 +1054,7 @@ const handleProcessEdit = () => {
     ElMessage.error('流程信息不存在')
     return
   }
-  
+
   const currentStatus = currentProcess.value.status
   if (currentStatus === PROCESS_STATUS.REVIEWING) {
     ElMessage.info('审核中，无法修改')
@@ -1042,7 +1064,7 @@ const handleProcessEdit = () => {
     ElMessage.info('审核成功，无法修改')
     return
   }
-  
+
   processDialogVisible.value = false
   processFormTitle.value = '修改投稿流程'
   Object.assign(processFormData, {
@@ -1171,16 +1193,6 @@ const handleTempFileRemove = (file, fileList) => {
   tempFileList.value = fileList
 }
 
-// 文件变化处理（按tag分类）
-const handleFileChange = (file, fileListParam, tag) => {
-  tagFileLists.value[tag] = fileListParam
-}
-
-// 文件移除处理（按tag分类）
-const handleFileRemove = (file, fileListParam, tag) => {
-  tagFileLists.value[tag] = fileListParam
-}
-
 // 上传前验证
 const beforeUpload = (file) => {
   const isLt50M = file.size / 1024 / 1024 < 50
@@ -1189,84 +1201,6 @@ const beforeUpload = (file) => {
     return false
   }
   return true
-}
-
-// 上传文件
-const handleUploadFiles = async () => {
-  if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEWING) {
-    ElMessage.info('审核中，无法上传文件')
-    return
-  }
-  if (currentProcessForFile.value.status === PROCESS_STATUS.REVIEW_PASSED) {
-    ElMessage.info('审核成功，无法上传文件')
-    return
-  }
-  
-  // 验证所有tag至少有一个文件
-  if (!isAllTagsHaveFiles.value) {
-    ElMessage.warning('每个文件类型至少需要上传一个文件')
-    return
-  }
-
-  uploading.value = true
-  let successCount = 0
-  let failCount = 0
-  let totalFiles = 0
-  
-  try {
-    const processId = currentProcessForFile.value.id
-    const requiredTags = PROCESS_TAG_CONFIG[currentProcessForFile.value.name]
-    
-    // 计算总文件数
-    requiredTags.forEach(tag => {
-      totalFiles += tagFileLists.value[tag]?.length || 0
-    })
-    
-    // 遍历所有tag的文件列表
-    for (const tag of requiredTags) {
-      const files = tagFileLists.value[tag] || []
-      for (const fileItem of files) {
-        try {
-          // 为文件添加tag参数
-          fileItem.tag = tag
-          await uploadSubmissionProcessFile(processId, fileItem,tag)
-          successCount++
-        } catch (error) {
-          failCount++
-          console.error(`文件 ${fileItem.name} 上传失败:`, error)
-          ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
-        }
-      }
-    }
-
-    if (successCount > 0 && failCount === 0) {
-      ElMessage.success(`所有文件上传成功 (${successCount}/${totalFiles})`)
-    } else if (successCount > 0 && failCount > 0) {
-      ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
-    } else {
-      ElMessage.error(`文件上传失败 (${failCount}/${totalFiles})`)
-    }
-    
-    // 清空所有tag的文件列表
-    tagFileLists.value = {}
-    
-    if (successCount > 0) {
-      // 上传成功后刷新文件列表
-      const response = await getSubmissionProcessFiles(currentProcessForFile.value.id)
-      processFileList.value = response.data || []
-      
-      // 刷新当前计划的流程列表，更新关联文件显示
-      const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
-      if (currentPlan) {
-        await loadProcesses(currentPlan)
-      }
-    }
-  } catch (error) {
-    ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
-    console.error('文件上传过程出现错误:', error)
-  } finally {
-    uploading.value = false
-  }
 }
 
 // 删除文件
@@ -1280,7 +1214,7 @@ const handleDeleteFile = async (file) => {
       ElMessage.info('审核成功，无法删除文件')
       return
     }
-    
+
     await ElMessageBox.confirm('确定要删除该文件吗？', '删除确认', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -1290,7 +1224,7 @@ const handleDeleteFile = async (file) => {
     ElMessage.success('文件删除成功')
     // 从本地文件列表中移除删除的文件
     processFileList.value = processFileList.value.filter(f => f.id !== file.id)
-    
+
     // 刷新当前计划的流程列表，更新关联文件显示
     const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
     if (currentPlan) {
@@ -1322,24 +1256,24 @@ const handleUploadDialogClose = () => {
 const handleTempFileUpload = async () => {
   // 检查文件列表，过滤掉无效文件（如上传失败的文件）
   const validFiles = tempFileList.value.filter(file => !file.status || file.status !== 'fail')
-  
+
   if (validFiles.length === 0) {
     ElMessage.warning('请选择要上传的文件')
     return
   }
-  
+
   tempUploading.value = true
   let successCount = 0
   let failCount = 0
-  
+
   try {
     const processId = currentProcessForFile.value.id
     const tag = currentUploadTag.value
-    
+
     // 遍历临时文件列表，直接上传到后端
     for (const fileItem of validFiles) {
       try {
-        await uploadSubmissionProcessFile(processId, fileItem,tag)
+        await uploadSubmissionProcessFile(processId, fileItem, tag)
         successCount++
       } catch (error) {
         failCount++
@@ -1356,23 +1290,23 @@ const handleTempFileUpload = async () => {
     } else {
       ElMessage.error(`文件上传失败 (${failCount}/${validFiles.length})`)
     }
-    
+
     if (successCount > 0) {
       // 上传成功后刷新文件列表
       const response = await getSubmissionProcessFiles(currentProcessForFile.value.id)
       processFileList.value = response.data || []
-      
+
       // 刷新当前计划的流程列表，更新关联文件显示
       const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
       if (currentPlan) {
         await loadProcesses(currentPlan)
       }
     }
-    
+
     // 关闭对话框并清空临时文件列表
     uploadDialogVisible.value = false
     tempFileList.value = []
-    
+
     // 清空对应tag的文件列表（因为已经直接上传了）
     if (tagFileLists.value[currentUploadTag.value]) {
       tagFileLists.value[currentUploadTag.value] = []
@@ -1687,16 +1621,19 @@ onMounted(async () => {
   font-weight: 500;
   color: #409eff;
 }
+
 .files-label {
   font-size: 15px;
   color: #606266;
   margin-top: 5px;
 }
+
 .tag-label {
   font-size: 15px;
   color: #606266;
   margin-top: 5px;
 }
+
 .no-files {
   text-align: center;
 }
