@@ -38,6 +38,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,9 +84,14 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         submissionPlanMapper.insert(submissionPlan);
 
         // 5.保存参与用户
-        if(!CollectionUtils.isEmpty(submissionPlanDTO.getParticipantUserIds())){
-            submissionPlanUserMapper.insertBatch(submissionPlan.getId(),submissionPlanDTO.getParticipantUserIds());
+        List<Long> participantUserIds = submissionPlanDTO.getParticipantUserIds();
+        if(CollectionUtils.isEmpty(participantUserIds)){
+            participantUserIds = new ArrayList<>();
         }
+        if(!participantUserIds.contains(SecurityUtils.getUserId())){
+            participantUserIds.add(SecurityUtils.getUserId());
+        }
+        submissionPlanUserMapper.insertBatch(submissionPlan.getId(),participantUserIds);
 
         // 6.自动创建第一个投稿流程（一审）
         SubmissionProcess submissionProcess = new SubmissionProcess();
@@ -106,9 +112,14 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         submissionPlanMapper.update(submissionPlan);
         // 2.更改投稿计划参与用户
         submissionPlanUserMapper.deleteByPlanId(submissionPlan.getId());
-        if(!CollectionUtils.isEmpty(submissionPlanDTO.getParticipantUserIds())){
-            submissionPlanUserMapper.insertBatch(submissionPlan.getId(),submissionPlanDTO.getParticipantUserIds());
+        List<Long> participantUserIds = submissionPlanDTO.getParticipantUserIds();
+        if(CollectionUtils.isEmpty(participantUserIds)){
+            participantUserIds = new ArrayList<>();
         }
+        if(!participantUserIds.contains(SecurityUtils.getUserId())){
+            participantUserIds.add(SecurityUtils.getUserId());
+        }
+        submissionPlanUserMapper.insertBatch(submissionPlan.getId(),participantUserIds);
     }
 
     @Override

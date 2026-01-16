@@ -247,27 +247,16 @@
         </el-form-item>
 
         <!-- 参与用户 -->
-        <el-form-item label="参与用户" prop="participantUserIds">
-          <el-select
-            v-model="planFormData.participantUserIds"
-            multiple
-            filterable
-            remote
-            reserve-keyword
-            placeholder="请输入用户名搜索并选择"
-            style="width: 100%;"
-            :remote-method="querySelectableParticipantUser"
-            :loading="participantUserLoading"
-          >
-            <el-option
-              v-for="user in selectableParticipantUsers"
-              :key="user.userId"
-              :label="`${user.nickName}(${user.userName})`"
-              :value="user.userId"
-            />
-          </el-select>
-        </el-form-item>
-
+         <el-tooltip content="只有参与用户对该投稿计划可见" placement="top">
+          <el-form-item label="参与用户" prop="participantUserIds">
+            <el-select v-model="planFormData.participantUserIds" multiple filterable remote reserve-keyword
+              placeholder="请输入用户名搜索并选择" style="width: 100%;" :remote-method="querySelectableParticipantUser"
+              :loading="participantUserLoading">
+              <el-option v-for="user in selectableParticipantUsers" :key="user.userId"
+                :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+            </el-select>
+          </el-form-item>
+        </el-tooltip>
         <!-- 备注 -->
         <el-form-item label="备注" prop="remark">
           <el-input v-model="planFormData.remark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255" show-word-limit />
