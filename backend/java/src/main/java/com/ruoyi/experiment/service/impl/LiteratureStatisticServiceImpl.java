@@ -12,6 +12,7 @@ import com.ruoyi.project.system.domain.dto.UserForSelectQueryDTO;
 import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -25,32 +26,38 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class LiteratureStatisticServiceImpl implements LiteratureStatisticService {
     private final LiteratureStatisticMapper literatureStatisticMapper;
     private final SysUserMapper userMapper;
 
     @Override
     public List<StudentReadStatisticsVO> selectStudentReadingStatistics(LiteratureStatisticQueryDTO queryDTO) {
+        log.info("文献统计模块-查询学生文献阅读统计：{}",queryDTO);
         return literatureStatisticMapper.selectStudentReadingStatistics(queryDTO);
     }
 
     @Override
     public List<StudentReadStatisticsVO.LiteratureReadDetail> selectStudentLiteratureDetail(Long studentId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("文献统计模块-查询学生文献阅读详情：{}",studentId);
         return literatureStatisticMapper.selectStudentLiteratureDetail(studentId, startTime, endTime);
     }
 
     @Override
     public List<LiteratureReadStatisticsVO> selectLiteratureReadingStatistics(LiteratureStatisticQueryDTO queryDTO) {
+        log.info("文献统计模块-查询文献阅读统计：{}",queryDTO);
         return literatureStatisticMapper.selectLiteratureReadingStatistics(queryDTO);
     }
 
     @Override
     public List<LiteratureReadStatisticsVO.StudentReadDetail> selectLiteratureStudentDetail(Long literatureId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("文献统计模块-查询文献阅读详情：{}",literatureId);
         return literatureStatisticMapper.selectLiteratureStudentDetail(literatureId, startTime, endTime);
     }
 
     @Override
     public void exportStatistics(LiteratureStatisticQueryDTO queryDTO, HttpServletResponse response) {
+        log.info("文献统计模块-导出文献阅读统计：{}",queryDTO);
         try {
             List<StudentReadStatisticsVO> studentList = literatureStatisticMapper.selectStudentStatisticsForExport(queryDTO);
             List<LiteratureReadStatisticsVO> literatureList = literatureStatisticMapper.selectLiteratureStatisticsForExport(queryDTO);
@@ -126,6 +133,7 @@ public class LiteratureStatisticServiceImpl implements LiteratureStatisticServic
             workbook.write(response.getOutputStream());
             workbook.close();
         } catch (Exception e) {
+            log.error("文献统计模块-导出文献阅读统计失败: {}", e.getMessage(), e);
             throw new ServiceException("导出统计失败: " + e.getMessage());
         }
     }

@@ -51,6 +51,7 @@ public class LiteratureServiceImpl implements LiteratureService {
     
     @Override
     public List<LiteratureVO> selectLiteratureList(LiteratureQueryDTO queryDTO) {
+        log.info("文献管理模块-查询文献列表：{}",queryDTO);
         queryDTO.setUserId(SecurityUtils.getUserId());
         // 排序字段转化
         if("publishTime".equals(queryDTO.getSortField())){
@@ -72,6 +73,7 @@ public class LiteratureServiceImpl implements LiteratureService {
     
     @Override
     public LiteratureDetailVO selectLiteratureDetail(Long id) {
+        log.info("文献管理模块-查询文献详情：{}",id);
         // 查询文献基本信息
         LiteratureDetailVO literatureDetail = literatureMapper.selectLiteratureDetail(id);
         if (literatureDetail == null) {
@@ -92,6 +94,7 @@ public class LiteratureServiceImpl implements LiteratureService {
 
     @Override
     public void scoreLiterature(LiteratureScoreDTO scoreDTO) {
+        log.info("文献管理模块-文献评分：{}",scoreDTO);
         Long userId = SecurityUtils.getUserId();
         Long literatureId = scoreDTO.getLiteratureId();
         Integer score = scoreDTO.getScore();
@@ -129,6 +132,7 @@ public class LiteratureServiceImpl implements LiteratureService {
     @Transactional
     @Override
     public void addLiterature(LiteratureDTO literatureDTO) {
+        log.info("文献管理模块-新增文献：{}",literatureDTO);
         // 1.文献名称重复校验
         String identifier = getIdentifier(literatureDTO.getTitle());
         if(null != literatureMapper.selectIdentifier(identifier)){
@@ -181,7 +185,7 @@ public class LiteratureServiceImpl implements LiteratureService {
                     commentFileList.add(commentFile);
                 }
             }catch (Exception e){
-                log.error("评论文件上传失败", e);
+                log.error("文献管理模块-上传评论文件失败", e);
                 throw new ServiceException("评论文件上传失败");
             }
             commentFileMapper.insertBatch(commentFileList);
@@ -193,6 +197,7 @@ public class LiteratureServiceImpl implements LiteratureService {
     @Transactional
     @Override
     public void updateLiterature(LiteratureDTO literatureDTO) {
+        log.info("文献管理模块-更新文献：{}",literatureDTO);
         // 1.校验文献是否存在
         Literature originLiterature = literatureMapper.selectLiteratureById(literatureDTO.getId());
         if(null==originLiterature){
@@ -219,13 +224,13 @@ public class LiteratureServiceImpl implements LiteratureService {
         return literatureMapper.selectSelectableLiteratures(literatureTitle);
     }
 
-    public void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
+    private void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;
         try{
             filePath = FileUtils.uploadLiteratureFile(experimentConfig.getLiteratureBaseDir(), file);
         }catch (Exception e){
-            log.error("文献文件上传失败", e);
+            log.error("文献管理模块-上传文献文件失败", e);
             throw new ServiceException("文献文件上传失败");
         }
         // 2.插入数据库记录
@@ -242,6 +247,7 @@ public class LiteratureServiceImpl implements LiteratureService {
 
     @Override
     public void downloadLiterature(Long id,HttpServletResponse response) {
+        log.info("文献管理模块-下载文献文件：{}",id);
         // 更新下载数
         literatureMapper.updateDownloadCount(id);
 
@@ -252,7 +258,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         try{
             FileUtils.downloadFile(experimentConfig.getLiteratureBaseDir(), filePath, response);
         }catch (Exception e){
-            log.error("文献文件下载失败", e);
+            log.error("文献管理模块-下载文献文件失败", e);
             throw new ServiceException("文献文件下载失败");
         }
     }

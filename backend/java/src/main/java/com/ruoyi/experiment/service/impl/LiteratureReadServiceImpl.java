@@ -20,6 +20,7 @@ public class LiteratureReadServiceImpl implements LiteratureReadService {
 
     @Override
     public List<LiteratureReadVO> list(LiteratureReadQueryDTO queryDTO) {
+        log.info("文献阅读模块-查询文献阅读列表：{}",queryDTO);
         queryDTO.setUserId(SecurityUtils.getUserId());
         // 设置关键词数量，用于AND逻辑查询
         if (!CollectionUtils.isEmpty(queryDTO.getKeywordIds())) {
