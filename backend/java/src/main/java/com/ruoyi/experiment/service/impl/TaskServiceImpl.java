@@ -197,7 +197,10 @@ public class TaskServiceImpl implements TaskService {
         if(TaskConstants.FIRST_PARENT_TASK_ID.equals(parentTaskId)){
             return;
         }
-        // 2. 父任务参与用户组对子任务参与用户组求差集
+        // 2.递归更新父任务
+        Task parentTask = taskMapper.selectTaskById(parentTaskId);
+        updateParentTaskParticipantUserIds(parentTask.getParentTaskId(),subParticipantUserIds);
+        // 3. 父任务参与用户组对子任务参与用户组求差集
         HashSet<Long> hashSet = new HashSet<>(taskUserMapper.selectUserIdsByTaskId(parentTaskId));
         List<Long> differentUserIds = new ArrayList<>();
         for (Long subParticipantUserId : subParticipantUserIds) {
@@ -205,7 +208,7 @@ public class TaskServiceImpl implements TaskService {
                 differentUserIds.add(subParticipantUserId);
             }
         }
-        // 7.3 将差集添加到父任务参与用户组
+        // 4 将差集添加到父任务参与用户组
         if(!CollectionUtils.isEmpty(differentUserIds)){
             taskUserMapper.insertTaskUserBatch(parentTaskId, differentUserIds);
         }

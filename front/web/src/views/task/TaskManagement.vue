@@ -239,18 +239,12 @@
 
         <!-- 执行用户组 -->
         <el-form-item label="执行用户组" prop="participantUserIds">
-          <div v-if="isReadOnlyUserGroup || !isHasTeacherRole" style="margin-bottom: 8px;">
+          <div v-if="!isHasTeacherRole" style="margin-bottom: 8px;">
             <el-tag type="info" size="small">
               <el-icon>
                 <InfoFilled />
               </el-icon>
-              <span v-if="!isHasTeacherRole">
-                <span v-if="!isChildTask">无权修改执行用户</span>
-                <span v-else>该任务继承父任务的用户组，不可修改</span>
-              </span>
-              <span v-else>
-                <span v-if="isChildTask">该任务继承父任务的用户组，不可修改</span>
-              </span>
+              <span>无权修改执行用户</span>
             </el-tag>
           </div>
           <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
@@ -820,8 +814,8 @@ const handleEdit = (task) => {
   const isSubTask = task.parentTaskId && task.parentTaskId !== '0'
   isChildTask.value = isSubTask
 
-  // 非一级父任务（深度>1）的用户组字段为只读
-  isReadOnlyUserGroup.value = isSubTask
+  // 移除子任务的用户组字段只读限制，允许子任务设置自己的用户组
+  isReadOnlyUserGroup.value = false
 
   // 填充表单数据
   Object.assign(formData, {
@@ -970,12 +964,12 @@ const handleAddSubTask = async (parentTask) => {
   formTitle.value = '新增子任务'
   // 设置为子任务
   isChildTask.value = true
-  isReadOnlyUserGroup.value = true // 子任务的用户组字段为只读
+  isReadOnlyUserGroup.value = false // 允许子任务设置自己的用户组
   parentTaskId.value = parentTask.taskId
   // 设置父任务ID
   formData.parentTaskId = parentTask.taskId
 
-  try {
+  /* try {
       // 加载父任务的参与用户组
       const response = await getTaskParticipantUsers(parentTask.taskId)
       const participantUsers = response.data || []
@@ -992,8 +986,7 @@ const handleAddSubTask = async (parentTask) => {
     } catch (error) {
       ElMessage.error('加载父任务用户组失败')
       console.error('加载父任务用户组失败:', error)
-    }
-
+    } */
   // 打开表单
   formVisible.value = true
 }
