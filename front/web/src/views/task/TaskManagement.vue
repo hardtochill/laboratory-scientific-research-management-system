@@ -906,10 +906,7 @@ const handleFormClose = () => {
 const handleChangeStatus = async (task, newStatus) => {
   try {
     // 调用接口修改任务状态
-    await updateTaskStatus({
-      taskId: task.taskId,
-      taskStatus: newStatus
-    })
+    await updateTaskStatus(task.taskId, newStatus)
     // 显示成功消息
     ElMessage.success('任务状态修改成功')
     // 重新加载任务列表

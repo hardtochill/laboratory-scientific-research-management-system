@@ -43,11 +43,14 @@ export function updateTask(data){
 }
 
 // 更新任务状态
-export function updateTaskStatus(data) {
+export function updateTaskStatus(taskId,status) {
   return request({
     url: '/task/updateStatus',
     method: 'post',
-    data
+    params: {
+      taskId: taskId,
+      status: status
+    }
   })
 }
 
