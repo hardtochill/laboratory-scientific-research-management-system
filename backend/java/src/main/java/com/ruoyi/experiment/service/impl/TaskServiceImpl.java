@@ -47,6 +47,7 @@ public class TaskServiceImpl implements TaskService {
     private final ExperimentConfig experimentConfig;
     @Override
     public TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO) {
+        log.info("任务管理模块-查询父任务列表：{}",taskQueryDTO);
         // 1.获取分页的任务列表
         List<TaskVO> tasks = selectParentTaskList(taskQueryDTO);
         
@@ -92,6 +93,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<TaskVO> selectSubTaskList(Long parentTaskId) {
+        log.info("任务管理模块-查询子任务列表：{}",parentTaskId);
         TaskQueryDTO taskQueryDTO = new TaskQueryDTO();
         taskQueryDTO.setParentTaskId(parentTaskId);
         taskQueryDTO.setUserId(SecurityUtils.getUserId());
@@ -104,6 +106,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void addTask(TaskDTO taskDTO) {
+        log.info("任务管理模块-添加任务：{}",taskDTO);
         // 1.查出父任务
         Task parentTask = taskMapper.selectTaskById(taskDTO.getParentTaskId());
         if(taskDTO.getParentTaskId()>TaskConstants.FIRST_PARENT_TASK_ID && null==parentTask){
@@ -151,6 +154,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateTask(TaskDTO taskDTO) {
+        log.info("任务管理模块-更新任务：{}",taskDTO);
         // 1.查出原任务
         Task originTask = taskMapper.selectTaskById(taskDTO.getTaskId());
         if(null==originTask){
@@ -216,6 +220,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void updateTaskStatus(Long taskId,Integer status) {
+        log.info("任务管理模块-更新任务状态：{},{}",taskId,status);
         Task task = new Task();
         task.setTaskId(taskId);
         task.setTaskStatus(status);
@@ -226,6 +231,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteTask(Long taskId) {
+        log.info("任务管理模块-删除任务：{}",taskId);
         // 1.获取当前任务的所有子任务
         List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
         // 2.递归删除所有子任务
@@ -260,6 +266,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task getTaskById(Long taskId) {
+        log.info("任务管理模块-查询任务详情：{}",taskId);
         // 1.查询任务信息
         Task task = taskMapper.selectTaskById(taskId);
         // 2.查询任务参与用户
@@ -270,11 +277,13 @@ public class TaskServiceImpl implements TaskService {
     }
     @Override
     public List<SysUser> getParticipantUsersByTaskId(Long taskId) {
+        log.info("任务管理模块-查询任务参与用户：{}",taskId);
         return taskUserMapper.selectUsersByTaskId(taskId);
     }
 
     @Override
     public List<UserForSelectVO> listUsersForSelect(String nickName) {
+        log.info("任务管理模块-查询用户列表（用于前端用户选择）：{}",nickName);
         UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
         queryDTO.setNickName(nickName);
         queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());

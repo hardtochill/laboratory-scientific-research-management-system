@@ -49,7 +49,7 @@ server:
 # 日志配置
 logging:
   level:
-    com.ruoyi: error
+    com.ruoyi: info
     org.springframework: warn
 
 # 用户配置

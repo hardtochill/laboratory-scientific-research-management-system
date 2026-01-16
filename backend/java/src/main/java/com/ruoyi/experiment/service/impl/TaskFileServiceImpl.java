@@ -33,11 +33,13 @@ public class TaskFileServiceImpl implements TaskFileService {
 
     @Override
     public List<TaskFile> getTaskFiles(Long taskId) {
+        log.info("任务文件模块-查询任务文件列表：{}",taskId);
         return taskFileMapper.selectByTaskId(taskId);
     }
 
     @Override
     public void uploadFile(Long taskId, MultipartFile file) {
+        log.info("任务文件模块-上传文件：{},{}",taskId,file.getOriginalFilename());
         // 1.检查权限
         if (!canUploadFile(taskId)) {
             throw new ServiceException("用户没有权限上传文件到任务");
@@ -48,7 +50,7 @@ public class TaskFileServiceImpl implements TaskFileService {
         try{
             filePath = FileUtils.uploadTaskFile(experimentConfig.getTaskBaseDir(), file);
         }catch (Exception e){
-            log.error("文件上传失败", e);
+            log.error("任务文件模块-上传文件失败", e);
             throw new ServiceException("文件上传失败");
         }
         // 保存文件信息到数据库
@@ -67,6 +69,7 @@ public class TaskFileServiceImpl implements TaskFileService {
 
     @Override
     public void downloadFile(Long fileId, HttpServletResponse response) {
+        log.info("任务文件模块-下载文件：{}",fileId);
         String filePath = taskFileMapper.selectFilePathById(fileId);
         if(null == filePath){
             throw new ServiceException("文件不存在");
@@ -74,13 +77,14 @@ public class TaskFileServiceImpl implements TaskFileService {
         try{
             FileUtils.downloadFile(experimentConfig.getTaskBaseDir(), filePath, response);
         }catch (Exception e){
-            log.error("文件下载失败", e);
+            log.error("任务文件模块-下载文件失败", e);
             throw new ServiceException("文件下载失败");
         }
     }
 
     @Override
     public void deleteFile(Long fileId) {
+        log.info("任务文件模块-删除文件：{}",fileId);
         // 1.文件校验
         TaskFile taskFile = taskFileMapper.selectById(fileId);
         if(null == taskFile){
@@ -103,7 +107,7 @@ public class TaskFileServiceImpl implements TaskFileService {
                 Files.delete(filePath);
             }
         }catch (Exception e){
-            log.error("文件删除失败", e);
+            log.error("任务文件模块-删除文件失败", e);
             throw new ServiceException("文件删除失败");
         }
     }
