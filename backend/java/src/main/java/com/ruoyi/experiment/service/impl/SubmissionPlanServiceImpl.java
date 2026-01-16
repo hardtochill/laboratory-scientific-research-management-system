@@ -55,12 +55,14 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
 
     @Override
     public List<SubmissionPlan> listSubmissionPlans(SubmissionPlanQueryDTO submissionPlanQueryDTO) {
+        log.info("投稿计划模块-查询投稿计划列表：{}",submissionPlanQueryDTO);
         submissionPlanQueryDTO.setParticipantUserId(SecurityUtils.getUserId());
         return submissionPlanMapper.selectSubmissionPlanList(submissionPlanQueryDTO);
     }
 
     @Override
     public SubmissionPlanDetailVO getSubmissionPlanById(Long id) {
+        log.info("投稿计划模块-查询投稿计划详情：{}",id);
         SubmissionPlanDetailVO submissionPlanDetailVO = submissionPlanMapper.selectById(id);
         submissionPlanDetailVO.setParticipantUsers(submissionPlanUserMapper.selectUsersByPlanId(id));
         return submissionPlanDetailVO;
@@ -69,7 +71,7 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void createSubmissionPlan(SubmissionPlanDTO submissionPlanDTO) {
-
+        log.info("投稿计划模块-创建投稿计划：{}",submissionPlanDTO);
         SubmissionPlan submissionPlan = new SubmissionPlan();
         BeanUtils.copyProperties(submissionPlanDTO, submissionPlan);
 
@@ -106,6 +108,7 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateSubmissionPlan(SubmissionPlanDTO submissionPlanDTO) {
+        log.info("投稿计划模块-更新投稿计划：{}",submissionPlanDTO);
         // 1.更改投稿计划
         SubmissionPlan submissionPlan = new SubmissionPlan();
         BeanUtils.copyProperties(submissionPlanDTO, submissionPlan);
@@ -125,6 +128,7 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSubmissionPlan(Long id) {
+        log.info("投稿计划模块-删除投稿计划：{}",id);
         // 1.查出所有关联投稿流程
         List<SubmissionProcessVO> submissionProcessList = submissionProcessMapper.selectByPlanId(id);
         // 2.查出所有关联文件

@@ -50,6 +50,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public List<SubmissionProcessVO> listSubmissionProcessesByPlanId(Long planId) {
+        log.info("投稿流程模块-查询投稿计划下的投稿流程列表：{}",planId);
         List<SubmissionProcessVO> submissionProcessVOs = submissionProcessMapper.selectByPlanId(planId);
         for (SubmissionProcessVO submissionProcessVO : submissionProcessVOs) {
             // 关联文件列表
@@ -99,6 +100,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public void createSubmissionProcess(SubmissionProcessDTO submissionProcessDTO) {
+        log.info("投稿流程模块-创建投稿流程：{}",submissionProcessDTO);
         // 1. 校验投稿计划是否存在
         SubmissionPlanDetailVO submissionPlan = submissionPlanMapper.selectById(submissionProcessDTO.getPlanId());
         if (submissionPlan == null) {
@@ -120,6 +122,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public void updateSubmissionProcess(SubmissionProcessDTO submissionProcessDTO) {
+        log.info("投稿流程模块-更新投稿流程：{}",submissionProcessDTO);
         // 1.查出原流程
         SubmissionProcess originProcess = submissionProcessMapper.selectByProcessId(submissionProcessDTO.getId());
         if(null==originProcess){
@@ -143,6 +146,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSubmissionProcess(Long id) {
+        log.info("投稿流程模块-删除投稿流程：{}",id);
         List<SubmissionProcessFile> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(id);
 
         // 1.删除关联文件记录
@@ -168,6 +172,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submitForReview(Long processId, String reviewedRemark) {
+        log.info("投稿流程模块-提交审核：{}",processId);
         // 1. 查询投稿流程信息
         SubmissionProcess submissionProcess = submissionProcessMapper.selectByProcessId(processId);
         if (null==submissionProcess) {
@@ -238,6 +243,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public SubmissionProcessDetailVO getSubmissionProcessDetail(Long id) {
+        log.info("投稿流程模块-查询投稿流程详情：{}",id);
         SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
         // 关联文件列表
         List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);

@@ -37,6 +37,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
     private final ExperimentConfig experimentConfig;
     @Override
     public void uploadFile(Long processId, MultipartFile file, Integer tag) {
+        log.info("投稿流程模块-上传文件：{}",processId);
         // 1.校验流程是否存在
          SubmissionProcess process = submissionProcessMapper.selectByProcessId(processId);
         if (process == null) {
@@ -47,7 +48,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
         try {
             filePath = FileUtils.uploadSubmissionFile(experimentConfig.getSubmissionBaseDir(), file);
         } catch (Exception e) {
-            log.error("文件上传失败", e);
+            log.error("投稿流程模块-上传文件失败", e);
             throw new ServiceException("文件上传失败");
         }
         
@@ -66,6 +67,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
 
     @Override
     public void downloadFile(Long fileId, HttpServletResponse response) {
+        log.info("投稿流程模块-下载文件：{}",fileId);
         String filePath = submissionProcessFileMapper.selectFilePathById(fileId);
         if (filePath == null) {
             throw new ServiceException("文件不存在");
@@ -73,13 +75,14 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
         try{
             FileUtils.downloadFile(experimentConfig.getSubmissionBaseDir(), filePath, response);
         }catch (Exception e){
-            log.error("文件下载失败", e);
+            log.error("投稿流程模块-下载文件失败", e);
             throw new ServiceException("文件下载失败");
         }
     }
 
     @Override
     public void deleteFile(Long id) {
+        log.info("投稿流程模块-删除文件：{}",id);
         // 1. 校验文件是否存在
         SubmissionProcessFile submissionProcessFile = submissionProcessFileMapper.selectByFileId(id);
         if (submissionProcessFile == null) {
@@ -104,13 +107,14 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
                 Files.delete(filePath);
             }
         } catch (Exception e) {
-            log.error("文件删除失败", e);
+            log.error("投稿流程模块-删除文件失败", e);
             throw new ServiceException("文件删除失败");
         }
     }
 
     @Override
     public List<SubmissionProcessFile> getProcessFiles(Long processId) {
+        log.info("投稿流程模块-查询投稿流程下的文件列表：{}",processId);
         return submissionProcessFileMapper.selectByProcessId(processId);
     }
 }
