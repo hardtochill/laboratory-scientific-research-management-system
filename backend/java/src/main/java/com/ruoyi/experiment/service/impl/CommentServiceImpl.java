@@ -48,6 +48,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentVO> listParentComments(CommentQueryDTO commentQueryDTO) {
+        log.info("文献评论模块-查询父评论列表：{}",commentQueryDTO);
         Long userId = SecurityUtils.getUserId();
         commentQueryDTO.setUserId(userId);
         commentQueryDTO.setParentId(CommentConstants.FIRST_PARENT_COMMENT_ID);
@@ -81,6 +82,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentVO> listChildComments(Long parentId) {
+        log.info("文献评论模块-查询子评论列表：{}",parentId);
         Long userId = SecurityUtils.getUserId();
         // 1.构造查询参数
         CommentQueryDTO commentQueryDTO = new CommentQueryDTO();
@@ -111,6 +113,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public boolean toggleCommentLike(Long commentId) {
+        log.info("文献评论模块-切换评论点赞状态：{}",commentId);
         // 获取当前用户ID
         Long userId = SecurityUtils.getUserId();
 
@@ -136,6 +139,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void addComment(CommentDTO commentDTO){
+        log.info("文献评论模块-添加评论：{}",commentDTO);
         // 1.校验parentId合法性
         Long parentId = commentDTO.getParentId();
         Comment parentComment = commentMapper.selectById(parentId);
@@ -192,7 +196,7 @@ public class CommentServiceImpl implements CommentService {
                     commentFileList.add(commentFile);
                 }
             }catch (Exception e){
-                log.error("评论文件上传失败", e);
+                log.error("文献评论模块-上传评论文件失败", e);
                 throw new ServiceException("评论文件上传失败");
             }
             // 8.保存评论文件
@@ -203,6 +207,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional
     public void deleteComment(Long commentId) {
+        log.info("文献评论模块-删除评论：{}",commentId);
         // 1.权限校验
         Comment comment = commentMapper.selectById(commentId);
         boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
@@ -211,7 +216,19 @@ public class CommentServiceImpl implements CommentService {
             deleteCommentRecursively(commentId);
         }
     }
-
+    @Override
+    public void changeVisibleType(Long commentId, Integer visibleType) {
+        log.info("文献评论模块-修改评论可见范围：{}",commentId);
+        // 权限校验
+        Comment comment = commentMapper.selectById(commentId);
+        if(null==comment || !CommentConstants.FIRST_PARENT_COMMENT_ID.equals(comment.getParentId())){
+            throw new ServiceException("评论状态异常");
+        }
+        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
+            commentMapper.updateVisibleType(commentId, visibleType);
+        }
+    }
     private void deleteCommentRecursively(Long commentId){
         // 1.删除子评论
         List<Long> childIds = commentMapper.selectChildIds(commentId);
@@ -241,18 +258,5 @@ public class CommentServiceImpl implements CommentService {
             throw new ServiceException("删除任务关联文件失败");
         }
         commentFileMapper.deleteByCommentId(commentId);
-    }
-
-    @Override
-    public void changeVisibleType(Long commentId, Integer visibleType) {
-        // 权限校验
-        Comment comment = commentMapper.selectById(commentId);
-        if(null==comment || !CommentConstants.FIRST_PARENT_COMMENT_ID.equals(comment.getParentId())){
-            throw new ServiceException("评论状态异常");
-        }
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
-        if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
-            commentMapper.updateVisibleType(commentId, visibleType);
-        }
     }
 }

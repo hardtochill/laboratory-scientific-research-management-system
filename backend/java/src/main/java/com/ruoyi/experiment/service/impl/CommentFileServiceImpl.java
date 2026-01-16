@@ -36,11 +36,13 @@ public class CommentFileServiceImpl implements CommentFileService {
 
     @Override
     public List<CommentFileVO> getCommentFiles(Long commentId) {
+        log.info("文献评论模块-查询评论文件：{}",commentId);
         return commentFileMapper.selectByCommentId(commentId);
     }
 
     @Override
     public void uploadFile(Long commentId, MultipartFile file) {
+        log.info("文献评论模块-上传评论文件：{}",commentId);
         // 1.检查权限，仅评论发表用户有权限上传
         Comment comment = commentMapper.selectById(commentId);
         if (!comment.getUserId().equals(SecurityUtils.getUserId())) {
@@ -66,6 +68,7 @@ public class CommentFileServiceImpl implements CommentFileService {
 
     @Override
     public void downloadFile(Long fileId, HttpServletResponse response) {
+        log.info("文献评论模块-下载评论文件：{}",fileId);
         String filePath = commentFileMapper.selectFilePathById(fileId);
         if(null == filePath){
             throw new ServiceException("文件不存在");
@@ -80,6 +83,7 @@ public class CommentFileServiceImpl implements CommentFileService {
 
     @Override
     public void deleteFile(Long fileId) {
+        log.info("文献评论模块-删除评论文件：{}",fileId);
         // 1.文件校验
         CommentFile commentFile = commentFileMapper.selectById(fileId);
         if(null == commentFile){
