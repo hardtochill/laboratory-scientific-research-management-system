@@ -33,18 +33,21 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO) {
+        log.info("审核模块-查询审核记录列表：{}",reviewQueryDTO);
         reviewQueryDTO.setReviewerUserId(SecurityUtils.getUserId());
         return reviewMapper.selectReviewVOList(reviewQueryDTO);
     }
 
     @Override
     public ReviewVO getReviewById(Long id) {
+        log.info("审核模块-查询审核记录详情：{}",id);
         return reviewMapper.selectVOById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveReview(Long id, String reviewerRemark) {
+        log.info("审核模块-通过审核记录：{}",id);
         // 1.只有教师或指定审核人有权限操作
         Review review = reviewMapper.selectById(id);
         if(null==review){
@@ -72,6 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void rejectReview(Long id, String reviewerRemark) {
+        log.info("审核模块-拒绝审核记录：{}",id);
         // 1.只有教师或指定审核人有权限操作
         Review review = reviewMapper.selectById(id);
         if(null==review){
