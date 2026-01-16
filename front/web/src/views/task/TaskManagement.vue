@@ -833,8 +833,18 @@ const handleEdit = (task) => {
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark,
-    participantUserIds: task.participantUsers?.map(user => `${user.nickName}(${user.userName})`) || []
+    participantUserIds: task.participantUsers?.map(user => user.userId) || []
   })
+
+  // 将已选择的用户添加到ungraduatedUsers数组中，确保初始显示正确
+  if (task.participantUsers && task.participantUsers.length > 0) {
+    task.participantUsers.forEach(user => {
+      // 检查用户是否已经在数组中，避免重复添加
+      if (!ungraduatedUsers.value.some(u => u.userId === user.userId)) {
+        ungraduatedUsers.value.push(user)
+      }
+    })
+  }
 
   // 加载任务的参与用户组
   loadTaskParticipantUsers(task.taskId)
@@ -849,7 +859,15 @@ const loadTaskParticipantUsers = async (taskId) => {
     const response = await getTaskParticipantUsers(taskId)
     const participantUsers = response.data || []
     // 设置已选择的用户组
-    formData.participantUserIds = participantUsers.map(user => `${user.nickName}(${user.userName})`) || []
+    formData.participantUserIds = participantUsers.map(user => user.userId) || []
+    
+    // 将已选择的用户添加到ungraduatedUsers数组中，确保初始显示正确
+    participantUsers.forEach(user => {
+      // 检查用户是否已经在数组中，避免重复添加
+      if (!ungraduatedUsers.value.some(u => u.userId === user.userId)) {
+        ungraduatedUsers.value.push(user)
+      }
+    })
   } catch (error) {
     console.error('加载任务参与用户组失败:', error)
   }
@@ -961,15 +979,23 @@ const handleAddSubTask = async (parentTask) => {
   formData.parentTaskId = parentTask.taskId
 
   try {
-    // 加载父任务的参与用户组
-    const response = await getTaskParticipantUsers(parentTask.taskId)
-    const participantUsers = response.data || []
-    // 设置子任务继承父任务的用户组
-    formData.participantUserIds = participantUsers.map(user => user.userId)
-  } catch (error) {
-    ElMessage.error('加载父任务用户组失败')
-    console.error('加载父任务用户组失败:', error)
-  }
+      // 加载父任务的参与用户组
+      const response = await getTaskParticipantUsers(parentTask.taskId)
+      const participantUsers = response.data || []
+      // 设置子任务继承父任务的用户组
+      formData.participantUserIds = participantUsers.map(user => user.userId)
+      
+      // 将已选择的用户添加到ungraduatedUsers数组中，确保初始显示正确
+      participantUsers.forEach(user => {
+        // 检查用户是否已经在数组中，避免重复添加
+        if (!ungraduatedUsers.value.some(u => u.userId === user.userId)) {
+          ungraduatedUsers.value.push(user)
+        }
+      })
+    } catch (error) {
+      ElMessage.error('加载父任务用户组失败')
+      console.error('加载父任务用户组失败:', error)
+    }
 
   // 打开表单
   formVisible.value = true
