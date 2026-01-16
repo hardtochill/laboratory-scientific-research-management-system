@@ -191,6 +191,9 @@
           <el-descriptions-item label="创建时间">
             {{ parseTime(currentPlan.createTime) }}
           </el-descriptions-item>
+          <el-descriptions-item label="参与用户">
+            {{ currentPlan.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-' }}
+          </el-descriptions-item>
           <el-descriptions-item label="备注">
             {{ currentPlan.remark || '-' }}
           </el-descriptions-item>
@@ -240,6 +243,28 @@
             <el-option label="审核中" value="2" />
             <el-option label="发表成功" value="3" />
             <el-option label="发表失败" value="4" />
+          </el-select>
+        </el-form-item>
+
+        <!-- 参与用户 -->
+        <el-form-item label="参与用户" prop="participantUserIds">
+          <el-select
+            v-model="planFormData.participantUserIds"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入用户名搜索并选择"
+            style="width: 100%;"
+            :remote-method="querySelectableParticipantUser"
+            :loading="participantUserLoading"
+          >
+            <el-option
+              v-for="user in selectableParticipantUsers"
+              :key="user.userId"
+              :label="`${user.nickName}(${user.userName})`"
+              :value="user.userId"
+            />
           </el-select>
         </el-form-item>
 
@@ -650,7 +675,8 @@ const planFormData = reactive({
   type: undefined,
   journal: '',
   status: '1',
-  remark: ''
+  remark: '',
+  participantUserIds: []
 })
 
 const planFormRules = reactive({
@@ -725,6 +751,10 @@ const planLoading = ref(false)
 // 创建用户列表（用于下拉选择）
 const selectableCreators = ref([])
 const creatorLoading = ref(false)
+
+// 参与用户列表（用于下拉选择）
+const selectableParticipantUsers = ref([])
+const participantUserLoading = ref(false)
 
 // 加载投稿计划列表
 const loadSubmissionPlans = async () => {
@@ -906,7 +936,8 @@ const handlePlanEdit = () => {
     type: currentPlan.value.type,
     journal: currentPlan.value.journal || '',
     status: String(currentPlan.value.status),
-    remark: currentPlan.value.remark || ''
+    remark: currentPlan.value.remark || '',
+    participantUserIds: currentPlan.value.participantUsers?.map(user => `${user.nickName}(${user.userName})`) || []
   })
   planFormVisible.value = true
 }
@@ -922,8 +953,10 @@ const resetPlanForm = () => {
     type: undefined,
     journal: '',
     status: '1',
-    remark: ''
+    remark: '',
+    participantUserIds: []
   })
+  selectableParticipantUsers.value = []
 }
 
 // 提交投稿计划表单
@@ -1432,6 +1465,21 @@ const querySelectableCreators = async (query) => {
     console.error('获取创建用户列表失败:', error)
   } finally {
     creatorLoading.value = false
+  }
+}
+
+// 查询可选参与用户
+const querySelectableParticipantUser = async (query) => {
+  participantUserLoading.value = true
+  try {
+    const response = await getSelectableCreateUsers({ nickName: query })
+    selectableParticipantUsers.value = response.data || []
+  } catch (error) {
+    console.error('获取参与用户列表失败:', error)
+    ElMessage.error('获取参与用户列表失败')
+    selectableParticipantUsers.value = []
+  } finally {
+    participantUserLoading.value = false
   }
 }
 
