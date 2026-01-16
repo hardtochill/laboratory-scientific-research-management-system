@@ -832,7 +832,8 @@ const handleEdit = (task) => {
     taskStatus: String(task.taskStatus),
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
-    taskRemark: task.taskRemark
+    taskRemark: task.taskRemark,
+    participantUserIds: task.participantUsers?.map(user => `${user.nickName}(${user.userName})`) || []
   })
 
   // 加载任务的参与用户组
@@ -848,7 +849,7 @@ const loadTaskParticipantUsers = async (taskId) => {
     const response = await getTaskParticipantUsers(taskId)
     const participantUsers = response.data || []
     // 设置已选择的用户组
-    formData.participantUserIds = participantUsers.map(user => user.userId)
+    formData.participantUserIds = participantUsers.map(user => `${user.nickName}(${user.userName})`) || []
   } catch (error) {
     console.error('加载任务参与用户组失败:', error)
   }
