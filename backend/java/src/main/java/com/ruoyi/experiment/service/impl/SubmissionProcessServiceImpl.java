@@ -13,6 +13,7 @@ import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
@@ -99,7 +100,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     @Override
     public void createSubmissionProcess(SubmissionProcessDTO submissionProcessDTO) {
         // 1. 校验投稿计划是否存在
-        SubmissionPlan submissionPlan = submissionPlanMapper.selectById(submissionProcessDTO.getPlanId());
+        SubmissionPlanDetailVO submissionPlan = submissionPlanMapper.selectById(submissionProcessDTO.getPlanId());
         if (submissionPlan == null) {
             throw new RuntimeException("投稿计划不存在");
         }

@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,7 +30,7 @@ public interface SubmissionPlanMapper {
      * @return 投稿计划信息
      */
     @Select("select * from submission_plan where id = #{id}")
-    SubmissionPlan selectById(@Param("id") Long id);
+    SubmissionPlanDetailVO selectById(@Param("id") Long id);
     
     /**
      * 新增投稿计划
@@ -58,5 +59,5 @@ public interface SubmissionPlanMapper {
      * @param name 投稿计划名称
      * @return 投稿计划列表
      */
-    List<SubmissionPlanVO> selectVOList(String name);
+    List<SubmissionPlanVO> selectVOList(String name,Long participantUserId);
 }

@@ -4,6 +4,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
 import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 
@@ -25,7 +26,7 @@ public interface SubmissionPlanService {
      * @param id 投稿计划ID
      * @return 投稿计划信息
      */
-    SubmissionPlan getSubmissionPlanById(Long id);
+    SubmissionPlanDetailVO getSubmissionPlanById(Long id);
 
     /**
      * 创建投稿计划

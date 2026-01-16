@@ -9,14 +9,18 @@ import com.ruoyi.experiment.enums.SubmissionPlanStatusEnum;
 import com.ruoyi.experiment.enums.SubmissionProcessStatusEnum;
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.SubmissionPlanMapper;
+import com.ruoyi.experiment.mapper.SubmissionPlanUserMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessFileMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanDTO;
 import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
+import com.ruoyi.experiment.pojo.entity.SubmissionPlanUser;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
+import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
 import com.ruoyi.experiment.service.SubmissionPlanService;
 import com.ruoyi.experiment.utils.FileUtils;
@@ -28,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,17 +48,21 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     private final SubmissionPlanMapper submissionPlanMapper;
     private final SubmissionProcessMapper submissionProcessMapper;
     private final SubmissionProcessFileMapper submissionProcessFileMapper;
+    private final SubmissionPlanUserMapper submissionPlanUserMapper;
     private final SysUserMapper userMapper;
     private final ExperimentConfig experimentConfig;
 
     @Override
     public List<SubmissionPlan> listSubmissionPlans(SubmissionPlanQueryDTO submissionPlanQueryDTO) {
+        submissionPlanQueryDTO.setParticipantUserId(SecurityUtils.getUserId());
         return submissionPlanMapper.selectSubmissionPlanList(submissionPlanQueryDTO);
     }
 
     @Override
-    public SubmissionPlan getSubmissionPlanById(Long id) {
-        return submissionPlanMapper.selectById(id);
+    public SubmissionPlanDetailVO getSubmissionPlanById(Long id) {
+        SubmissionPlanDetailVO submissionPlanDetailVO = submissionPlanMapper.selectById(id);
+        submissionPlanDetailVO.setParticipantUsers(submissionPlanUserMapper.selectUsersByPlanId(id));
+        return submissionPlanDetailVO;
     }
 
     @Override
@@ -73,21 +82,33 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         // 4.保存投稿计划
         submissionPlanMapper.insert(submissionPlan);
 
-        // 5.自动创建第一个投稿流程（一审）
+        // 5.保存参与用户
+        if(!CollectionUtils.isEmpty(submissionPlanDTO.getParticipantUserIds())){
+            submissionPlanUserMapper.insertBatch(submissionPlan.getId(),submissionPlanDTO.getParticipantUserIds());
+        }
+
+        // 6.自动创建第一个投稿流程（一审）
         SubmissionProcess submissionProcess = new SubmissionProcess();
         submissionProcess.setPlanId(submissionPlan.getId());
         submissionProcess.setName(SubmissionConstants.FIRST_PROCESS_NAME);
         submissionProcess.setStatus(SubmissionProcessStatusEnum.WAITING_SUBMIT_REVIEW.getValue());
         submissionProcess.setProcessCreateTime(LocalDateTime.now());
-        // 6.保存投稿流程
+        // 7.保存投稿流程
         submissionProcessMapper.insert(submissionProcess);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateSubmissionPlan(SubmissionPlanDTO submissionPlanDTO) {
+        // 1.更改投稿计划
         SubmissionPlan submissionPlan = new SubmissionPlan();
         BeanUtils.copyProperties(submissionPlanDTO, submissionPlan);
         submissionPlanMapper.update(submissionPlan);
+        // 2.更改投稿计划参与用户
+        submissionPlanUserMapper.deleteByPlanId(submissionPlan.getId());
+        if(!CollectionUtils.isEmpty(submissionPlanDTO.getParticipantUserIds())){
+            submissionPlanUserMapper.insertBatch(submissionPlan.getId(),submissionPlanDTO.getParticipantUserIds());
+        }
     }
 
     @Override
@@ -101,7 +122,9 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         submissionPlanMapper.deleteById(id);
         // 4.删除所有关联投稿流程
         submissionProcessMapper.deleteByPlanId(id);
-        // 5.删除所有关联文件
+        // 5.删除所有关联投稿计划参与用户
+        submissionPlanUserMapper.deleteByPlanId(id);
+        // 6.删除所有关联文件
         submissionProcessFileMapper.deleteByIds(submissionProcessFileList.stream().map(SubmissionProcessFile::getId).collect(Collectors.toList()));
         for (SubmissionProcessFile submissionProcessFile : submissionProcessFileList) {
             Path filePath = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getSubmissionBaseDir(), submissionProcessFile.getFilePath()));
@@ -118,7 +141,7 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
 
     @Override
     public List<SubmissionPlanVO> listSubmissionPlansForSelect(String name) {
-        return submissionPlanMapper.selectVOList(name);
+        return submissionPlanMapper.selectVOList(name,SecurityUtils.getUserId());
     }
 
     @Override

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 投稿计划DTO
@@ -44,4 +45,8 @@ public class SubmissionPlanDTO{
      * 投稿创建时间
      */
     private LocalDateTime submissionCreateTime;
+    /**
+     * 参与用户ID列表
+     */
+     private List<Long> participantUserIds;
 }

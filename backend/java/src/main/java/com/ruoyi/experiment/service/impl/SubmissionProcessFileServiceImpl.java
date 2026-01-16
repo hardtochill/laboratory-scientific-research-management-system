@@ -10,6 +10,7 @@ import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
+import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
 import com.ruoyi.experiment.service.SubmissionProcessFileService;
 import com.ruoyi.experiment.utils.FileUtils;
@@ -86,7 +87,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
         }
         // 2.校验用户权限
         SubmissionProcess submissionProcess = submissionProcessMapper.selectByProcessId(submissionProcessFile.getProcessId());
-        SubmissionPlan submissionPlan = submissionPlanMapper.selectById(submissionProcess.getPlanId());
+        SubmissionPlanDetailVO submissionPlan = submissionPlanMapper.selectById(submissionProcess.getPlanId());
 
         boolean canDelete = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || SecurityUtils.getUserId().equals(submissionPlan.getCreateUserId());
         if (!canDelete) {

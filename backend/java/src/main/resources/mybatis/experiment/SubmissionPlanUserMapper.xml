@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.SubmissionPlanUserMapper">
+
+    <insert id="insertBatch">
+        insert into submission_plan_user (plan_id, user_id)
+        values
+        <foreach collection="participantUserIds" item="userId" separator=",">
+            (#{planId}, #{userId})
+        </foreach>
+    </insert>
+    <select id="selectUsersByPlanId" resultType="com.ruoyi.project.system.domain.SysUser">
+        select su.user_id,su.user_name,su.nick_name
+        from submission_plan_user spu
+        left join sys_user su on spu.user_id = su.user_id
+        where spu.plan_id = #{id}
+    </select>
+</mapper>

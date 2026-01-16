@@ -4,22 +4,27 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.SubmissionPlanMapper">
     <select id="selectSubmissionPlanList" resultType="com.ruoyi.experiment.pojo.entity.SubmissionPlan">
-        select id, name, create_user_id, create_user_nick_name, type, journal, status, remark, submission_create_time, create_time, update_time
-        from submission_plan
+        select sp.id, sp.name, sp.create_user_id, sp.create_user_nick_name, sp.type, sp.journal, sp.status, sp.remark, sp.submission_create_time, sp.create_time, sp.update_time
+        from submission_plan sp
+        left join submission_plan_user spu on sp.id = spu.plan_id
         <where>
-            <if test="id != null">and id = #{id}</if>
-            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
-            <if test="createUserId != null">and create_user_id = #{createUserId}</if>
-            <if test="createUserNickName != null and createUserNickName != ''">and create_user_nick_name like concat('%', #{createUserNickName}, '%')</if>
-            <if test="type != null">and type = #{type}</if>
-            <if test="status != null">and status = #{status}</if>
+            spu.user_id = #{participantUserId}
+            <if test="id != null">and sp.id = #{id}</if>
+            <if test="name != null and name != ''">and sp.name like concat('%', #{name}, '%')</if>
+            <if test="createUserId != null">and sp.create_user_id = #{createUserId}</if>
+            <if test="createUserNickName != null and createUserNickName != ''">and sp.create_user_nick_name like concat('%', #{createUserNickName}, '%')</if>
+            <if test="type != null">and sp.type = #{type}</if>
+            <if test="status != null">and sp.status = #{status}</if>
         </where>
-        order by create_time desc
+        order by sp.create_time desc
     </select>
     <select id="selectVOList" resultType="com.ruoyi.experiment.pojo.vo.SubmissionPlanVO">
-        select id, name from submission_plan
+        select sp.id, sp.name
+        from submission_plan sp
+        left join submission_plan_user spu on sp.id = spu.plan_id
         <where>
-            <if test="name != null and name != ''">and name like concat('%', #{name}, '%')</if>
+            spu.user_id = #{participantUserId}
+            <if test="name != null and name != ''">and sp.name like concat('%', #{name}, '%')</if>
         </where>
     </select>
 
