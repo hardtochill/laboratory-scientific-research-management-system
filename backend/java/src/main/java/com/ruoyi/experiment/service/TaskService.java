@@ -53,7 +53,7 @@ public interface TaskService {
     /**
      * 更新任务状态
      */
-    void updateTaskStatus(Task task);
+    void updateTaskStatus(Long taskId,Integer status);
     /**
      * 删除任务
      */

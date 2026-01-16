@@ -12,21 +12,8 @@ import java.util.Map;
 
 @Mapper
 public interface TaskMapper {
-    /**
-     * 获取一级父任务-教师端
-     */
-    List<TaskVO> selectFirstParentTasksForTeacher(Long parentTaskId, TaskQueryDTO taskQueryDTO);
 
-    /**
-     * 获取一级父任务-学生端
-     */
-    List<TaskVO> selectFirstParentTasksForStudent(Long parentTaskId,Long userId,TaskQueryDTO taskQueryDTO);
-
-    /**
-     * 获取二级及以下任务
-     */
-    @Select("select task_id,task_name,task_status from task where parent_task_id=#{parentTaskId} order by task_order asc")
-    List<TaskVO> selectSubTasks(Long parentTaskId);
+    List<TaskVO> select(TaskQueryDTO taskQueryDTO);
 
     /**
      * 计算子任务的完成情况
@@ -69,5 +56,4 @@ public interface TaskMapper {
      */
     @Select("select task_id from task where parent_task_id = #{parentTaskId}")
     List<Long> selectSubTaskIds(Long parentTaskId);
-
 }

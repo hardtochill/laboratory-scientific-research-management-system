@@ -90,8 +90,8 @@ public class TaskController extends BaseController {
      */
     @PostMapping("/updateStatus")
     @CheckTeacher
-    public AjaxResult updateTaskStatus(@RequestBody Task task) {
-        taskService.updateTaskStatus(task);
+    public AjaxResult updateTaskStatus(Long taskId,Integer status) {
+        taskService.updateTaskStatus(taskId,status);
         return AjaxResult.success();
     }
 

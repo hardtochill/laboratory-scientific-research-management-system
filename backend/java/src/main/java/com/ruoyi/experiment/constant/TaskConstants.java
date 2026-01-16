@@ -8,9 +8,17 @@ public class TaskConstants {
     /**
      * 任务最大深度（一级父任务深度为1）
      */
-    public static final Integer MAX_TASK_DEPTH = 3;
+    public static final Integer MAX_TASK_DEPTH = 5;
     /**
      * 任务最大广度（从1开始）
      */
     public static final Integer MAX_TASK_ORDER = 10;
+    /**
+     * 子任务排序字段
+     */
+    public static final String SUB_TASK_ORDER_BY = "task_order";
+     /**
+      * 子任务排序方向
+      */
+     public static final String SUB_TASK_ORDER_DIRECTION = "asc";
 }
