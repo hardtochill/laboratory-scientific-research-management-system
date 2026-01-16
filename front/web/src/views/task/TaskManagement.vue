@@ -249,7 +249,7 @@
           </div>
           <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
             placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
-            :disabled="isReadOnlyUserGroup || !isHasTeacherRole" @focus="handleSelectFocus">
+            :disabled="isReadOnlyUserGroup || !isHasTeacherRole" @focus="handleSelectFocus" clearable>
             <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
               :value="user.userId" />
           </el-select>
@@ -943,7 +943,6 @@ const handleFormSubmit = async () => {
       // 表单验证失败，不处理
       return
     }
-    ElMessage.error('保存失败：' + (error.message || '未知错误'))
     console.error('保存任务失败:', error)
   }
 }
@@ -969,7 +968,7 @@ const handleAddSubTask = async (parentTask) => {
   // 设置父任务ID
   formData.parentTaskId = parentTask.taskId
 
-  /* try {
+  try {
       // 加载父任务的参与用户组
       const response = await getTaskParticipantUsers(parentTask.taskId)
       const participantUsers = response.data || []
@@ -986,7 +985,7 @@ const handleAddSubTask = async (parentTask) => {
     } catch (error) {
       ElMessage.error('加载父任务用户组失败')
       console.error('加载父任务用户组失败:', error)
-    } */
+    }
   // 打开表单
   formVisible.value = true
 }
