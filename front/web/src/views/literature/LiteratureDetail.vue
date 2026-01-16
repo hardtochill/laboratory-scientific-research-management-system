@@ -32,7 +32,7 @@
                     </div>
                     <div class="info-item">
                         <span class="label">评分：</span>
-                        <span>{{ literature.finalScore }}</span>
+                        <el-rate v-model="currentUserScore" :max="10" show-score @change="handleScoreChange" />
                     </div>
                     <div class="info-item">
                         <span class="label">上传用户：</span>
@@ -307,7 +307,7 @@ import { useRouter, useRoute } from "vue-router"
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
-import { getLiteratureDetail } from '@/api/literature/literature'
+import { getLiteratureDetail, scoreLiterature } from '@/api/literature/literature'
 import { listParentComments, listChildComments, toggleLike, addComment, deleteComment, changeVisibleType } from '@/api/comment/comment'
 import { download } from "@/utils/request"
 import { parseTime } from '@/utils/ruoyi'
@@ -328,6 +328,8 @@ const currentUserId = ref(null)
 // 文献详情数据
 const literature = ref({})
 
+// 评分数据
+const currentUserScore = ref(null)
 
 // 排序数据
 const sortField = ref('likeCount')  // 默认按点赞数排序
@@ -407,7 +409,7 @@ function checkUserRoles() {
 
 /** 返回列表 */
 function goBack() {
-    router.push("/literature/read")
+    router.push("/literature/resource")
 }
 
 /** 格式化日期 */
@@ -435,9 +437,42 @@ async function getDetail() {
     try {
         const res = await getLiteratureDetail(id)
         literature.value = res.data
+        // 设置当前用户评分的初始值，优先使用路由参数中的score
+        const queryScore = route.query.score
+        console.log('路由参数中的score:', queryScore)
+        if (queryScore !== undefined) {
+            currentUserScore.value = parseFloat(queryScore)
+        } else {
+            currentUserScore.value = res.data.userScore !== null ? res.data.userScore : undefined
+        }
     } catch (error) {
         ElMessage.error('获取文献详情失败')
         console.error('获取文献详情失败:', error)
+    }
+}
+
+/** 处理评分变化 */
+async function handleScoreChange(newScore) {
+    const literatureId = literature.value.id
+    if (!literatureId) {
+        ElMessage.error('文献ID错误')
+        return
+    }
+    
+    try {
+        await scoreLiterature({
+            literatureId: literatureId,
+            score: newScore
+        })
+        // 更新本地评分数据
+        literature.value.finalScore = newScore
+        currentUserScore.value = newScore
+        ElMessage.success('评分成功')
+    } catch (error) {
+        ElMessage.error('评分失败')
+        console.error('评分失败:', error)
+        // 恢复原来的评分
+        currentUserScore.value = literature.value.userScore
     }
 }
 

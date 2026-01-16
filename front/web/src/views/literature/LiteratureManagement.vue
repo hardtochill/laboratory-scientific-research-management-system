@@ -344,7 +344,12 @@ function handleSelectionChange(selection) {
 
 /** 详情按钮操作 */
 function handleDetail(row) {
-  router.push(`/literature/detail/${row.id}`)
+  router.push({
+    path: `/literature/detail/${row.id}`,
+    query: {
+      score: row.score !== null ? row.score : undefined
+    }
+  })
 }
 
 /** 评分按钮操作 */
