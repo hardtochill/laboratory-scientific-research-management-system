@@ -36,11 +36,11 @@
           </el-tooltip>
           <!-- 任务详情按钮 -->
           <el-tooltip content="任务详情" placement="top">
-            <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="MoreFilled" style="margin-left: 0px;"></el-button>
+            <el-button link type="primary" @click.stop="$emit('show-detail', task)" :icon="Document" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 文件信息按钮 -->
           <el-tooltip content="文件信息" placement="top">
-            <el-button link type="primary" @click.stop="handleShowFiles" :icon="Document" style="margin-left: 0px;"></el-button>
+            <el-button link type="primary" @click.stop="handleShowFiles" :icon="Files" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
           <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
@@ -91,7 +91,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
-import {CaretRight,CaretBottom,Plus, MoreFilled, Switch, Delete, Document } from '@element-plus/icons-vue'
+import {CaretRight,CaretBottom,Plus, Files, Switch, Delete, Document } from '@element-plus/icons-vue'
 
 // 组件属性
 const props = defineProps({
