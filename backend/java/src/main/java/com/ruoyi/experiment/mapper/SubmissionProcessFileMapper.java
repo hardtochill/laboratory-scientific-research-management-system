@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcessFile;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessFileVO;
+import io.swagger.models.auth.In;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -82,4 +83,14 @@ public interface SubmissionProcessFileMapper {
       * @return 影响行数
       */
     void deleteByIds(List<Long> ids);
+
+    /**
+     * 根据processId和tag查询文件是否存在
+     * @param processId 投稿流程ID
+     * @param tag 文件标签
+     * @return 是否存在
+     */
+    @Select("select id from submission_process_file where process_id = #{processId} and tag = #{tag} limit 1")
+    SubmissionProcessFile existByProcessIdAndTag(Long processId, Integer tag);
+
 }

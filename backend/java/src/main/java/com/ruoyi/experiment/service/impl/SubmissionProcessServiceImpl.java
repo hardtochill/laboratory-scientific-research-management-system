@@ -183,10 +183,44 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
                 ,submissionProcess.getStatus())){
                 throw new ServiceException("投稿流程状态异常，仅“待发起内部审核”和“内部审核不通过”状态下才能发起审核流程");
         }
-        // 4. 更新投稿流程状态为"内部审核中"
+        // 4.流程关联的tag文件列表为必填
+        if (SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcess.getName())) { // 一审
+            // 校验是否上传了提交给期刊的文件
+            SubmissionProcessFile journalSubmissionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag());
+            if (null == journalSubmissionFile) {
+                throw new ServiceException("请上传提交给期刊的文件");
+            }
+            // 校验是否上传了原始数据与程序文件
+            SubmissionProcessFile rawDataAndProgramFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag());
+            if (null == rawDataAndProgramFile) {
+                throw new ServiceException("请上传原始数据与程序文件");
+            }
+        } else if (SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcess.getName())) { // 校稿
+            // 校验是否上传最终稿
+            SubmissionProcessFile finalDraftFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.FINAL_DRAFT.getTag());
+            if (null == finalDraftFile) {
+                throw new ServiceException("请上传最终稿");
+            }
+        } else { // n审
+            // 校验是否上传审稿意见
+            SubmissionProcessFile reviewOpinionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag());
+            if (null == reviewOpinionFile) {
+                throw new ServiceException("请上传审稿意见");
+            }
+            // 校验是否上传提交给期刊的文件
+            SubmissionProcessFile journalSubmissionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag());
+            if (null == journalSubmissionFile) {
+                throw new ServiceException("请上传提交给期刊的文件");
+            }
+            // 校验是否上传补充数据
+            SubmissionProcessFile supplementaryDataFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag());
+            if (null == supplementaryDataFile) {
+                throw new ServiceException("请上传补充数据");
+            }
+        }
+        // 5. 更新投稿流程状态为"内部审核中"
         submissionProcessMapper.updateStatus(processId,SubmissionProcessStatusEnum.REVIEWING.getValue());
-        
-        // 4. 创建审核记录
+        // 6. 创建审核记录
         Review review = new Review();
         review.setPlanId(submissionProcess.getPlanId());
         review.setProcessId(processId);
