@@ -393,15 +393,9 @@
                   </template>
                 </el-table-column>
               </el-table>
-              <div v-if="getFilesByTagFromList(processFileList, tag).length === 0 && !fileLoading" class="no-files">
-                <el-empty description="暂无文件" />
-              </div>
               </div>
               <el-divider v-if="index < PROCESS_TAG_CONFIG[currentProcessForFile.name].length - 1" />
             </template>
-          </div>
-          <div v-else-if="!fileLoading" class="no-files">
-            <el-empty description="暂无文件" />
           </div>
         </div>
       </div>
@@ -416,9 +410,9 @@
     <el-dialog v-model="uploadDialogVisible" :title="`上传${FILE_TAG_TEXT[currentUploadTag]}`" width="600px" :before-close="handleUploadDialogClose">
       <div class="upload-dialog-content">
         <el-upload ref="uploadRef" :file-list="tempFileList" :auto-upload="false" 
-          :on-change="(file, fileList) => tempFileList.value = fileList" 
-          :on-remove="(file, fileList) => tempFileList.value = fileList" 
-          :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+              :on-change="handleTempFileChange" 
+              :on-remove="handleTempFileRemove" 
+              :before-upload="beforeUpload" drag multiple accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
           <el-icon class="el-icon--upload">
             <UploadFilled />
           </el-icon>
@@ -1145,6 +1139,16 @@ const openUploadDialog = (tag) => {
   uploadDialogVisible.value = true
 }
 
+// 临时文件选择变化处理
+const handleTempFileChange = (file, fileList) => {
+  tempFileList.value = fileList
+}
+
+// 临时文件移除处理
+const handleTempFileRemove = (file, fileList) => {
+  tempFileList.value = fileList
+}
+
 // 文件变化处理（按tag分类）
 const handleFileChange = (file, fileListParam, tag) => {
   tagFileLists.value[tag] = fileListParam
@@ -1293,18 +1297,70 @@ const handleUploadDialogClose = () => {
 }
 
 // 处理临时文件上传（确定按钮）
-const handleTempFileUpload = () => {
-  if (tempFileList.value.length === 0) {
+const handleTempFileUpload = async () => {
+  // 检查文件列表，过滤掉无效文件（如上传失败的文件）
+  const validFiles = tempFileList.value.filter(file => !file.status || file.status !== 'fail')
+  
+  if (validFiles.length === 0) {
     ElMessage.warning('请选择要上传的文件')
     return
   }
   
-  // 将临时文件列表保存到对应的tagFileLists中
-  tagFileLists.value[currentUploadTag.value] = tempFileList.value
+  tempUploading.value = true
+  let successCount = 0
+  let failCount = 0
   
-  ElMessage.success('文件已添加到上传列表')
-  uploadDialogVisible.value = false
-  tempFileList.value = [] // 清空临时文件列表
+  try {
+    const processId = currentProcessForFile.value.id
+    const tag = currentUploadTag.value
+    
+    // 遍历临时文件列表，直接上传到后端
+    for (const fileItem of validFiles) {
+      try {
+        await uploadSubmissionProcessFile(processId, fileItem,tag)
+        successCount++
+      } catch (error) {
+        failCount++
+        console.error(`文件 ${fileItem.name} 上传失败:`, error)
+        ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+      }
+    }
+
+    // 显示上传结果
+    if (successCount > 0 && failCount === 0) {
+      ElMessage.success(`所有文件上传成功 (${successCount}/${validFiles.length})`)
+    } else if (successCount > 0 && failCount > 0) {
+      ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
+    } else {
+      ElMessage.error(`文件上传失败 (${failCount}/${validFiles.length})`)
+    }
+    
+    if (successCount > 0) {
+      // 上传成功后刷新文件列表
+      const response = await getSubmissionProcessFiles(currentProcessForFile.value.id)
+      processFileList.value = response.data || []
+      
+      // 刷新当前计划的流程列表，更新关联文件显示
+      const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
+      if (currentPlan) {
+        await loadProcesses(currentPlan)
+      }
+    }
+    
+    // 关闭对话框并清空临时文件列表
+    uploadDialogVisible.value = false
+    tempFileList.value = []
+    
+    // 清空对应tag的文件列表（因为已经直接上传了）
+    if (tagFileLists.value[currentUploadTag.value]) {
+      tagFileLists.value[currentUploadTag.value] = []
+    }
+  } catch (error) {
+    ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
+    console.error('文件上传过程出现错误:', error)
+  } finally {
+    tempUploading.value = false
+  }
 }
 
 // 发起内部审核
