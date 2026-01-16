@@ -8,6 +8,7 @@ import com.ruoyi.experiment.pojo.dto.KeywordQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Keyword;
 import com.ruoyi.experiment.service.KeywordService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class KeywordServiceImpl implements KeywordService {
 
     private final KeywordMapper keywordMapper;
@@ -25,12 +27,14 @@ public class KeywordServiceImpl implements KeywordService {
 
     @Override
     public List<Keyword> selectKeywordList(KeywordQueryDTO keywordQueryDTO) {
+        log.info("关键词管理模块-查询关键词列表：{}",keywordQueryDTO);
         return keywordMapper.selectKeywordList(keywordQueryDTO);
     }
 
     @Override
     @Transactional
     public void addKeyword(KeywordDTO keywordDTO) {
+        log.info("关键词管理模块-添加关键词：{}",keywordDTO);
         // 校验关键词名称是否已存在
         if (keywordMapper.selectByKeywordName(keywordDTO.getKeywordName()) != null) {
             throw new ServiceException("关键词名称已存在");
@@ -45,6 +49,7 @@ public class KeywordServiceImpl implements KeywordService {
     @Override
     @Transactional
     public void updateKeyword(KeywordDTO keywordDTO) {
+        log.info("关键词管理模块-更新关键词：{}",keywordDTO);
         // 校验关键词是否存在
         Keyword originKeyword = keywordMapper.selectById(keywordDTO.getId());
         if (originKeyword == null) {
@@ -64,6 +69,7 @@ public class KeywordServiceImpl implements KeywordService {
     @Override
     @Transactional
     public void deleteKeywords(Long[] keywordIds) {
+        log.info("关键词管理模块-删除关键词：{}",keywordIds);
         // 删除关键词
         keywordMapper.deleteKeywords(keywordIds);
         // 删除文献关键词关联
