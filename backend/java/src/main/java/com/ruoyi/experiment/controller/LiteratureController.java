@@ -115,4 +115,12 @@ public class LiteratureController extends BaseController {
         List<LiteratureVO> literatureVOS = literatureService.getSelectableLiteratures(literatureTitle);
         return AjaxResult.success(literatureVOS);
     }
+    /**
+     * 更换文献源文件
+     */
+    @PostMapping("/changeLiteratureFile")
+    public AjaxResult changeLiteratureFile(@RequestParam("id") Long literatureId, @RequestParam("file") MultipartFile file) {
+        literatureService.changeLiteratureFile(literatureId, file);
+        return AjaxResult.success();
+    }
 }

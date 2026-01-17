@@ -6,6 +6,7 @@ import com.ruoyi.experiment.pojo.dto.LiteratureScoreDTO;
 import com.ruoyi.experiment.pojo.entity.Literature;
 import com.ruoyi.experiment.pojo.vo.LiteratureDetailVO;
 import com.ruoyi.experiment.pojo.vo.LiteratureVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -54,4 +55,10 @@ public interface LiteratureService {
      * @return 文献列表
      */
     List<LiteratureVO> getSelectableLiteratures(String literatureTitle);
+    /**
+     * 更换文献源文件
+     * @param literatureId 文献id
+     * @param file 新文件
+     */
+    void changeLiteratureFile(Long literatureId, MultipartFile file);
 }

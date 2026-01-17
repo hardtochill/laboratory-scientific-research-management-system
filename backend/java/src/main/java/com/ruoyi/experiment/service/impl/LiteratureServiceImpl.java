@@ -7,7 +7,6 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.constant.CommentConstants;
-import com.ruoyi.experiment.enums.CommentVisibleTypeEnum;
 import com.ruoyi.experiment.mapper.*;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
@@ -27,7 +26,12 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -224,6 +228,33 @@ public class LiteratureServiceImpl implements LiteratureService {
         return literatureMapper.selectSelectableLiteratures(literatureTitle);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeLiteratureFile(Long literatureId, MultipartFile file) {
+        log.info("文献管理模块-更换文献源文件：{}",literatureId);
+        // 1.校验文献是否存在
+        Literature originLiterature = literatureMapper.selectLiteratureById(literatureId);
+        if(null==originLiterature){
+            throw new ServiceException("文献不存在");
+        }
+        // 2.删除旧文件
+        String originFilePath = literatureFileMapper.selectFilePathByLiteratureId(literatureId);
+        literatureFileMapper.deleteByLiteratureId(literatureId);
+        try {
+            if(null!=originFilePath){
+                Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getLiteratureBaseDir(), originFilePath));
+                if (Files.exists(path)){
+                    Files.delete(path);
+                }
+            }
+        }catch (Exception e){
+            log.error("文献管理模块-删除文献文件失败", e);
+            throw new ServiceException("文献文件删除失败");
+        }
+        // 3.上传新文件
+        uploadLiterature(literatureId,originLiterature.getTitle(),file);
+    }
+
     private void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;
@@ -251,7 +282,7 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 更新下载数
         literatureMapper.updateDownloadCount(id);
 
-        String filePath = literatureFileMapper.selectFilePathById(id);
+        String filePath = literatureFileMapper.selectFilePathByLiteratureId(id);
         if(null==filePath){
             throw new ServiceException("文献文件按不存在");
         }
