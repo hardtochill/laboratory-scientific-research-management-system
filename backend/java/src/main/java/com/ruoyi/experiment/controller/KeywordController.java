@@ -21,7 +21,6 @@ public class KeywordController extends BaseController {
      * 根据关键词查询条件分页查询关键词列表
      */
     @GetMapping("/list")
-    @CheckTeacher
     public TableDataInfo list(KeywordQueryDTO keywordQueryDTO) {
         startPage();
         return getDataTable(keywordService.selectKeywordList(keywordQueryDTO));
