@@ -948,8 +948,14 @@ const handlePlanEdit = () => {
     journal: currentPlan.value.journal || '',
     status: String(currentPlan.value.status),
     remark: currentPlan.value.remark || '',
-    participantUserIds: currentPlan.value.participantUsers?.map(user => `${user.nickName}(${user.userName})`) || []
+    participantUserIds: currentPlan.value.participantUsers?.map(user => user.userId) || []
   })
+  
+  // 将当前计划的参与用户信息添加到selectableParticipantUsers中，确保El Select能正确显示label
+  if (currentPlan.value.participantUsers) {
+    selectableParticipantUsers.value = currentPlan.value.participantUsers
+  }
+  
   planFormVisible.value = true
 }
 
@@ -1049,7 +1055,7 @@ const handleAddProcess = (plan) => {
 }
 
 // 修改投稿流程
-const handleProcessEdit = () => {
+const handleProcessEdit = async () => {
   if (!currentProcess.value) {
     ElMessage.error('流程信息不存在')
     return
@@ -1074,6 +1080,34 @@ const handleProcessEdit = () => {
     reviewerUserId: currentProcess.value.reviewerUserId,
     remark: currentProcess.value.remark || ''
   })
+  
+  // 如果有审核人ID，获取当前审核人的完整信息，确保Select组件能正确显示label
+  if (currentProcess.value.reviewerUserId) {
+    reviewerLoading.value = true
+    try {
+      // 调用API获取审核人信息
+      const response = await getSelectableReviewerUsers({
+        nickName: '' // 传递空字符串获取所有审核人，或者可以尝试获取特定用户
+      })
+      const reviewers = response.data || []
+      
+      // 过滤出当前审核人
+      const currentReviewer = reviewers.find(user => user.userId === currentProcess.value.reviewerUserId)
+      
+      // 如果找到当前审核人，将其添加到selectableReviewers数组中
+      if (currentReviewer) {
+        selectableReviewers.value = [currentReviewer]
+      } else if (reviewers.length > 0) {
+        // 如果没找到特定审核人但获取到了审核人列表，使用完整列表
+        selectableReviewers.value = reviewers
+      }
+    } catch (error) {
+      console.error('获取审核人信息失败:', error)
+    } finally {
+      reviewerLoading.value = false
+    }
+  }
+  
   processFormVisible.value = true
 }
 
