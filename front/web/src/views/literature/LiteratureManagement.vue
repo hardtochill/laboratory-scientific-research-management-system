@@ -122,8 +122,7 @@
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="warning" @click="handleChangeFile">更换源文件</el-button>
-          <el-button type="primary" @click="submitEdit">编辑信息</el-button>
+          <el-button type="primary" @click="submitEdit">确认</el-button>
           <el-button @click="cancelEdit">取 消</el-button>
         </div>
       </template>
@@ -447,25 +446,53 @@ async function loadKeywordsForEdit() {
 }
 
 /** 提交编辑 */
-function submitEdit() {
-  proxy.$refs["editRef"].validate((valid) => {
+async function submitEdit() {
+  proxy.$refs["editRef"].validate(async (valid) => {
     if (valid) {
-      updateLiterature({
-        id: editForm.value.id,
-        title: editForm.value.title,
-        authors: editForm.value.authors,
-        journal: editForm.value.journal,
-        publishTime: editForm.value.publishTime,
-        abstractText: editForm.value.abstract,
-        keywordIds: editForm.value.keywordIds
-      }).then(() => {
+      try {
+        // 如果有文件，则先执行文件更换操作
+        if (editForm.value.file) {
+          // 提示用户确认操作
+          await proxy.$modal.confirm('该操作会更换文献的源pdf文件，确认要继续吗？', '确认更换', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          })
+          
+          // 用户确认后执行更换操作
+          const formData = new FormData()
+          formData.append('id', editForm.value.id)
+          formData.append('file', editForm.value.file)
+          
+          await changeLiteratureFile(formData)
+          
+          // 清空选择的文件
+          editFileList.value = []
+          editForm.value.file = undefined
+        }
+        
+        // 执行文献信息更新操作
+        await updateLiterature({
+          id: editForm.value.id,
+          title: editForm.value.title,
+          authors: editForm.value.authors,
+          journal: editForm.value.journal,
+          publishTime: editForm.value.publishTime,
+          abstractText: editForm.value.abstract,
+          keywordIds: editForm.value.keywordIds
+        })
+        
+        // 所有操作成功后关闭对话框并提示
         editOpen.value = false
         proxy.$modal.msgSuccess("修改成功")
         getList()
-      }).catch(error => {
+      } catch (error) {
         console.error('修改失败:', error)
-        proxy.$modal.msgError(error.message || "修改失败")
-      })
+        // 如果是用户取消操作，不显示错误提示
+        if (error !== 'cancel') {
+          proxy.$modal.msgError(error.message || "修改失败")
+        }
+      }
     }
   })
 }
