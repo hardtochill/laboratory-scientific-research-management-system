@@ -89,7 +89,7 @@ export const constantRoutes = [
         path: ':id',
         component: () => import('@/views/literature/LiteratureDetail'),
         name: 'LiteratureDetail',
-        meta: { title: '文献详情', activeMenu: '/literature/read' }
+        meta: { title: '文献详情', activeMenu: '/literature/resource' }
       }
     ]
   },
