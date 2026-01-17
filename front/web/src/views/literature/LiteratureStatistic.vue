@@ -1,13 +1,13 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="100px">
-      <el-form-item v-if="activeTab === 'student'" label="用户昵称" prop="userId">
+      <el-form-item v-if="activeTab === 'student'" label="用户姓名" prop="userId">
         <el-select
           v-model="queryParams.userId"
           filterable
           remote
           reserve-keyword
-          placeholder="请输入用户昵称"
+          placeholder="请输入用户姓名"
           :remote-method="remoteSearchUser"
           :loading="userLoading"
           style="width: 240px"
@@ -91,7 +91,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="userNickName" label="用户昵称" min-width="150" align="center" />
+          <el-table-column prop="userNickName" label="用户姓名" min-width="150" align="center" />
           <el-table-column prop="literatureCount" label="阅读文献数量" width="150" align="center" sortable />
           <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="150" align="center" />
         </el-table>
@@ -104,7 +104,7 @@
             <template #default="{ row }">
               <div v-if="expandedLiteratureIds.includes(row.literatureId)" class="literature-detail">
                 <el-table :data="literatureStudentMap[row.literatureId]" border size="small">
-                  <el-table-column prop="userNickName" label="用户昵称" min-width="150" align="center" />
+                  <el-table-column prop="userNickName" label="用户姓名" min-width="150" align="center" />
                   <el-table-column prop="readCount" label="阅读次数" min-width="150" align="center" sortable />
                   <el-table-column prop="lastReadTime" label="最后阅读时间" min-width="200" align="center">
                     <template #default="{ row: detail }">
