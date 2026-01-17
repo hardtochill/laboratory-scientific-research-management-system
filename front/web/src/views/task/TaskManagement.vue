@@ -29,25 +29,25 @@
     <!-- 统计面板 -->
     <div class="statistics-panel" v-if="taskStatistics">
       <div class="statistics-grid">
-          <div class="stat-card pending" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PENDING }">
+          <div class="stat-card pending" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PENDING }" @click="handleStatusFilter(TASK_STATUS.PENDING)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.pendingCount || 0 }}</div>
               <div class="stat-label">未开始</div>
             </div>
           </div>
-          <div class="stat-card processing" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PROCESSING }">
+          <div class="stat-card processing" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PROCESSING }" @click="handleStatusFilter(TASK_STATUS.PROCESSING)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.processingCount || 0 }}</div>
               <div class="stat-label">进行中</div>
             </div>
           </div>
-          <div class="stat-card finished" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.FINISHED }">
+          <div class="stat-card finished" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.FINISHED }" @click="handleStatusFilter(TASK_STATUS.FINISHED)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.finishedCount || 0 }}</div>
               <div class="stat-label">已完成</div>
             </div>
           </div>
-          <div class="stat-card skipped" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.SKIPPED }">
+          <div class="stat-card skipped" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.SKIPPED }" @click="handleStatusFilter(TASK_STATUS.SKIPPED)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.skippedCount || 0 }}</div>
               <div class="stat-label">已跳过</div>
@@ -653,6 +653,18 @@ const loadParentTasks = async () => {
 const handleQuery = () => {
   queryParams.value.pageNum = 1
   loadParentTasks()
+}
+
+// 点击统计面板图标过滤任务状态
+const handleStatusFilter = (status) => {
+  // 如果当前已经是该状态，则清除过滤
+  if (queryParams.value.taskStatus === status) {
+    queryParams.value.taskStatus = undefined
+  } else {
+    queryParams.value.taskStatus = status
+  }
+  // 触发查询
+  handleQuery()
 }
 
 // 重置按钮操作
