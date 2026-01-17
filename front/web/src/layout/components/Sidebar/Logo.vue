@@ -80,11 +80,12 @@ const getLogoTextColor = computed(() => {
       display: inline-block;
       margin: 0;
       color: v-bind(getLogoTextColor);
-      font-weight: 600;
-      line-height: 50px;
-      font-size: 14px;
+      font-weight: 700;
+      line-height: 55px;
+      font-size: 20px;
       font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
       vertical-align: middle;
+      margin-right: 12px;
     }
   }
 

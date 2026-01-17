@@ -5,7 +5,7 @@
         <div class="panel-header-logo">
           <img src="../assets/login/images/logo.png">
         </div>
-        <h1 class="panel-header-title">实验室科研管理系统
+        <h1 class="panel-header-title">buct-tech
         </h1>
       </div>
       <el-form class="form" ref="loginRef" :model="loginForm" :rules="loginRules">
@@ -47,8 +47,8 @@ const router = useRouter()
 const {proxy} = getCurrentInstance()
 
 const loginForm = ref({
-  username: "admin",
-  password: "admin123",
+  username: "",
+  password: "",
   rememberMe: false,
   code: "",
   uuid: ""
@@ -187,7 +187,9 @@ getCookie()
     vertical-align: middle;
   }
 }
-
+.input-submit{
+  background-color: #667eea;
+}
 .el-login-footer {
   height: 40px;
   line-height: 40px;

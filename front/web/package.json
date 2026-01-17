@@ -1,8 +1,8 @@
 {
-  "name": "ruoyi",
+  "name": "buct-tech",
   "version": "3.9.0",
   "description": "实验室科研管理系统",
-  "author": "若依",
+  "author": "liangqizhe",
   "license": "MIT",
   "type": "module",
   "scripts": {
