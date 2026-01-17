@@ -72,3 +72,15 @@ export function getSelectableLiteratures(params) {
     params
   })
 }
+
+// 更换文献源文件
+export function changeLiteratureFile(formData) {
+  return request({
+    url: '/literature/changeLiteratureFile',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

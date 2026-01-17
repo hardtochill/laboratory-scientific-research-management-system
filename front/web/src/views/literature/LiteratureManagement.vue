@@ -91,7 +91,7 @@
 
     <!-- 编辑文献对话框 -->
     <el-dialog :title="'编辑文献：' + editForm.title" v-model="editOpen" width="600px" append-to-body>
-      <el-form :model="editForm" :rules="editRules" ref="editRef" label-width="100px">
+      <el-form :model="editForm" :rules="editRules" ref="editRef" label-width="110px">
         <el-form-item label="文献名称" prop="title">
           <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="255" show-word-limit />
         </el-form-item>
@@ -112,10 +112,18 @@
             <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="更换文献源文件">
+          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top">
+            <el-upload ref="editFileUpload" :file-list="editFileList" :limit="1" :on-exceed="editOnExceed" :on-change="editOnChange" :on-remove="editOnRemove" :auto-upload="false" accept=".pdf">
+              <el-button type="warning">选择新文件</el-button>
+            </el-upload>
+          </el-tooltip>
+        </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="submitEdit">确 定</el-button>
+          <el-button type="warning" @click="handleChangeFile">更换源文件</el-button>
+          <el-button type="primary" @click="submitEdit">编辑信息</el-button>
           <el-button @click="cancelEdit">取 消</el-button>
         </div>
       </template>
@@ -190,7 +198,7 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail } from "@/api/literature/literature"
+import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail, changeLiteratureFile } from "@/api/literature/literature"
 import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
@@ -255,8 +263,10 @@ const data = reactive({
     authors: undefined,
     journal: undefined,
     abstract: undefined,
-    keywordIds: []
+    keywordIds: [],
+    file: undefined
   },
+  editFileList: [],
   editRules: {
     title: [{ required: true, message: "请输入文献名称", trigger: "blur" }]
   },
@@ -300,7 +310,7 @@ const data = reactive({
   }
 })
 
-const { queryParams, scoreForm, scoreRules, editForm, editRules, uploadForm, uploadRules } = toRefs(data)
+const { queryParams, scoreForm, scoreRules, editForm, editFileList, editRules, uploadForm, uploadRules } = toRefs(data)
 
 /** 查询文献列表 */
 function getList() {
@@ -470,8 +480,11 @@ function cancelEdit() {
     authors: undefined,
     journal: undefined,
     abstract: undefined,
-    keywordIds: []
+    keywordIds: [],
+    file: undefined
   }
+  // 清空文件列表
+  editFileList.value = []
   proxy.resetForm("editRef")
 }
 
@@ -656,11 +669,118 @@ function handleCommentFileChange(file, fileList) {
   uploadForm.value.commentFiles = rawFiles
 }
 
-/** 评论文件移除处理 */
-function handleCommentFileRemove(file, fileList) {
-  // 更新表单数据中的文件列表
-  const rawFiles = fileList.map(item => item.raw).filter(raw => raw)
-  uploadForm.value.commentFiles = rawFiles
+
+
+/** 编辑对话框文件变化时验证 */
+function editOnChange(file, fileList) {
+  // 检查文件类型
+  const isPDF = file.raw.type === 'application/pdf'
+  if (!isPDF) {
+    proxy.$modal.msgError('只能上传PDF文件!')
+    // 移除不符合要求的文件
+    fileList.splice(fileList.indexOf(file), 1)
+    // 清理编辑表单的文件
+    editForm.value.file = undefined
+    return false
+  }
+  
+  // 检查文件大小 (50MB = 50 * 1024 * 1024)
+  const isLt50M = file.raw.size / 1024 / 1024 < 50
+  if (!isLt50M) {
+    proxy.$modal.msgError('文件大小不能超过50MB!')
+    // 移除不符合要求的文件
+    fileList.splice(fileList.indexOf(file), 1)
+    // 清理编辑表单的文件
+    editForm.value.file = undefined
+    return false
+  }
+  
+  // 校验通过，设置编辑表单的文件
+  editForm.value.file = file.raw
+  
+  return false // 返回false阻止自动上传，由我们手动控制
+}
+
+/** 编辑对话框文件删除时清理 */
+function editOnRemove(file, fileList) {
+  // 当文件被删除时，清理编辑表单的文件
+  if (fileList.length === 0) {
+    editForm.value.file = undefined
+  }
+}
+
+/** 编辑对话框超出文件数量限制时替换文件 */
+function editOnExceed(files, fileList) {
+  // 替换已上传的文件为新文件
+  const newFile = files[0]
+  
+  // 检查新文件的类型和大小
+  const isPDF = newFile.type === 'application/pdf'
+  if (!isPDF) {
+    proxy.$modal.msgError('只能上传PDF文件!')
+    return false
+  }
+  
+  // 检查文件大小 (50MB = 50 * 1024 * 1024)
+  const isLt50M = newFile.size / 1024 / 1024 < 50
+  if (!isLt50M) {
+    proxy.$modal.msgError('文件大小不能超过50MB!')
+    return false
+  }
+  
+  // 替换文件列表
+  fileList.splice(0, fileList.length, {
+    name: newFile.name,
+    size: newFile.size,
+    status: 'ready',
+    raw: newFile
+  })
+  
+  // 更新响应式的fileList
+  editFileList.value = [...fileList]
+  
+  // 设置编辑表单的文件
+  editForm.value.file = newFile
+  
+  return false // 返回false阻止自动上传，由我们手动控制
+}
+
+/** 更换文献源文件按钮操作 */
+async function handleChangeFile() {
+  if (!editForm.value.file) {
+    proxy.$modal.msgError('请选择新的文献文件')
+    return
+  }
+  
+  // 提示用户确认操作
+  try {
+    await proxy.$modal.confirm('该操作会更换文献的源pdf文件，确认要继续吗？', '确认更换', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    
+    // 用户确认后执行更换操作
+    const formData = new FormData()
+    formData.append('id', editForm.value.id)
+    formData.append('file', editForm.value.file)
+    
+    await changeLiteratureFile(formData)
+    
+    // 更换成功
+    proxy.$modal.msgSuccess('文献源文件更换成功')
+    // 清空选择的文件
+    editFileList.value = []
+    editForm.value.file = undefined
+    // 刷新文献列表
+    getList()
+  } catch (error) {
+    // 用户取消操作或更换失败
+    if (error !== 'cancel') {
+      console.error('更换文献源文件失败:', error)
+      proxy.$modal.msgError(error.message || '更换文献源文件失败')
+    }
+  }
 }
 
 /** 关键词远程搜索 */
