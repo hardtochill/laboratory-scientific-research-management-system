@@ -131,6 +131,11 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         log.info("投稿计划模块-删除投稿计划：{}",id);
         // 1.查出所有关联投稿流程
         List<SubmissionProcessVO> submissionProcessList = submissionProcessMapper.selectByPlanId(id);
+        if(CollectionUtils.isEmpty(submissionProcessList)){
+            submissionPlanMapper.deleteById(id);
+            submissionPlanUserMapper.deleteByPlanId(id);
+            return;
+        }
         // 2.查出所有关联文件
         List<SubmissionProcessFile> submissionProcessFileList = submissionProcessFileMapper.selectByProcessIds(submissionProcessList.stream().map(SubmissionProcessVO::getId).collect(Collectors.toList()));
         // 3.删除投稿计划
@@ -140,6 +145,9 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
         // 5.删除所有关联投稿计划参与用户
         submissionPlanUserMapper.deleteByPlanId(id);
         // 6.删除所有关联文件
+        if(CollectionUtils.isEmpty(submissionProcessFileList)){
+            return;
+        }
         submissionProcessFileMapper.deleteByIds(submissionProcessFileList.stream().map(SubmissionProcessFile::getId).collect(Collectors.toList()));
         for (SubmissionProcessFile submissionProcessFile : submissionProcessFileList) {
             Path filePath = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getSubmissionBaseDir(), submissionProcessFile.getFilePath()));

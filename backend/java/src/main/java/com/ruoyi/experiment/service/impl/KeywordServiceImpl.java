@@ -9,8 +9,10 @@ import com.ruoyi.experiment.pojo.entity.Keyword;
 import com.ruoyi.experiment.service.KeywordService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -70,6 +72,9 @@ public class KeywordServiceImpl implements KeywordService {
     @Transactional
     public void deleteKeywords(Long[] keywordIds) {
         log.info("关键词管理模块-删除关键词：{}",keywordIds);
+        if(ArrayUtils.isEmpty(keywordIds)){
+            return;
+        }
         // 删除关键词
         keywordMapper.deleteKeywords(keywordIds);
         // 删除文献关键词关联

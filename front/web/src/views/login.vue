@@ -16,7 +16,7 @@
         <div class="input">
           <i class="iconfont icon-RectangleCopy2"></i><input type="password" class="input-field"
                                                              placeholder="请输入密码"
-                                                             v-model="loginForm.password" @keyup.enter="handleLogin"/>
+                                                             v-model="loginForm.password" @keyup.enter="handleLogin" />
         </div>
         <div class="input">
           <i class="iconfont icon-RectangleCopy1"></i><input type="text" class="input-field" placeholder="请输入验证码"

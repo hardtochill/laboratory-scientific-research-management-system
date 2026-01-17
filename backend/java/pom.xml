@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.ruoyi</groupId>
-    <artifactId>birdInfo</artifactId>
+    <artifactId>buct-tech</artifactId>
     <version>3.9.0</version>
     <packaging>jar</packaging>
 
-    <name>birdInfo</name>
+    <name>buct-tech</name>
     <url>http://www.ruoyi.vip</url>
     <description>若依管理系统</description>
 
