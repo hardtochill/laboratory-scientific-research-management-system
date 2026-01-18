@@ -6,8 +6,7 @@ ruoyi:
   version: 3.9.0
   # 版权年份
   copyrightYear: 2025
-  # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-  profile: E:\java\ide\idea\AllProjects\experiment-management\backend\file
+  profile: ${experiment.profile}
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -17,16 +16,16 @@ ruoyi:
 experiment:
   #任务文件存储路径
   task:
-    baseDir: ${ruoyi.profile}/task
+    baseDir: ${experiment.task.baseDir}
   # 文献存储路径
   literature:
-     baseDir: ${ruoyi.profile}/literature
+     baseDir: ${experiment.literature.baseDir}
   # 评论文件存储路径
   comment:
-    baseDir: ${ruoyi.profile}/comment
+    baseDir: ${experiment.comment.baseDir}
   # 投稿文件存储路径
   submission:
-    baseDir: ${ruoyi.profile}/submission
+    baseDir: ${experiment.submission.baseDir}
 
 # 开发环境配置
 server:
