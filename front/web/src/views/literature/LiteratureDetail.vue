@@ -586,8 +586,10 @@ async function downloadFile(fileId, fileName) {
     // 使用异步方式下载，不阻塞用户操作
     try {
         await download(`/commentFile/download/${fileId}`, {}, fileName, {}, false)
+        ElMessage.success('文件下载成功')
     } catch (error) {
         console.error('文件下载失败:', error)
+        ElMessage.error('文件下载失败')
     }
 }
 
@@ -867,20 +869,36 @@ async function submitComment() {
         return
     }
     
-    try {
-        if (commentFormType.value === 'comment') {
-            // 发表评论
+    // 保存评论数据用于后台上传
+    const commentType = commentFormType.value
+    const content = commentForm.value.content.trim()
+    const visibleType = commentFormType.value === 'comment' ? commentForm.value.visibleType : 2
+    const files = commentForm.value.files
+    const parentId = commentFormType.value === 'comment' ? 0 : currentParentId.value
+    const receiveUserId = commentFormType.value === 'comment' ? null : targetCommentUserId.value
+    const receiveUserNickName = commentFormType.value === 'comment' ? null : targetCommentUserNickName.value
+    
+    // 显示后台上传提示
+    const operationText = commentType === 'comment' ? '评论' : '回复'
+    ElMessage.info(`正在后台发表${operationText}，请稍候...`)
+    
+    // 立即关闭对话框，允许用户继续操作
+    closeCommentDialog()
+    
+    // 后台执行评论提交操作
+    const submitCommentInBackground = async () => {
+        try {
             await addComment(
-                0, // parentId = 0 表示一级评论
+                parentId,
                 literatureId,
-                commentForm.value.content.trim(),
-                commentForm.value.visibleType,
-                commentForm.value.files,
-                null // 发表评论不携带receiveUserId
+                content,
+                visibleType,
+                files,
+                receiveUserId,
+                receiveUserNickName
             )
             
-            ElMessage.success('评论发表成功')
-            closeCommentDialog()
+            ElMessage.success(`${operationText}发表成功`)
             
             // 刷新评论列表
             await getParentComments()
@@ -892,41 +910,25 @@ async function submitComment() {
                     await toggleChildComments(parentId)
                 }
             }
-        } else {
-            // 回复评论
-            if (!currentParentId.value) {
-                ElMessage.error('参数错误')
-                return
+            
+            // 如果是回复评论，还需要特别处理
+            if (commentType === 'reply' && currentParentId.value) {
+                // 首先刷新父评论列表，以更新hasChildComments状态
+                await getParentComments()
+                
+                // 然后刷新被回复评论所属父评论的子评论，保持其展开状态
+                if (parentCommentId.value) {
+                    await refreshChildCommentsForParent(parentCommentId.value)
+                }
             }
-            
-            await addComment(
-                currentParentId.value,
-                literatureId,
-                commentForm.value.content.trim(),
-                2, // 子评论固定为公开
-                commentForm.value.files,
-                targetCommentUserId.value, // 传递目标评论的userId作为receiveUserId
-                targetCommentUserNickName.value // 传递目标评论的userNickName作为receiveUserNickName
-            )
-            
-            ElMessage.success('回复发表成功')
-            
-            // 保存需要刷新的父评论ID，再关闭对话框
-            const refreshParentId = parentCommentId.value
-            closeCommentDialog()
-            
-            // 首先刷新父评论列表，以更新hasChildComments状态
-            await getParentComments()
-            
-            // 然后刷新被回复评论所属父评论的子评论，保持其展开状态
-            if (refreshParentId) {
-                await refreshChildCommentsForParent(refreshParentId)
-            }
+        } catch (error) {
+            ElMessage.error(`${operationText}发表失败`)
+            console.error(`${operationText}失败:`, error)
         }
-    } catch (error) {
-        ElMessage.error(`${commentFormType.value === 'comment' ? '评论' : '回复'}发表失败`)
-        console.error(`${commentFormType.value === 'comment' ? '评论' : '回复'}失败:`, error)
     }
+    
+    // 启动后台提交
+    submitCommentInBackground()
 }
 
 </script>

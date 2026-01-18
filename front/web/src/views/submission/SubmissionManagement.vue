@@ -1308,61 +1308,70 @@ const handleTempFileUpload = async () => {
     return
   }
 
-  tempUploading.value = true
-  let successCount = 0
-  let failCount = 0
+  // 保存当前流程ID、标签和文件列表，以便在后台上传时使用
+  const processId = currentProcessForFile.value.id
+  const processName = currentProcessForFile.value.name
+  const tag = currentUploadTag.value
+  const filesToUpload = [...validFiles]
 
-  try {
-    const processId = currentProcessForFile.value.id
-    const tag = currentUploadTag.value
+  // 显示后台上传提示
+  ElMessage.info(`正在后台上传 ${filesToUpload.length} 个文件到 "${processName}" 流程，请稍候...`)
 
-    // 遍历临时文件列表，直接上传到后端
-    for (const fileItem of validFiles) {
-      try {
-        await uploadSubmissionProcessFile(processId, fileItem, tag)
-        successCount++
-      } catch (error) {
-        failCount++
-        console.error(`文件 ${fileItem.name} 上传失败:`, error)
-        ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
-      }
-    }
+  // 清空临时文件列表并关闭对话框，允许用户继续操作
+  uploadDialogVisible.value = false
+  tempFileList.value = []
 
-    // 显示上传结果
-    if (successCount > 0 && failCount === 0) {
-      ElMessage.success(`所有文件上传成功 (${successCount}/${validFiles.length})`)
-    } else if (successCount > 0 && failCount > 0) {
-      ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
-    } else {
-      ElMessage.error(`文件上传失败 (${failCount}/${validFiles.length})`)
-    }
-
-    if (successCount > 0) {
-      // 上传成功后刷新文件列表
-      const response = await getSubmissionProcessFiles(currentProcessForFile.value.id)
-      processFileList.value = response.data || []
-
-      // 刷新当前计划的流程列表，更新关联文件显示
-      const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
-      if (currentPlan) {
-        await loadProcesses(currentPlan)
-      }
-    }
-
-    // 关闭对话框并清空临时文件列表
-    uploadDialogVisible.value = false
-    tempFileList.value = []
-
-    // 清空对应tag的文件列表（因为已经直接上传了）
-    if (tagFileLists.value[currentUploadTag.value]) {
-      tagFileLists.value[currentUploadTag.value] = []
-    }
-  } catch (error) {
-    ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
-    console.error('文件上传过程出现错误:', error)
-  } finally {
-    tempUploading.value = false
+  // 清空对应tag的文件列表（因为已经直接上传了）
+  if (tagFileLists.value[tag]) {
+    tagFileLists.value[tag] = []
   }
+
+  // 后台上传文件，不阻塞用户操作
+  const uploadFilesInBackground = async () => {
+    let successCount = 0
+    let failCount = 0
+
+    try {
+      // 遍历临时文件列表，直接上传到后端
+      for (const fileItem of filesToUpload) {
+        try {
+          await uploadSubmissionProcessFile(processId, fileItem, tag)
+          successCount++
+        } catch (error) {
+          failCount++
+          console.error(`文件 ${fileItem.name} 上传失败:`, error)
+          ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+        }
+      }
+
+      // 显示上传结果
+      if (successCount > 0 && failCount === 0) {
+        ElMessage.success(`所有 ${successCount} 个文件上传成功`) 
+      } else if (successCount > 0 && failCount > 0) {
+        ElMessage.warning(`${successCount} 个文件上传成功，${failCount} 个文件上传失败`)
+      } else {
+        ElMessage.error(`所有 ${failCount} 个文件上传失败`)
+      }
+
+      if (successCount > 0) {
+        // 上传成功后刷新文件列表
+        const response = await getSubmissionProcessFiles(processId)
+        processFileList.value = response.data || []
+
+        // 刷新当前计划的流程列表，更新关联文件显示
+        const currentPlan = submissionPlans.value.find(plan => plan.id === currentProcessForFile.value.planId)
+        if (currentPlan) {
+          await loadProcesses(currentPlan)
+        }
+      }
+    } catch (error) {
+      ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
+      console.error('文件上传过程出现错误:', error)
+    }
+  }
+  
+  // 启动后台上传
+  uploadFilesInBackground()
 }
 
 // 发起内部审核

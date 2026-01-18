@@ -1051,50 +1051,57 @@ const handleUploadFiles = async () => {
     return
   }
 
-  uploading.value = true
-  let successCount = 0
-  let failCount = 0
-  
-  try {
-    // 逐个上传文件
-    for (let i = 0; i < fileList.value.length; i++) {
-      const fileItem = fileList.value[i]
-      const formData = new FormData()
-      formData.append('file', fileItem.raw)
+  // 保存当前任务ID和文件列表，以便在后台上传时使用
+  const taskId = currentTaskForFile.value.taskId
+  const filesToUpload = [...fileList.value]
 
-      try {
-        await uploadTaskFile(currentTaskForFile.value.taskId, formData)
-        successCount++
-        ElMessage.info(`正在上传文件 ${i + 1}/${fileList.value.length}：${fileItem.name}`)
-      } catch (error) {
-        failCount++
-        console.error(`文件 ${fileItem.name} 上传失败:`, error)
-        ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+  // 显示后台上传提示
+  ElMessage.info(`正在后台上传 ${filesToUpload.length} 个文件，请稍候...`)
+
+  // 清空待上传文件列表，允许用户继续操作
+  fileList.value = []
+
+  // 关闭对话框，允许用户进行其他操作
+  fileDialogVisible.value = false
+
+  // 后台上传文件，不阻塞用户操作
+  const uploadFilesInBackground = async () => {
+    let successCount = 0
+    let failCount = 0
+    
+    try {
+      // 逐个上传文件
+      for (let i = 0; i < filesToUpload.length; i++) {
+        const fileItem = filesToUpload[i]
+        const formData = new FormData()
+        formData.append('file', fileItem.raw)
+
+        try {
+          await uploadTaskFile(taskId, formData)
+          successCount++
+        } catch (error) {
+          failCount++
+          console.error(`文件 ${fileItem.name} 上传失败:`, error)
+          ElMessage.error(`文件 ${fileItem.name} 上传失败: ${error.message || '未知错误'}`)
+        }
       }
-    }
 
-    // 显示总体结果
-    if (successCount > 0 && failCount === 0) {
-      ElMessage.success(`所有文件上传成功 (${successCount}/${fileList.value.length})`)
-    } else if (successCount > 0 && failCount > 0) {
-      ElMessage.warning(`部分文件上传成功 (${successCount}个成功，${failCount}个失败)`)
-    } else {
-      ElMessage.error(`文件上传失败 (${failCount}/${fileList.value.length})`)
+      // 显示总体结果
+      if (successCount > 0 && failCount === 0) {
+        ElMessage.success(`所有 ${successCount} 个文件上传成功`)
+      } else if (successCount > 0 && failCount > 0) {
+        ElMessage.warning(`${successCount} 个文件上传成功，${failCount} 个文件上传失败`)
+      } else {
+        ElMessage.error(`所有 ${failCount} 个文件上传失败`)
+      }
+    } catch (error) {
+      ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
+      console.error('文件上传过程出现错误:', error)
     }
-    
-    // 清空文件列表
-    fileList.value = []
-    
-    // 如果有文件上传成功，重新加载文件列表
-    if (successCount > 0) {
-      await loadTaskFileList(currentTaskForFile.value.taskId)
-    }
-  } catch (error) {
-    ElMessage.error('文件上传过程出现错误: ' + (error.message || '未知错误'))
-    console.error('文件上传过程出现错误:', error)
-  } finally {
-    uploading.value = false
   }
+
+  // 启动后台上传
+  uploadFilesInBackground()
 }
 
 // 下载文件

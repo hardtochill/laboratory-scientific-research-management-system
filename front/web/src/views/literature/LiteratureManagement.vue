@@ -205,6 +205,7 @@ import { ref, reactive, toRefs, onMounted } from "vue"
 import { getCurrentInstance } from "vue"
 import { listKeyword } from "@/api/keyword/keyword"
 import { UploadFilled } from "@element-plus/icons-vue"
+import { ElMessage } from "element-plus"
 
 const router = useRouter()
 const { proxy } = getCurrentInstance()
@@ -574,50 +575,62 @@ async function submitUpload() {
         return
       }
       
-      try {
-        const formData = new FormData()
-        formData.append('title', uploadForm.value.title || '')
-        formData.append('authors', uploadForm.value.authors || '')
-        formData.append('journal', uploadForm.value.journal || '')
-        formData.append('abstract', uploadForm.value.abstract || '')
-        
-        // 处理发表时间 - 只有当有值时才添加
-        if (uploadForm.value.publishTime) {
-          formData.append('publishTime', uploadForm.value.publishTime)
-        }
-        
-        // 处理关键词 - 只有当有值时才添加
-        if (uploadForm.value.keywordIds && uploadForm.value.keywordIds.length > 0) {
-          uploadForm.value.keywordIds.forEach((id) => {
-            formData.append('keywordIds', id)
-          })
-        }
-        
-        formData.append('file', uploadForm.value.file)
-        
-        // 新增评论相关字段
-        formData.append('firstComment', uploadForm.value.firstComment || '')
-        formData.append('commentVisibleType', uploadForm.value.commentVisibleType)
-        
-        // 处理评论文件
-        if (uploadForm.value.commentFiles && uploadForm.value.commentFiles.length > 0) {
-          uploadForm.value.commentFiles.forEach((file, index) => {
-            formData.append('commentFiles', file)
-          })
-        }
-        
-        // 调用后端的add方法
-        await addLiterature(formData)
-        
-        uploadOpen.value = false
-        fileList.value = [] // 清空文献文件列表
-        commentFileList.value = [] // 清空评论文件列表
-        proxy.$modal.msgSuccess("上传成功")
-        getList()
-      } catch (error) {
-        console.error('上传失败:', error)
-        proxy.$modal.msgError(error.message || "上传失败")
+      // 创建FormData对象
+      const formData = new FormData()
+      formData.append('title', uploadForm.value.title || '')
+      formData.append('authors', uploadForm.value.authors || '')
+      formData.append('journal', uploadForm.value.journal || '')
+      formData.append('abstract', uploadForm.value.abstract || '')
+      
+      // 处理发表时间 - 只有当有值时才添加
+      if (uploadForm.value.publishTime) {
+        formData.append('publishTime', uploadForm.value.publishTime)
       }
+      
+      // 处理关键词 - 只有当有值时才添加
+      if (uploadForm.value.keywordIds && uploadForm.value.keywordIds.length > 0) {
+        uploadForm.value.keywordIds.forEach((id) => {
+          formData.append('keywordIds', id)
+        })
+      }
+      
+      formData.append('file', uploadForm.value.file)
+      
+      // 新增评论相关字段
+      formData.append('firstComment', uploadForm.value.firstComment || '')
+      formData.append('commentVisibleType', uploadForm.value.commentVisibleType)
+      
+      // 处理评论文件
+      if (uploadForm.value.commentFiles && uploadForm.value.commentFiles.length > 0) {
+        uploadForm.value.commentFiles.forEach((file, index) => {
+          formData.append('commentFiles', file)
+        })
+      }
+      
+      // 显示后台上传提示
+      ElMessage.info("正在后台上传文献，请稍候...")
+      
+      // 重置表单并关闭对话框，允许用户继续操作
+      const title = uploadForm.value.title || '文献'
+      resetUploadForm()
+      uploadOpen.value = false
+      
+      // 后台上传文件，不阻塞用户操作
+      const uploadLiteratureInBackground = async () => {
+        try {
+          // 调用后端的add方法
+          await addLiterature(formData)
+          
+          proxy.$modal.msgSuccess("文献上传成功")
+          getList() // 刷新列表以显示新上传的文献
+        } catch (error) {
+          console.error('上传失败:', error)
+          proxy.$modal.msgError(error.message || "文献上传失败")
+        }
+      }
+      
+      // 启动后台上传
+      uploadLiteratureInBackground()
     }
   })
 }
