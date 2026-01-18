@@ -1455,6 +1455,9 @@ const querySelectableParticipantUser = async (query) => {
 // 下载投稿流程文件
 const downloadFile = async (fileId, fileName) => {
   try {
+    // 显示正在后台下载的提示
+    ElMessage.info('正在后台下载文件，请稍候...')
+    
     const response = await downloadSubmissionProcessFile(fileId)
     // 创建下载链接并触发下载
     const blob = new Blob([response])
@@ -1467,6 +1470,7 @@ const downloadFile = async (fileId, fileName) => {
     // 清理
     window.URL.revokeObjectURL(url)
     document.body.removeChild(link)
+    ElMessage.success('文件下载成功')
   } catch (error) {
     ElMessage.error('文件下载失败')
     console.error('文件下载失败:', error)

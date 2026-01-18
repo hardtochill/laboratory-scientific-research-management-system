@@ -583,7 +583,12 @@ async function handleLike(comment) {
 
 /** 下载文件 */
 async function downloadFile(fileId, fileName) {
-    download(`/commentFile/download/${fileId}`, {}, fileName)
+    // 使用异步方式下载，不阻塞用户操作
+    try {
+        await download(`/commentFile/download/${fileId}`, {}, fileName, {}, false)
+    } catch (error) {
+        console.error('文件下载失败:', error)
+    }
 }
 
 /** 排序变化处理 */

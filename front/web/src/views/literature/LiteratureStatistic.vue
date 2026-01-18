@@ -177,6 +177,7 @@ import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
 import { getCurrentInstance } from "vue"
+import { ElMessage} from 'element-plus'
 
 const router = useRouter()
 const { proxy } = getCurrentInstance()
@@ -449,6 +450,9 @@ async function handleExport() {
   }
 
   try {
+    // 显示正在后台下载的提示
+     ElMessage.info('正在后台下载文件，请稍候...')
+    
     const res = await exportStatistics(
       queryParams.value.startTime,
       queryParams.value.endTime,
@@ -461,9 +465,11 @@ async function handleExport() {
     const fileName = `文献阅读统计_${parseTime(queryParams.value.startTime, '{y}{m}{d}')}-${parseTime(queryParams.value.endTime, '{y}{m}{d}')}_${parseTime(new Date(), '{y}{m}{d}{h}{i}{s}')}.xlsx`
     link.download = fileName
     link.click()
-    proxy.$modal.msgSuccess("导出成功")
+    
+    // 可以选择不显示成功提示，避免打扰用户
+    proxy.$modal.msgSuccess("文件导出成功")
   } catch (error) {
-    proxy.$modal.msgError("导出失败")
+    proxy.$modal.msgError("导出失败: "+error)
   }
 }
 

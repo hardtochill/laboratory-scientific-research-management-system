@@ -516,8 +516,15 @@ function cancelEdit() {
 }
 
 /** 下载按钮操作 */
-function handleDownload(row) {
-  download(`/literature/download/${row.id}`, {}, `${row.title}.pdf`)
+async function handleDownload(row) {
+  // 使用异步方式下载，不阻塞用户操作
+  try {
+    await download(`/literature/download/${row.id}`, {}, `${row.title}.pdf`, {}, false)
+    ElMessage.success('文件下载成功')
+  } catch (error) {
+    console.error('文件下载失败:', error)
+    // 错误提示已经在download函数中处理，这里可以不重复提示
+  }
 }
 
 /** 监听表格排序 */

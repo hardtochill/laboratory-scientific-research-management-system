@@ -524,7 +524,7 @@ const formData = reactive({
   parentTaskId: '0', // 默认一级任务
   taskName: '',
   taskDescription: '',
-  taskStatus: '1', // 默认未开始
+  taskStatus: '1', 
   participantUserIds: [], // 参与用户ID列表
   expectedFinishTime: null,
   actualFinishTime: null,
@@ -1099,7 +1099,14 @@ const handleUploadFiles = async () => {
 
 // 下载文件
 const handleDownloadFile = async (file) => {
-  download(`/taskFile/download/${file.id}`, {}, file.fileName+"."+file.fileType)
+  // 使用异步方式下载，不阻塞用户操作
+  try {
+    await download(`/taskFile/download/${file.id}`, {}, file.fileName+"."+file.fileType, {}, false)
+    ElMessage.success('文件下载成功')
+  } catch (error) {
+    console.error('文件下载失败:', error)
+    // 错误提示已经在download函数中处理，这里可以不重复提示
+  }
 }
 
 // 删除文件
