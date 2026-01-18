@@ -771,13 +771,25 @@ const participantUserLoading = ref(false)
 const loadSubmissionPlans = async () => {
   loading.value = true
   try {
+    // 保存当前所有计划的展开状态和流程数据
+    const expandedPlans = new Map(
+      submissionPlans.value
+        .filter(plan => plan.expanded && plan.processes && plan.processes.length > 0)
+        .map(plan => [plan.id, { processes: plan.processes }])
+    )
+    
     const response = await listSubmissionPlans(queryParams.value)
-    submissionPlans.value = (response.rows || []).map((plan) => ({
-      ...plan,
-      expanded: false,
-      loading: false,
-      processes: []
-    }))
+    submissionPlans.value = (response.rows || []).map((plan) => {
+      const savedPlanData = expandedPlans.get(plan.id)
+      return {
+        ...plan,
+        // 恢复之前的展开状态
+        expanded: expandedPlans.has(plan.id),
+        loading: false,
+        // 恢复之前的流程数据，如果有的话
+        processes: savedPlanData ? savedPlanData.processes : []
+      }
+    })
     total.value = response.total || 0
   } catch (error) {
     ElMessage.error('加载投稿计划失败')
