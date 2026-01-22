@@ -176,7 +176,7 @@
     </el-card>
 
     <!-- 投稿计划详情对话框 -->
-    <el-dialog v-model="planDialogVisible" :title="planDialogTitle" width="600px" :before-close="handlePlanDialogClose">
+    <el-dialog v-model="planDialogVisible" :title="planDialogTitle" width="650px" :before-close="handlePlanDialogClose">
       <div v-if="currentPlan" class="submission-detail">
         <el-descriptions :column="1" border>
           <el-descriptions-item label="计划名称">
@@ -197,7 +197,7 @@
             {{ currentPlan.createUserNickName || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
-            {{ parseTime(currentPlan.createTime) }}
+            {{ parseTime(currentPlan.submissionCreateTime) }}
           </el-descriptions-item>
           <el-descriptions-item label="参与用户">
             {{currentPlan.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-'}}
