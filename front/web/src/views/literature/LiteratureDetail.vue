@@ -244,7 +244,7 @@
                     <el-tooltip :content="commentFormType === 'reply' ? '回复时可不上传文件' : '请至少上传一个关联文件'" placement="top">
                         <el-upload ref="commentUploadRef" action="#" :auto-upload="false"
                             v-model:file-list="commentForm.files" :on-change="handleFileChange"
-                            :on-remove="handleFileRemove" multiple>
+                            :on-remove="handleFileRemove" multiple style="width: 100%;">
                             <el-button type="primary">选择文件</el-button>
                         </el-upload>
                     </el-tooltip>
