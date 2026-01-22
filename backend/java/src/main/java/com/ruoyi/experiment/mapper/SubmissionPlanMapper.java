@@ -6,6 +6,7 @@ import com.ruoyi.experiment.pojo.dto.SubmissionPlanQueryDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionPlanVO;
+import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -60,4 +61,12 @@ public interface SubmissionPlanMapper {
      * @return 投稿计划列表
      */
     List<SubmissionPlanVO> selectVOList(String name,Long participantUserId);
+
+    /**
+     * 查询计划的参与用户列表，用于作为流程审核人
+     * @param planId
+     * @param nickName
+     * @return
+     */
+    List<UserForSelectVO> selectUserVOForSelect(Long planId, String nickName);
 }

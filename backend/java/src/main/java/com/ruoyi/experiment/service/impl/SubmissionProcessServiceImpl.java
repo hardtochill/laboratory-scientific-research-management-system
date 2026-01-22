@@ -289,11 +289,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     }
 
     @Override
-    public List<UserForSelectVO> listReviewerUsersForSelect(String nickName) {
-        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
-        queryDTO.setNickName(nickName);
-        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
-        queryDTO.setRoleKey(RoleEnums.TEACHER.getRoleKey());
-        return userMapper.selectVOForSelect(queryDTO);
+    public List<UserForSelectVO> listReviewerUsersForSelect(Long planId,String nickName) {
+        return submissionPlanMapper.selectUserVOForSelect(planId,nickName);
     }
 }

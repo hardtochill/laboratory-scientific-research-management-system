@@ -56,5 +56,5 @@ public interface SubmissionProcessService {
     /**
      * 获取审核人用户列表（用于前端用户选择）
      */
-    List<UserForSelectVO> listReviewerUsersForSelect(String nickName);
+    List<UserForSelectVO> listReviewerUsersForSelect(Long planId,String nickName);
 }

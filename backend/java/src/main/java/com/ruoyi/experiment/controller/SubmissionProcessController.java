@@ -76,7 +76,7 @@ public class SubmissionProcessController extends BaseController {
      * 获取审核人用户列表（用于前端用户选择）
      */
     @GetMapping("/listReviewerUsersForSelect")
-    public AjaxResult listReviewerUsersForSelect(String nickName) {
-        return AjaxResult.success(submissionProcessService.listReviewerUsersForSelect(nickName));
+    public AjaxResult listReviewerUsersForSelect(Long planId,String nickName) {
+        return AjaxResult.success(submissionProcessService.listReviewerUsersForSelect(planId,nickName));
     }
 }

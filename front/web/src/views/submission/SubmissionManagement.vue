@@ -1099,6 +1099,7 @@ const handleProcessEdit = async () => {
     try {
       // 调用API获取审核人信息
       const response = await getSelectableReviewerUsers({
+        planId: currentProcess.value.planId,
         nickName: '' // 传递空字符串获取所有审核人，或者可以尝试获取特定用户
       })
       const reviewers = response.data || []
@@ -1410,6 +1411,7 @@ const querySelectableReviewers = async (query) => {
   reviewerLoading.value = true
   try {
     const response = await getSelectableReviewerUsers({
+      planId: processFormData.planId,
       nickName: query
     })
     selectableReviewers.value = response.data || []

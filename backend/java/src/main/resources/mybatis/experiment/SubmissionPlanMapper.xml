@@ -27,6 +27,15 @@
             <if test="name != null and name != ''">and sp.name like concat('%', #{name}, '%')</if>
         </where>
     </select>
+    <select id="selectUserVOForSelect" resultType="com.ruoyi.project.system.domain.vo.UserForSelectVO">
+        select su.user_id as userId,su.user_name as userName,su.nick_name as nickName
+        from submission_plan_user spu inner join sys_user su on spu.user_id=su.user_id
+        <where>
+            spu.plan_id = #{planId}
+            <if test="nickName!=null and nickName!=''">and su.nick_name like concat('%', #{nickName}, '%')</if>
+        </where>
+        order by su.user_id asc
+    </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="com.ruoyi.experiment.pojo.entity.SubmissionPlan">
         insert into submission_plan (name, create_user_id, create_user_nick_name, type, journal, status, remark, submission_create_time, create_time, update_time)
