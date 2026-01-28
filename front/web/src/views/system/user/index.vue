@@ -139,8 +139,8 @@
         </el-row>
         <el-row>
           <el-col :span="12">
-            <el-form-item label="角色">
-              <el-select v-model="form.roleIds" multiple placeholder="请选择">
+            <el-form-item label="角色" prop="roleIds">
+              <el-select v-model="form.roleIds" placeholder="请选择">
                 <el-option v-for="item in roleOptions" :key="item.roleId" :label="item.roleName" :value="item.roleId" :disabled="item.status == 1"></el-option>
               </el-select>
             </el-form-item>
@@ -267,7 +267,8 @@ const data = reactive({
     nickName: [{ required: true, message: "用户姓名不能为空", trigger: "blur" }],
     password: [{ required: true, message: "用户密码不能为空", trigger: "blur" }, { min: 5, max: 20, message: "用户密码长度必须介于 5 和 20 之间", trigger: "blur" }, { pattern: /^[^<>"'|\\]+$/, message: "不能包含非法字符：< > \" ' \\\ |", trigger: "blur" }],
     email: [{ type: "email", message: "请输入正确的邮箱地址", trigger: ["blur", "change"] }],
-    phonenumber: [{ pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: "请输入正确的手机号码", trigger: "blur" }]
+    phonenumber: [{ pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: "请输入正确的手机号码", trigger: "blur" }],
+    roleIds: [{ required: true, message: "角色不能为空", trigger: "change" }]
   }
 })
 
@@ -452,7 +453,11 @@ function handleUpdate(row) {
       form.value.graduateFlag = parseInt(form.value.graduateFlag)
     }
     roleOptions.value = response.roles
-    form.value.roleIds = response.roleIds
+    if (Array.isArray(response.roleIds) && response.roleIds.length > 0) {
+      form.value.roleIds = response.roleIds[0]
+    } else {
+      form.value.roleIds = response.roleIds
+    }
     open.value = true
     title.value = "修改用户"
     form.password = ""
@@ -463,14 +468,18 @@ function handleUpdate(row) {
 function submitForm() {
   proxy.$refs["userRef"].validate(valid => {
     if (valid) {
-      if (form.value.userId != undefined) {
-        updateUser(form.value).then(response => {
+      const formData = { ...form.value }
+      if (formData.roleIds && !Array.isArray(formData.roleIds)) {
+        formData.roleIds = [formData.roleIds]
+      }
+      if (formData.userId != undefined) {
+        updateUser(formData).then(response => {
           proxy.$modal.msgSuccess("修改成功")
           open.value = false
           getList()
         })
       } else {
-        addUser(form.value).then(response => {
+        addUser(formData).then(response => {
           proxy.$modal.msgSuccess("新增成功")
           open.value = false
           getList()
