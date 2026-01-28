@@ -17,13 +17,17 @@
       </el-form>
 
       <h4 class="form-header h4">角色信息</h4>
-      <el-table v-loading="loading" :row-key="getRowKey" @row-click="clickRow" ref="roleRef" @selection-change="handleSelectionChange" :data="roles.slice((pageNum - 1) * pageSize, pageNum * pageSize)">
+      <el-table v-loading="loading" :row-key="getRowKey" @row-click="clickRow" ref="roleRef" :data="roles.slice((pageNum - 1) * pageSize, pageNum * pageSize)">
          <el-table-column label="序号" width="55" type="index" align="center">
             <template #default="scope">
                <span>{{ (pageNum - 1) * pageSize + scope.$index + 1 }}</span>
             </template>
          </el-table-column>
-         <el-table-column type="selection" :reserve-selection="true" :selectable="checkSelectable" width="55"></el-table-column>
+         <el-table-column label="选择" width="55" align="center">
+            <template #default="scope">
+               <el-radio v-model="selectedRoleId" :label="scope.row.roleId" :disabled="!checkSelectable(scope.row)"></el-radio>
+            </template>
+         </el-table-column>
          <el-table-column label="角色编号" align="center" prop="roleId" />
          <el-table-column label="角色名称" align="center" prop="roleName" />
          <el-table-column label="权限字符" align="center" prop="roleKey" />
@@ -55,7 +59,7 @@ const loading = ref(true)
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(10)
-const roleIds = ref([])
+const selectedRoleId = ref(undefined)
 const roles = ref([])
 const form = ref({
   nickName: undefined,
@@ -66,13 +70,8 @@ const form = ref({
 /** 单击选中行数据 */
 function clickRow(row) {
   if (checkSelectable(row)) {
-    proxy.$refs["roleRef"].toggleRowSelection(row)
+    selectedRoleId.value = row.roleId
   }
-}
-
-/** 多选框选中数据 */
-function handleSelectionChange(selection) {
-  roleIds.value = selection.map(item => item.roleId)
 }
 
 /** 保存选中的数据编号 */
@@ -93,9 +92,12 @@ function close() {
 
 /** 提交按钮 */
 function submitForm() {
+  if (!selectedRoleId.value) {
+    proxy.$modal.msgWarning("请选择一个角色")
+    return
+  }
   const userId = form.value.userId
-  const rIds = roleIds.value.join(",")
-  updateAuthRole({ userId: userId, roleIds: rIds }).then(response => {
+  updateAuthRole({ userId: userId, roleIds: String(selectedRoleId.value) }).then(response => {
     proxy.$modal.msgSuccess("授权成功")
     close()
   })
@@ -110,11 +112,10 @@ function submitForm() {
       roles.value = response.roles
       total.value = roles.value.length
       nextTick(() => {
-        roles.value.forEach(row => {
-          if (row.flag) {
-            proxy.$refs["roleRef"].toggleRowSelection(row)
-          }
-        })
+        const selectedRole = roles.value.find(row => row.flag)
+        if (selectedRole) {
+          selectedRoleId.value = selectedRole.roleId
+        }
       })
       loading.value = false
     })

@@ -54,6 +54,11 @@
               <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
               <el-table-column label="用户学号" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
               <el-table-column label="用户姓名" align="center" key="nickName" prop="nickName" v-if="columns[2].visible" :show-overflow-tooltip="true" />
+              <el-table-column label="角色" align="center" key="roles" width="120">
+                <template #default="scope">
+                  <span>{{ scope.row.roles && scope.row.roles.length > 0 ? scope.row.roles.map(r => r.roleName).join(', ') : '-' }}</span>
+                </template>
+              </el-table-column>
               <el-table-column label="手机号码" align="center" key="phonenumber" prop="phonenumber" v-if="columns[3].visible" width="120" />
               <el-table-column label="状态" align="center" key="status" v-if="columns[4].visible">
                 <template #default="scope">
@@ -205,6 +210,7 @@
 </template>
 
 <script setup name="User">
+import { onActivated, onMounted } from "vue"
 import { getToken } from "@/utils/auth"
 import useAppStore from '@/store/modules/app'
 import { changeUserStatus, listUser, resetUserPwd, delUser, getUser, updateUser, addUser } from "@/api/system/user"
@@ -494,5 +500,9 @@ onMounted(() => {
   proxy.getConfigKey("sys.user.initPassword").then(response => {
     initPassword.value = response.msg
   })
+})
+
+onActivated(() => {
+  getList()
 })
 </script>
