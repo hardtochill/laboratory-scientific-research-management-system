@@ -71,6 +71,16 @@
           <span>{{ scope.row.finalScore }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="上传用户" align="center" prop="uploadUserName" v-if="columns[8].visible" width="150" :show-overflow-tooltip="true">
+        <template #default="scope">
+          <span>{{ scope.row.uploadUserNickName }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="最近评论" align="center" prop="uploadUserName" v-if="columns[9].visible" width="150" :show-overflow-tooltip="true">
+        <template #default="scope">
+          <span>{{ scope.row.recentCommentUserNickName }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" fixed="right" align="center" width="200" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-tooltip content="详情" placement="top">
@@ -291,7 +301,9 @@ const columns = ref([
   { key: 4, label: `DOI`, visible: true },
   { key: 5, label: `发表时间`, visible: true },
   { key: 6, label: `下载数`, visible: true },
-  { key: 7, label: `评分`, visible: true }
+  { key: 7, label: `评分`, visible: true },
+  { key: 8, label: `上传用户`, visible: true },
+  { key: 9, label: `最近评论`, visible: true }
 ])
 
 const data = reactive({

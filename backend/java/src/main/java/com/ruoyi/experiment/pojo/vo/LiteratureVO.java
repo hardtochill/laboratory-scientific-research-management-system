@@ -55,4 +55,16 @@ public class LiteratureVO {
      * 关键词列表（以逗号分隔的字符串）
      */
     private String keywords;
+    /**
+     * 上传用户id
+     */
+    private Long uploadUserId;
+    /**
+     * 上传用户昵称
+     */
+    private String uploadUserNickName;
+    /**
+     * 最近评论用户
+     */
+    private String recentCommentUserNickName;
 }
