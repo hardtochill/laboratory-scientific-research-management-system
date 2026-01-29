@@ -27,6 +27,10 @@
                             style="margin-right: 6px">{{ keyword.keywordName }}</el-tag>
                     </div>
                     <div class="info-item">
+                        <span class="label">DOI：</span>
+                        <span style="color: #555;">{{ literature.doi }}</span>
+                    </div>
+                    <div class="info-item">
                         <span class="label">下载数：</span>
                         <span style="color: #555;">{{ literature.downloadCount }}</span>
                     </div>

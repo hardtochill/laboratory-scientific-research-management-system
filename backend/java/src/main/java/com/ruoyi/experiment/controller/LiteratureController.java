@@ -73,10 +73,11 @@ public class LiteratureController extends BaseController {
     @PostMapping("/add")
     public AjaxResult add(
             @RequestParam("title") String title,
-            @RequestParam(value = "authors", required = false) String authors,
-            @RequestParam(value = "journal", required = false) String journal,
-            @RequestParam(value = "publishTime", required = false) LocalDate publishTime,
-            @RequestParam(value = "abstract", required = false) String abstractText,
+            @RequestParam(value = "authors") String authors,
+            @RequestParam(value = "journal") String journal,
+            @RequestParam(value = "doi") String doi,
+            @RequestParam(value = "publishTime") LocalDate publishTime,
+            @RequestParam(value = "abstract") String abstractText,
             @RequestParam(value = "keywordIds", required = false) List<Long> keywordIds,
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "firstComment") String firstComment,
@@ -88,6 +89,7 @@ public class LiteratureController extends BaseController {
         literatureDTO.setTitle(title);
         literatureDTO.setAuthors(authors);
         literatureDTO.setJournal(journal);
+        literatureDTO.setDoi(doi);
         literatureDTO.setPublishTime(publishTime);
         literatureDTO.setAbstractText(abstractText);
         literatureDTO.setKeywordIds(keywordIds);

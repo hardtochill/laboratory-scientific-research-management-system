@@ -4,18 +4,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.LiteratureMapper">
     <insert id="insertLiterature" useGeneratedKeys="true" keyProperty="id">
-        insert into literature (title, identifier, authors, journal, publish_time, abstract_text, download_count,
+        insert into literature (title, identifier, authors, journal, doi, publish_time, abstract_text, download_count,
                                 teacher_score_avg, teacher_score_count, student_score_avg, student_score_count,
                                 final_score,
                                 upload_user_id, upload_user_nick_name, upload_time, create_time, update_time)
-        values (#{title}, #{identifier}, #{authors}, #{journal}, #{publishTime}, #{abstractText}, #{downloadCount},
+        values (#{title}, #{identifier}, #{authors}, #{journal}, #{doi}, #{publishTime}, #{abstractText}, #{downloadCount},
                 #{teacherScoreAvg}, #{teacherScoreCount}, #{studentScoreAvg}, #{studentScoreCount}, #{finalScore},
                 #{uploadUserId}, #{uploadUserNickName}, #{uploadTime}, #{createTime}, #{updateTime})
     </insert>
 
     <!-- 根据查询条件查询文献列表 -->
     <select id="selectLiteratureList" resultType="com.ruoyi.experiment.pojo.vo.LiteratureVO">
-        select literature.id, title, authors, journal, publish_time, download_count, final_score,score,
+        select literature.id, title, authors, journal,doi, publish_time, download_count, final_score,score,
                group_concat(k.keyword_name order by k.usage_count desc, k.keyword_name asc separator ', ') as keywords
         from literature 
         left join literature_score on literature.id = literature_score.literature_id and #{queryDTO.userId} = literature_score.user_id
@@ -80,6 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="identifier != null">identifier = #{identifier},</if>
             <if test="authors != null">authors = #{authors},</if>
             <if test="journal != null">journal = #{journal},</if>
+            <if test="doi != null">doi = #{doi},</if>
             <if test="publishTime != null">publish_time = #{publishTime},</if>
             <if test="abstractText != null">abstract_text = #{abstractText},</if>
             <if test="updateTime != null">update_time = #{updateTime},</if>
@@ -94,7 +95,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <!-- 根据文献id查询文献详情 -->
     <select id="selectLiteratureDetail" resultType="com.ruoyi.experiment.pojo.vo.LiteratureDetailVO">
-        select id, title, authors, journal, publish_time, abstract_text as abstractText,
+        select id, title, authors, journal,doi, publish_time, abstract_text as abstractText,
                download_count as downloadCount,final_score as finalScore,
                upload_user_id as uploadUserId, upload_user_nick_name as uploadUserNickName,
                upload_time as uploadTime

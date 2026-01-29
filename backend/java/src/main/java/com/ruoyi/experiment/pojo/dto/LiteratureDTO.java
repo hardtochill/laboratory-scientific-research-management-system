@@ -37,6 +37,10 @@ public class LiteratureDTO {
      * 期刊名称
      */
     private String journal;
+     /**
+     * 文献doi
+     */
+    private String doi;
     /**
      * 文献发表时间
      */

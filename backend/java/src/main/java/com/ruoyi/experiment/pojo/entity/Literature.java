@@ -33,6 +33,10 @@ public class Literature extends BaseEntity {
      */
     private String journal;
     /**
+     * 文献doi
+     */
+    private String doi;
+    /**
      * 发表时间
      */
     private LocalDate publishTime;

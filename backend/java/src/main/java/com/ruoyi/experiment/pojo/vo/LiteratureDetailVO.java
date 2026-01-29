@@ -32,6 +32,10 @@ public class LiteratureDetailVO {
      * 期刊/会议名称
      */
     private String journal;
+     /**
+     * 文献doi
+     */
+    private String doi;
     /**
      * 发表时间
      */
