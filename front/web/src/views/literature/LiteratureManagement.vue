@@ -607,7 +607,6 @@ async function handleDownload(row) {
     ElMessage.success('文件下载成功')
   } catch (error) {
     console.error('文件下载失败:', error)
-    // 错误提示已经在download函数中处理，这里可以不重复提示
   }
 }
 

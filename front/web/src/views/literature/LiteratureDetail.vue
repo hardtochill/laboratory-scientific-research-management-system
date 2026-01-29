@@ -40,7 +40,11 @@
                     </div>
                     <div class="info-item">
                         <span class="label">上传用户：</span>
-                        <span style="color: #555;">{{ literature.uploadUserNickName }}</span>
+                        <span style="color: #495057;">{{ literature.uploadUserNickName }}</span>
+                        <el-button type="primary" size="medium" @click="handleDownload" class="download-button-inline">
+                            <el-icon><Download /></el-icon>
+                            下载文献
+                        </el-button>
                     </div>
                 </div>
             </div>
@@ -126,7 +130,7 @@
                         <div v-if="comment.commentFiles && comment.commentFiles.length > 0" class="related-files">
                             <span class="files-label">关联文件：</span>
                             <el-button v-for="file in comment.commentFiles" :key="file.id" type="text" class="file-link"
-                                @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                @click="downloadCommentFile(file.id, file.fileName + '.' + file.fileType)">
                                 {{ file.fileName }}.{{ file.fileType }}
                             </el-button>
                         </div>
@@ -205,7 +209,7 @@
                                         <span class="files-label">关联文件：</span>
                                         <el-button v-for="file in childComment.commentFiles" :key="file.id" type="text"
                                             class="file-link"
-                                            @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                            @click="downloadCommentFile(file.id, file.fileName + '.' + file.fileType)">
                                             {{ file.fileName }}.{{ file.fileType }}
                                         </el-button>
                                     </div>
@@ -310,7 +314,7 @@
 import { ref, onActivated, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from "vue-router"
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, Download } from '@element-plus/icons-vue'
 import SvgIcon from '@/components/SvgIcon'
 import { getLiteratureDetail, scoreLiterature } from '@/api/literature/literature'
 import { listParentComments, listChildComments, toggleLike, addComment, deleteComment, changeVisibleType } from '@/api/comment/comment'
@@ -476,6 +480,20 @@ async function handleScoreChange(newScore) {
     }
 }
 
+/** 下载文献 */
+async function handleDownload() {
+    if (!literature.value.id) {
+        ElMessage.error('文献ID错误')
+        return
+    }
+    try {
+        await download(`/literature/download/${literature.value.id}`, {}, `${literature.value.title}.pdf`, {}, false)
+        ElMessage.success('文件下载成功')
+    } catch (error) {
+        console.error('文件下载失败:', error)
+    }
+}
+
 /** 页面加载时获取数据 */
 onActivated(() => {
     getDetail()
@@ -581,8 +599,8 @@ async function handleLike(comment) {
     }
 }
 
-/** 下载文件 */
-async function downloadFile(fileId, fileName) {
+/** 下载评论文件 */
+async function downloadCommentFile(fileId, fileName) {
     // 使用异步方式下载，不阻塞用户操作
     try {
         await download(`/commentFile/download/${fileId}`, {}, fileName, {}, false)
@@ -979,6 +997,8 @@ async function submitComment() {
 
 .info-item {
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
 }
 
 .label {
@@ -988,14 +1008,18 @@ async function submitComment() {
 }
 
 .abstract-text {
-    margin-top: 5px;
-    padding: 10px;
-    background-color: #f5f5f5;
-    color: #555;
-    font-style: normal;
+    margin-top: 8px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    color: #495057;
     font-size: 14px;
-    border-radius: 4px;
-    line-height: 1.6;
+    border-radius: 6px;
+    line-height: 1.8;
+    border-left: 3px solid #79bbff;
+}
+
+.download-button-inline {
+    margin-left: auto;
 }
 
 .section-header {
