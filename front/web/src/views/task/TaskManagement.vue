@@ -75,63 +75,71 @@
         <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
           <!-- 任务行 -->
           <div class="task-row">
-            <!-- 左侧内容区域 -->
-            <div class="left-content">
-              <!-- 展开/收起按钮容器 -->
-              <div class="expand-btn-container">
-                <el-button type="text" @click.stop="toggleSubTasks(task)"
-                  :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
+            <!-- 第一行：任务信息 -->
+            <div class="task-main-row">
+              <!-- 左侧内容区域 -->
+              <div class="left-content">
+                <!-- 展开/收起按钮容器 -->
+                <div class="expand-btn-container">
+                  <el-button type="text" @click.stop="toggleSubTasks(task)"
+                    :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
+                </div>
+
+                <!-- 任务名称 -->
+                <span class="task-name">{{ task.taskName }}</span>
+
+                <!-- 任务状态 -->
+                <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
+                  {{ getStatusText(task.taskStatus) }}
+                </el-tag>
+
+                <!-- 任务进度条 -->
+                <div class="progress-container">
+                  <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
+                    :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11"
+                    striped striped-flow :duration="200"></el-progress>
+                </div>
               </div>
 
-              <!-- 任务名称 -->
-              <span class="task-name">{{ task.taskName }}</span>
-
-              <!-- 任务状态 -->
-              <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
-                {{ getStatusText(task.taskStatus) }}
-              </el-tag>
-
-              <!-- 任务进度条 -->
-              <div class="progress-container">
-                <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
-                  :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11"
-                  striped striped-flow :duration="200"></el-progress>
+              <!-- 右侧按钮区域 -->
+              <div class="right-buttons">
+                <!-- 新增子任务按钮 -->
+                <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
+                  <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
+                </el-tooltip>
+                <!-- 任务详情按钮 -->
+                <el-tooltip content="任务详情" placement="top">
+                  <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Document"
+                    style="margin-left: 0px;"></el-button>
+                </el-tooltip>
+                <!-- 文件信息按钮 -->
+                <el-tooltip content="文件信息" placement="top">
+                  <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files" style="margin-left: 0px;"></el-button>
+                </el-tooltip>
+                <!-- 修改状态下拉菜单 -->
+                <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
+                  <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
+                    <el-button link type="primary" :icon="Switch"></el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="1">未开始</el-dropdown-item>
+                        <el-dropdown-item command="2">进行中</el-dropdown-item>
+                        <el-dropdown-item command="3">已完成</el-dropdown-item>
+                        <el-dropdown-item command="4">已跳过</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </el-tooltip>
+                <!-- 删除任务按钮 -->
+                <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
+                  <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
+                </el-tooltip>
               </div>
             </div>
 
-            <!-- 右侧按钮区域 -->
-            <div class="right-buttons">
-              <!-- 新增子任务按钮 -->
-              <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
-                <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
-              </el-tooltip>
-              <!-- 任务详情按钮 -->
-              <el-tooltip content="任务详情" placement="top">
-                <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Document"
-                  style="margin-left: 0px;"></el-button>
-              </el-tooltip>
-              <!-- 文件信息按钮 -->
-              <el-tooltip content="文件信息" placement="top">
-                <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files" style="margin-left: 0px;"></el-button>
-              </el-tooltip>
-              <!-- 修改状态下拉菜单 -->
-              <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
-                <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
-                  <el-button link type="primary" :icon="Switch"></el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="1">未开始</el-dropdown-item>
-                      <el-dropdown-item command="2">进行中</el-dropdown-item>
-                      <el-dropdown-item command="3">已完成</el-dropdown-item>
-                      <el-dropdown-item command="4">已跳过</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
-              </el-tooltip>
-              <!-- 删除任务按钮 -->
-              <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
-                <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
-              </el-tooltip>
+            <!-- 第二行：参与用户 -->
+            <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
+              <span class="participant-users">参与用户：{{ task.participantUsers.map(user => user.nickName).join(', ') }}</span>
             </div>
           </div>
 
@@ -1204,17 +1212,24 @@ onMounted(async () => {
 
 .task-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 12px 16px;
   background-color: #f9f9f9;
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s;
+  border-left: 3px solid #79bbff;
 }
 
 .task-row:hover {
   background-color: #f0f0f0;
+}
+
+.task-main-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
 }
 
 .left-content {
@@ -1230,14 +1245,33 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.participant-users-row {
+  margin-top: 8px;
+  padding-left: 28px;
+}
+
+.task-info {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  margin: 0 16px 0 0;
+  min-width: 150px;
+  max-width: 400px;
+}
+
 .task-name {
   flex: 0 1 auto;
-  margin: 0 16px 0 0;
   font-weight: 600;
   font-size: 16px;
   color: #2c3e50;
-  min-width: 100px;
-  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.participant-users {
+  font-size: 13px;
+  color: #606266;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

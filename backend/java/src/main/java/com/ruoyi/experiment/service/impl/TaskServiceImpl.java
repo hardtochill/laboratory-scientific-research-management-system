@@ -51,7 +51,13 @@ public class TaskServiceImpl implements TaskService {
         // 1.获取分页的任务列表
         List<TaskVO> tasks = selectParentTaskList(taskQueryDTO);
         
-        // 2.统计各状态任务个数
+        // 2.为每个任务加载参与用户信息
+        for (TaskVO task : tasks) {
+            List<SysUser> participantUsers = taskUserMapper.selectUsersByTaskId(task.getTaskId());
+            task.setParticipantUsers(participantUsers);
+        }
+        
+        // 3.统计各状态任务个数
         Long pendingCount = 0L;
         Long processingCount = 0L;
         Long finishedCount = 0L;
@@ -69,7 +75,7 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         
-        // 3.创建返回结果
+        // 4.创建返回结果
         TaskStatisticsVO result = new TaskStatisticsVO();
         result.setList(tasks);
         result.setPendingCount(pendingCount);
