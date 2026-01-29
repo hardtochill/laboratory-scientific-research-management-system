@@ -62,7 +62,7 @@ public class CommentServiceImpl implements CommentService {
         }
         // 2.查询评论列表
         List<CommentVO> commentVOList;
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if(isTeacher){
             commentVOList = commentMapper.selectParentCommentListForTeacher(commentQueryDTO);
         }else{
@@ -92,7 +92,7 @@ public class CommentServiceImpl implements CommentService {
         commentQueryDTO.setSortOrder(CommentConstants.DEFAULT_SORT_ORDER);
         // 2.查询评论列表
         List<CommentVO> commentVOList;
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if(isTeacher){
             commentVOList = commentMapper.selectChildCommentListForTeacher(commentQueryDTO);
         }else{
@@ -197,7 +197,7 @@ public class CommentServiceImpl implements CommentService {
                 }
             }catch (Exception e){
                 log.error("文献评论模块-上传评论文件失败", e);
-                throw new ServiceException("评论文件上传失败");
+                throw new ServiceException("评论文件上传失败: "+e.getMessage());
             }
             // 8.保存评论文件
             commentFileMapper.insertBatch(commentFileList);
@@ -210,7 +210,7 @@ public class CommentServiceImpl implements CommentService {
         log.info("文献评论模块-删除评论：{}",commentId);
         // 1.权限校验
         Comment comment = commentMapper.selectById(commentId);
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
             // 2.递归删除评论及其子评论
             deleteCommentRecursively(commentId);
@@ -224,7 +224,7 @@ public class CommentServiceImpl implements CommentService {
         if(null==comment || !CommentConstants.FIRST_PARENT_COMMENT_ID.equals(comment.getParentId())){
             throw new ServiceException("评论状态异常");
         }
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if(isTeacher || SecurityUtils.getUserId().equals(comment.getUserId())){
             commentMapper.updateVisibleType(commentId, visibleType);
         }

@@ -53,7 +53,7 @@ public class ReviewServiceImpl implements ReviewService {
         if(null==review){
             throw new RuntimeException("审核记录不存在");
         }
-        boolean canReview = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || SecurityUtils.getUserId().equals(review.getReviewerUserId());
+        boolean canReview = SecurityUtils.isTeacher() || SecurityUtils.getUserId().equals(review.getReviewerUserId());
         if(!canReview){
             throw new RuntimeException("您没有权限操作该审核记录");
         }
@@ -81,7 +81,7 @@ public class ReviewServiceImpl implements ReviewService {
         if(null==review){
             throw new RuntimeException("审核记录不存在");
         }
-        boolean canReview = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || SecurityUtils.getUserId().equals(review.getReviewerUserId());
+        boolean canReview = SecurityUtils.isTeacher() || SecurityUtils.getUserId().equals(review.getReviewerUserId());
         if(!canReview){
             throw new RuntimeException("您没有权限操作该审核记录");
         }

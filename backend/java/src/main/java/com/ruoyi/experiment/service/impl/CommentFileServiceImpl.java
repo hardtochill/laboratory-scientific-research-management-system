@@ -92,7 +92,7 @@ public class CommentFileServiceImpl implements CommentFileService {
 
         // 2.权限校验
         Comment comment = commentMapper.selectById(commentFile.getCommentId());
-        boolean canDelete = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || comment.getUserId().equals(SecurityUtils.getUserId());
+        boolean canDelete = SecurityUtils.isTeacher() || comment.getUserId().equals(SecurityUtils.getUserId());
         if(!canDelete){
             throw new ServiceException("用户没有权限删除文件");
         }

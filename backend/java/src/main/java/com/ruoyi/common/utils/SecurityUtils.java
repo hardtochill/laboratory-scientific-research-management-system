@@ -3,6 +3,8 @@ package com.ruoyi.common.utils;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.ruoyi.experiment.enums.RoleEnums;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -122,6 +124,23 @@ public class SecurityUtils
     public static boolean isAdmin(Long userId)
     {
         return userId != null && 1L == userId;
+    }
+
+    /**
+     * 是否为教师
+     */
+    public static boolean isTeacher(){
+        return hasRole(RoleEnums.TEACHER.getRoleKey());
+    }
+
+    /**
+     * 是否为学生
+     */
+     public static boolean isStudent(){
+         List<SysRole> roleList = getLoginUser().getUser().getRoles();
+         Collection<String> roles = roleList.stream().map(SysRole::getRoleKey).collect(Collectors.toSet());
+         return roles.stream().filter(StringUtils::hasText)
+                 .anyMatch(x -> PatternMatchUtils.simpleMatch(x, RoleEnums.STUDENT.getRoleKey()));
     }
 
     /**

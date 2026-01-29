@@ -7,6 +7,7 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.constant.CommentConstants;
+import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.mapper.*;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
@@ -124,7 +125,7 @@ public class LiteratureServiceImpl implements LiteratureService {
             literatureScoreMapper.updateLiteratureScore(literatureScore);
         }
 
-        boolean isTeacher = SecurityUtils.hasRole("teacher");
+        boolean isTeacher = SecurityUtils.isTeacher();
 
         // todo 更新评分和计算评分改为定时任务触发
         // 更新文献的评分统计信息

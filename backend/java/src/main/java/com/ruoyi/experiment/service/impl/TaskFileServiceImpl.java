@@ -92,7 +92,7 @@ public class TaskFileServiceImpl implements TaskFileService {
         }
 
         // 2.权限校验
-        boolean canDelete = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || taskFile.getUserId().equals(SecurityUtils.getUserId());
+        boolean canDelete = SecurityUtils.isTeacher() || taskFile.getUserId().equals(SecurityUtils.getUserId());
         if(!canDelete){
             throw new ServiceException("用户没有权限删除文件");
         }
@@ -117,7 +117,7 @@ public class TaskFileServiceImpl implements TaskFileService {
      */
     private boolean canUploadFile(Long taskId) {
         // 检查是否为teacher身份
-        if (SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey())) {
+        if (SecurityUtils.isTeacher()) {
             return true;
         }
         // 检查是否为任务参与组中的用户

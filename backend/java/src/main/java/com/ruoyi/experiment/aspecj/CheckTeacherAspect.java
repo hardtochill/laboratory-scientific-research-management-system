@@ -20,7 +20,7 @@ public class CheckTeacherAspect {
     @Before("pointcut()")
     public void intercept() {
         // 校验教师角色逻辑
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if (!isTeacher) {
             throw new IllegalArgumentException("非教师角色，无权限操作");
         }

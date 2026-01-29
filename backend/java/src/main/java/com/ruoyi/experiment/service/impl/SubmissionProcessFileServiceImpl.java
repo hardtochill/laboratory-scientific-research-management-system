@@ -92,7 +92,7 @@ public class SubmissionProcessFileServiceImpl implements SubmissionProcessFileSe
         SubmissionProcess submissionProcess = submissionProcessMapper.selectByProcessId(submissionProcessFile.getProcessId());
         SubmissionPlanDetailVO submissionPlan = submissionPlanMapper.selectById(submissionProcess.getPlanId());
 
-        boolean canDelete = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey()) || SecurityUtils.getUserId().equals(submissionPlan.getCreateUserId());
+        boolean canDelete = SecurityUtils.isTeacher() || SecurityUtils.getUserId().equals(submissionPlan.getCreateUserId());
         if (!canDelete) {
             throw new ServiceException("用户没有权限删除文件");
         }
