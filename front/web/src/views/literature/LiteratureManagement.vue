@@ -112,9 +112,9 @@
             <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="更换文献源文件">
-          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top">
-            <el-upload ref="editFileUpload" :file-list="editFileList" :limit="1" :on-exceed="editOnExceed" :on-change="editOnChange" :on-remove="editOnRemove" :auto-upload="false" accept=".pdf">
+        <el-form-item label="更换文献源文件" style="width: 100%;">
+          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
+            <el-upload style="width: 100%;" ref="editFileUpload" :file-list="editFileList" :limit="1" :on-exceed="editOnExceed" :on-change="editOnChange" :on-remove="editOnRemove" :auto-upload="false" accept=".pdf">
               <el-button type="warning">选择新文件</el-button>
             </el-upload>
           </el-tooltip>
@@ -156,9 +156,9 @@
               show-word-limit style="width: 100%;" />
           </el-form-item>
         </el-row>
-        <el-form-item label="文献文件" prop="file">
+        <el-form-item label="文献文件" prop="file" style="width: 100%;">
           <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top">
-          <el-upload ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange"
+          <el-upload style="width: 100%;" ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange"
             :on-remove="onRemove" :auto-upload="false" accept=".pdf">
             <el-button type="primary">选择文件</el-button>
           </el-upload>
@@ -179,8 +179,9 @@
         </el-form-item>
         <el-row>
           <el-form-item label="评论关联文件" prop="commentFiles" style="width: 100%;">
-              <el-upload ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList"
-                :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple>
+              <el-upload style="width: 100%;" ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList"
+                :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple
+                :accept="'.gif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,txt,.rar,.zip,.gz,.bz2,.pdf'">
                 <el-button type="primary">选择文件</el-button>
               </el-upload>
             </el-form-item>

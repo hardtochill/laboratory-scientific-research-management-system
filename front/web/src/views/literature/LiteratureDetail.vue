@@ -15,7 +15,7 @@
                 <div class="detail-info">
                     <div class="info-item">
                         <span class="label">发表时间：</span>
-                        <span>{{ parseTime(literature.publishTime, '{y}-{m}-{d}') }}</span>
+                        <span style="color: #555;">{{ parseTime(literature.publishTime, '{y}-{m}-{d}') }}</span>
                     </div>
                     <div class="info-item">
                         <span class="label">摘要：</span>
@@ -28,7 +28,7 @@
                     </div>
                     <div class="info-item">
                         <span class="label">下载数：</span>
-                        <span>{{ literature.downloadCount }}</span>
+                        <span style="color: #555;">{{ literature.downloadCount }}</span>
                     </div>
                     <div class="info-item">
                         <span class="label">评分：</span>
@@ -36,7 +36,7 @@
                     </div>
                     <div class="info-item">
                         <span class="label">上传用户：</span>
-                        <span>{{ literature.uploadUserNickName }}</span>
+                        <span style="color: #555;">{{ literature.uploadUserNickName }}</span>
                     </div>
                 </div>
             </div>
@@ -241,10 +241,11 @@
                     </div>
                 </el-form-item>
                 <el-form-item label="关联文件" prop="files">
-                    <el-tooltip :content="commentFormType === 'reply' ? '回复时可不上传文件' : '请至少上传一个关联文件'" placement="top">
+                    <el-tooltip :content="commentFormType === 'reply' ? '回复时可不上传文件' : '请至少上传一个关联文件'" placement="top-start">
                         <el-upload ref="commentUploadRef" action="#" :auto-upload="false"
                             v-model:file-list="commentForm.files" :on-change="handleFileChange"
-                            :on-remove="handleFileRemove" multiple style="width: 100%;">
+                            :on-remove="handleFileRemove" multiple style="width: 100%;"
+                            :accept="'.gif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,txt,.rar,.zip,.gz,.bz2,.pdf'">
                             <el-button type="primary">选择文件</el-button>
                         </el-upload>
                     </el-tooltip>
@@ -986,6 +987,9 @@ async function submitComment() {
     margin-top: 5px;
     padding: 10px;
     background-color: #f5f5f5;
+    color: #555;
+    font-style: normal;
+    font-size: 14px;
     border-radius: 4px;
     line-height: 1.6;
 }
