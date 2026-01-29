@@ -84,7 +84,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
         taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
-        taskQueryDTO.setUserId(SecurityUtils.getUserId());
+        // 学生用户只能查自己参与的任务；教师用户可以查所有任务
+        if(SecurityUtils.isStudent()){
+            taskQueryDTO.setUserId(SecurityUtils.getUserId());
+        }
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
         // 2.计算子任务状态
         calculateTaskList(tasks);
@@ -96,7 +99,10 @@ public class TaskServiceImpl implements TaskService {
         log.info("任务管理模块-查询子任务列表：{}",parentTaskId);
         TaskQueryDTO taskQueryDTO = new TaskQueryDTO();
         taskQueryDTO.setParentTaskId(parentTaskId);
-        taskQueryDTO.setUserId(SecurityUtils.getUserId());
+        // 学生用户只能查自己参与的任务；教师用户可以查所有任务
+        if(SecurityUtils.isStudent()){
+            taskQueryDTO.setUserId(SecurityUtils.getUserId());
+        }
         taskQueryDTO.setOrderBy(TaskConstants.SUB_TASK_ORDER_BY);
         taskQueryDTO.setOrderDirection(TaskConstants.SUB_TASK_ORDER_DIRECTION);
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
@@ -131,13 +137,13 @@ public class TaskServiceImpl implements TaskService {
             task.setTaskDepth(1);
             task.setTaskOrder(1);
         }
-        // 3.参与用户组
-        List<Long> subParticipantUserIds = taskDTO.getParticipantUserIds();
-        if(CollectionUtils.isEmpty(subParticipantUserIds)){
-            subParticipantUserIds = new ArrayList<>();
+        // 3.参与用户组，参与用户组自动添加任务创建者
+        List<Long> participantUserIds = taskDTO.getParticipantUserIds();
+        if(CollectionUtils.isEmpty(participantUserIds)){
+            participantUserIds = new ArrayList<>();
         }
-        if(!subParticipantUserIds.contains(SecurityUtils.getUserId())){
-            subParticipantUserIds.add(SecurityUtils.getUserId());
+        if(!participantUserIds.contains(SecurityUtils.getUserId())){
+            participantUserIds.add(SecurityUtils.getUserId());
         }
         // 4.设置任务的创建人信息
         SysUser user = SecurityUtils.getLoginUser().getUser();
@@ -145,10 +151,10 @@ public class TaskServiceImpl implements TaskService {
         task.setCreateNickName(user.getNickName());
         // 5.新增任务
         taskMapper.insertTask(task);
-        // 6.记录子任务参与用户组
-        taskUserMapper.insertTaskUserBatch(task.getTaskId(), subParticipantUserIds);
+        // 6.记录任务参与用户组
+        taskUserMapper.insertTaskUserBatch(task.getTaskId(), participantUserIds);
         // 7.更新父任务的参与用户组
-        updateParentTaskParticipantUserIds(task.getParentTaskId(),subParticipantUserIds);
+        updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
     }
 
     @Override
@@ -161,7 +167,7 @@ public class TaskServiceImpl implements TaskService {
             throw new ServiceException("任务不存在");
         }
         // 2.非教师角色不能修改任务状态
-        boolean isTeacher = SecurityUtils.hasRole(RoleEnums.TEACHER.getRoleKey());
+        boolean isTeacher = SecurityUtils.isTeacher();
         if(!isTeacher && !taskDTO.getTaskStatus().equals(originTask.getTaskStatus())){
             throw new ServiceException("非教师角色，无权限操作");
         }
@@ -287,6 +293,16 @@ public class TaskServiceImpl implements TaskService {
         UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
         queryDTO.setNickName(nickName);
         queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        return userMapper.selectVOForSelect(queryDTO);
+    }
+
+    @Override
+    public List<UserForSelectVO> listStudentsForSelect(String nickName) {
+        log.info("任务管理模块-查询学生列表（用于前端用户选择）：{}",nickName);
+        UserForSelectQueryDTO queryDTO = new UserForSelectQueryDTO();
+        queryDTO.setNickName(nickName);
+        queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
+        queryDTO.setRoleKey(RoleEnums.STUDENT.getRoleKey());
         return userMapper.selectVOForSelect(queryDTO);
     }
 

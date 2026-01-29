@@ -33,7 +33,7 @@ public class TaskQueryDTO {
      */
     private Long parentTaskId;
     /**
-     * 当前用户ID，用于查询当前用户参与的任务
+     * 查询目标用户参与的任务
      */
     private Long userId;
     /**

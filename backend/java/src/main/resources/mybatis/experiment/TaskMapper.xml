@@ -8,12 +8,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         from task t inner join task_user tu on t.task_id = tu.task_id
         <where>
             t.parent_task_id=#{parentTaskId}
-            and tu.user_id=#{userId}
+            <if test="userId!=null">and tu.user_id=#{userId}</if>
             <if test="taskName!=null">and t.task_name like concat('%',#{taskName},'%')</if>
             <if test="taskStatus!=null">and t.task_status=#{taskStatus}</if>
             <if test="createTimeStart!=null">and t.create_time &gt;= #{createTimeStart}</if>
             <if test="createTimeEnd!=null">and t.create_time &lt;= #{createTimeEnd}</if>
         </where>
+        group by t.task_id,t.task_name,t.task_status
         order by
         <if test="orderBy!=null and orderDirection!=null">t.${orderBy} ${orderDirection}</if>
         <if test="orderBy==null or orderDirection==null">t.create_time desc</if>

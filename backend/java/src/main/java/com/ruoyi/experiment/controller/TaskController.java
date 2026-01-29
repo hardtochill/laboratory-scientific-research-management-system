@@ -55,6 +55,14 @@ public class TaskController extends BaseController {
     }
 
     /**
+     * 获取学生列表（用于前端用户选择）
+     */
+    @GetMapping("/listStudentsForSelect")
+    public AjaxResult listStudentsForSelect(String nickName) {
+        return AjaxResult.success(taskService.listStudentsForSelect(nickName));
+    }
+
+    /**
      * 根据任务ID获取任务详情
      *
      * @param taskId 任务ID

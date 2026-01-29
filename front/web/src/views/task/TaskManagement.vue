@@ -2,6 +2,11 @@
   <div class="task-management">
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+      <el-form-item label="学生姓名" v-if="isHasTeacherRole">
+        <el-select v-model="queryParams.userId" placeholder="请输入学生姓名" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading">
+          <el-option v-for="item in selectableStudents" :key="item.userId" :label="`${item.nickName}(${item.userName})`" :value="item.userId" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="任务名称" prop="taskName">
         <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
           @keyup.enter="handleQuery" />
@@ -499,6 +504,8 @@ const isReadOnlyUserGroup = ref(false)
 const parentTaskId = ref(0)
 // 未毕业用户列表
 const ungraduatedUsers = ref([])
+// 可供选择的学生列表
+const selectableStudents = ref([])
 // 用户加载状态
 const userLoading = ref(false)
 
@@ -540,6 +547,7 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
+    userId: undefined,
     taskName: undefined,
     taskStatus: 2
   },
@@ -684,6 +692,20 @@ const querySelectableUsers = async (query) => {
     ungraduatedUsers.value = response.data || []
   } catch (error) {
     console.error('获取用户列表失败:', error)
+  } finally {
+    userLoading.value = false
+  }
+}
+// 获取可供选择的学生列表
+const querySelectableStudents = async (query) => {
+  userLoading.value = true
+  try {
+    const response = await getSelectableStudents({
+      nickName: query
+    })
+    selectableStudents.value = response.data || []
+  } catch (error) {
+    console.error('获取学生列表失败:', error)
   } finally {
     userLoading.value = false
   }

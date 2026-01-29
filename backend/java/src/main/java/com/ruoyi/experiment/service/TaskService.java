@@ -70,4 +70,8 @@ public interface TaskService {
       * 获取用户列表（用于前端用户选择）
       */
     List<UserForSelectVO> listUsersForSelect(String nickName);
+    /**
+     * 获取学生列表（用于前端用户选择）
+     */
+    List<UserForSelectVO> listStudentsForSelect(String nickName);
 }
