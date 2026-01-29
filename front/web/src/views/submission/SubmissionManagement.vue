@@ -179,11 +179,11 @@
     <el-dialog v-model="planDialogVisible" :title="planDialogTitle" width="650px" :before-close="handlePlanDialogClose">
       <div v-if="currentPlan" class="submission-detail">
         <el-descriptions :column="1" border>
+           <el-descriptions-item label="投稿类型">
+            {{ getSubmissionTypeText(currentPlan.type) }}
+          </el-descriptions-item>
           <el-descriptions-item label="计划名称">
             {{ currentPlan.name }}
-          </el-descriptions-item>
-          <el-descriptions-item label="投稿类型">
-            {{ getSubmissionTypeText(currentPlan.type) }}
           </el-descriptions-item>
           <el-descriptions-item label="投稿期刊">
             {{ currentPlan.journal || '-' }}
@@ -224,12 +224,7 @@
           <el-input v-model="planFormData.id" type="hidden" />
         </el-form-item>
 
-        <!-- 计划名称 -->
-        <el-form-item label="计划名称" prop="name">
-          <el-input v-model="planFormData.name" placeholder="请输入计划名称" maxlength="100" show-word-limit />
-        </el-form-item>
-
-        <!-- 投稿类型 -->
+         <!-- 投稿类型 -->
         <el-form-item label="投稿类型" prop="type">
           <el-select v-model="planFormData.type" placeholder="请选择投稿类型" style="width: 100%;">
             <el-option label="期刊论文" :value="SUBMISSION_TYPE.JOURNAL_PAPER" />
@@ -238,6 +233,11 @@
             <el-option label="实用新型专利" :value="SUBMISSION_TYPE.UTILITY_MODEL_PATENT" />
             <el-option label="软件著作权" :value="SUBMISSION_TYPE.SOFTWARE_COPYRIGHT" />
           </el-select>
+        </el-form-item>
+
+        <!-- 计划名称 -->
+        <el-form-item label="计划名称" prop="name">
+          <el-input v-model="planFormData.name" placeholder="请输入计划名称" maxlength="100" show-word-limit />
         </el-form-item>
 
         <!-- 投稿期刊 -->
@@ -490,7 +490,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs, computed } from 'vue'
+import { ref, onMounted, reactive, toRefs, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect, getSelectableCreateUsers } from '@/api/submission/submissionPlan'
 import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail, getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
@@ -699,8 +699,34 @@ const planFormRules = reactive({
     { required: true, message: '请选择投稿类型', trigger: 'change' }
   ],
   journal: [
-    { max: 100, message: '长度不超过 100 个字符', trigger: 'blur' }
+    { 
+      validator: (rule, value, callback) => {
+        if (planFormData.type !== SUBMISSION_TYPE.JOURNAL_PAPER && 
+            planFormData.type !== SUBMISSION_TYPE.CONFERENCE_PAPER) {
+          if (value && value.length > 100) {
+            callback(new Error('长度不超过 100 个字符'))
+          } else {
+            callback()
+          }
+        } else {
+          if (!value) {
+            callback(new Error('请输入投稿期刊'))
+          } else if (value.length > 100) {
+            callback(new Error('长度不超过 100 个字符'))
+          } else {
+            callback()
+          }
+        }
+      }, 
+      trigger: 'blur' 
+    }
   ]
+})
+
+watch(() => planFormData.type, () => {
+  if (planFormRef.value) {
+    planFormRef.value.validateField('journal')
+  }
 })
 
 // 投稿流程详情对话框

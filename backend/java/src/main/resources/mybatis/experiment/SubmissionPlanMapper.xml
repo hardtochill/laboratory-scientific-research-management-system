@@ -49,7 +49,7 @@
             <if test="createUserId != null">create_user_id = #{createUserId},</if>
             <if test="createUserNickName != null and createUserNickName != ''">create_user_nick_name = #{createUserNickName},</if>
             <if test="type != null">type = #{type},</if>
-            <if test="journal != null and journal != ''">journal = #{journal},</if>
+            <if test="journal != null">journal = #{journal},</if>
             <if test="status != null">status = #{status},</if>
             <if test="remark != null and remark != ''">remark = #{remark},</if>
             <if test="submissionCreateTime != null">submission_create_time = #{submissionCreateTime},</if>
