@@ -360,7 +360,7 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers } from '@/api/task/task'
+import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers,getSelectableStudents } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
@@ -479,14 +479,7 @@ const isHasTeacherRole = ref(false)
 // 检查用户是否含有teacher角色
 const checkUserRoles = () => {
   userRoles.value = userStore.roles || []
-  isHasTeacherRole.value = userRoles.value.some(role =>
-    role === 'teacher' ||
-    role.includes('teacher') ||
-    role.roleName === 'teacher' ||
-    role.roleKey === 'teacher'
-  )
-  console.log('用户角色:', userRoles.value)
-  console.log('是否含有teacher角色:', isHasTeacherRole.value)
+  isHasTeacherRole.value = userRoles.value.includes('teacher') || userRoles.value.includes('admin')
 }
 // 加载状态
 const loading = ref(true)

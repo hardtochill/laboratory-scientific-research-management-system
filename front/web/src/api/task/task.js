@@ -78,3 +78,12 @@ export function getSelectableUsers(params) {
     params
   })
 }
+
+// 获取可供选择的学生列表
+export function getSelectableStudents(params) {
+  return request({
+    url: '/task/listStudentsForSelect',
+    method: 'get',
+    params
+  })
+}

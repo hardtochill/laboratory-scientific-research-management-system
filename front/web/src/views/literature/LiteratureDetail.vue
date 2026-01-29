@@ -399,12 +399,7 @@ const commentFormLabel = computed(() => {
 function checkUserRoles() {
     userRoles.value = userStore.roles || []
     currentUserId.value = userStore.id || null
-    isHasTeacherRole.value = userRoles.value.some(role =>
-        role === 'teacher' ||
-        role.includes('teacher') ||
-        role.roleName === 'teacher' ||
-        role.roleKey === 'teacher'
-    )
+    isHasTeacherRole.value = userRoles.value.includes('teacher') || userRoles.value.includes('admin')
 }
 
 /** 返回列表 */
