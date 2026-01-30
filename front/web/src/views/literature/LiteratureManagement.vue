@@ -122,12 +122,12 @@
         <el-row>
           <el-form-item label="文献名称" prop="title">
             <el-tooltip content="外文文献填写原名称，无需翻译" placement="top">
-              <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="255" show-word-limit />
+              <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
             </el-tooltip>
           </el-form-item>
           <el-form-item label="文献作者" prop="authors">
             <el-tooltip content="外文作者填写全名" placement="top">
-              <el-input v-model="editForm.authors" placeholder="多个作者请用逗号分隔" maxlength="255" show-word-limit />
+              <el-input v-model="editForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit />
             </el-tooltip>
           </el-form-item>
         </el-row>
@@ -182,13 +182,13 @@
        <el-row>
           <el-form-item label="文献名称" prop="title">
             <el-tooltip content="外文文献填写原名称，无需翻译" placement="top">
-              <el-input v-model="uploadForm.title" placeholder="请输入文献名称" maxlength="255" show-word-limit />
+              <el-input v-model="uploadForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
             </el-tooltip>
           </el-form-item>
 
           <el-form-item label="文献作者" prop="authors">
             <el-tooltip content="外文作者填写全名" placement="top">
-              <el-input v-model="uploadForm.authors" placeholder="多个作者请用逗号分隔" maxlength="255" show-word-limit />
+              <el-input v-model="uploadForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit />
             </el-tooltip>
           </el-form-item>
         </el-row>

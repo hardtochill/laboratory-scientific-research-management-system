@@ -237,7 +237,7 @@
 
         <!-- 计划名称 -->
         <el-form-item label="计划名称" prop="name">
-          <el-input v-model="planFormData.name" placeholder="请输入计划名称" maxlength="100" show-word-limit />
+          <el-input v-model="planFormData.name" placeholder="请输入计划名称" maxlength="1000" show-word-limit />
         </el-form-item>
 
         <!-- 投稿期刊 -->
