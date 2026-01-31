@@ -13,6 +13,7 @@
       </el-form-item>
       <el-form-item label="任务状态" prop="taskStatus">
         <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px" @change="handleQuery">
+          <el-option label="全部" :value="null" />
           <el-option label="未开始" :value="1" />
           <el-option label="进行中" :value="2" />
           <el-option label="已完成" :value="3" />
@@ -532,7 +533,7 @@ const formData = reactive({
   parentTaskId: '0', // 默认一级任务
   taskName: '',
   taskDescription: '',
-  taskStatus: '1', 
+  taskStatus: '', 
   participantUserIds: [], // 参与用户ID列表
   expectedFinishTime: null,
   actualFinishTime: null,
@@ -547,7 +548,15 @@ const formRules = reactive({
   taskStatus: [
     { required: true, message: '请选择任务状态', trigger: 'change' }
   ],
-  participantUserIds: []
+  participantUserIds: [
+    { required: true, message: '请至少选择一个执行用户', trigger: 'change', validator: (rule, value, callback) => {
+      if (!value || value.length === 0) {
+        callback(new Error('请至少选择一个执行用户'))
+      } else {
+        callback()
+      }
+    } }
+  ]
 })
 
 // 响应式数据
@@ -913,7 +922,7 @@ const resetForm = () => {
     parentTaskId: '0', // 默认一级任务
     taskName: '',
     taskDescription: '',
-    taskStatus: '1',
+    taskStatus: '',
     participantUserIds: [],
     expectedFinishTime: null,
     actualFinishTime: null,
