@@ -20,7 +20,7 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="keywordList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="keywordList" @selection-change="handleSelectionChange" border>
       <el-table-column type="selection" width="50" align="center" />
       <el-table-column label="关键词名称" align="center" prop="keywordName" v-if="columns[0].visible" :show-overflow-tooltip="true" />
       <el-table-column label="关键词描述" align="center" prop="description" v-if="columns[1].visible" :show-overflow-tooltip="true" />

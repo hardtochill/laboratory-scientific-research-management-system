@@ -25,20 +25,12 @@
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="literatureList" @selection-change="handleSelectionChange" @sort-change="handleSortChange">
+    <el-table v-loading="loading" :data="literatureList" @selection-change="handleSelectionChange" @sort-change="handleSortChange" border>
       <!-- <el-table-column type="selection" width="50" align="center" /> -->
        <el-table-column type="index" width="50" align="center" />
-      <el-table-column label="文献名称" width="200" align="center" prop="title" v-if="columns[0].visible" :show-overflow-tooltip="true">
+      <el-table-column label="文献名称" width="400" align="center" prop="title" v-if="columns[0].visible">
         <template #default="scope">
           <span>{{ scope.row.title }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="关键词" align="center" v-if="columns[1].visible" width="200" :show-overflow-tooltip="true">
-        <template #default="scope">
-          <!-- <div class="keyword-tags">
-            <el-tag v-for="keyword in scope.row.keywords" :key="keyword.id" size="small" style="margin-right: 4px">{{ keyword.keywordName }}</el-tag>
-          </div> -->
-          <span>{{ scope.row.keywords }}</span>
         </template>
       </el-table-column>
       <el-table-column label="作者" align="center" prop="authors" v-if="columns[2].visible" width="150" :show-overflow-tooltip="true">
@@ -51,14 +43,22 @@
           <span>{{ scope.row.journal }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="发表时间" align="center" prop="publishTime" v-if="columns[5].visible" width="120" :sortable="true">
+        <template #default="scope">
+          <span>{{ parseTime(scope.row.publishTime, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="关键词" align="center" v-if="columns[1].visible" width="200" :show-overflow-tooltip="true">
+        <template #default="scope">
+          <!-- <div class="keyword-tags">
+            <el-tag v-for="keyword in scope.row.keywords" :key="keyword.id" size="small" style="margin-right: 4px">{{ keyword.keywordName }}</el-tag>
+          </div> -->
+          <span>{{ scope.row.keywords }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="DOI" align="center" prop="doi" v-if="columns[4].visible" width="200" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.doi }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="发表时间" align="center" prop="publishTime" v-if="columns[5].visible" width="160" :sortable="true">
-        <template #default="scope">
-          <span>{{ parseTime(scope.row.publishTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="下载数" align="center" prop="downloadCount" v-if="columns[6].visible" width="100" :sortable="true">
@@ -66,17 +66,17 @@
           <span>{{ scope.row.downloadCount }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="评分" align="center" prop="finalScore" v-if="columns[7].visible" width="100" :sortable="true">
+      <el-table-column label="评分" align="center" prop="finalScore" v-if="columns[7].visible" width="80" :sortable="true">
         <template #default="scope">
           <span>{{ scope.row.finalScore }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="上传用户" align="center" prop="uploadUserName" v-if="columns[8].visible" width="150" :show-overflow-tooltip="true">
+      <el-table-column label="上传用户" align="center" prop="uploadUserName" v-if="columns[8].visible" width="100" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.uploadUserNickName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="最近评论" align="center" prop="uploadUserName" v-if="columns[9].visible" width="150" :show-overflow-tooltip="true">
+      <el-table-column label="最近评论" align="center" prop="uploadUserName" v-if="columns[9].visible" width="100" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.recentCommentUserNickName }}</span>
         </template>
