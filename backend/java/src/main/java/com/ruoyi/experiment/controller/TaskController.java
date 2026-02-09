@@ -78,7 +78,6 @@ public class TaskController extends BaseController {
      * 添加任务
      */
     @PostMapping("/add")
-    @CheckTeacher
     public AjaxResult addTask(@Validated @RequestBody TaskDTO taskDTO) {
         taskService.addTask(taskDTO);
         return AjaxResult.success();
@@ -97,7 +96,6 @@ public class TaskController extends BaseController {
      * 更新任务状态
      */
     @PostMapping("/updateStatus")
-    @CheckTeacher
     public AjaxResult updateTaskStatus(Long taskId,Integer status) {
         taskService.updateTaskStatus(taskId,status);
         return AjaxResult.success();
@@ -107,7 +105,6 @@ public class TaskController extends BaseController {
      * 删除任务
      */
     @DeleteMapping("/delete/{taskId}")
-    @CheckTeacher
     public AjaxResult deleteTask(@PathVariable Long taskId) {
         taskService.deleteTask(taskId);
         return AjaxResult.success();

@@ -183,10 +183,10 @@ public class TaskServiceImpl implements TaskService {
             throw new ServiceException("任务不存在");
         }
         // 2.非教师角色不能修改任务状态
-        boolean isTeacher = SecurityUtils.isTeacher();
+        /*boolean isTeacher = SecurityUtils.isTeacher();
         if(!isTeacher && !taskDTO.getTaskStatus().equals(originTask.getTaskStatus())){
             throw new ServiceException("非教师角色，无权限操作");
-        }
+        }*/
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
         // 3.修改任务
@@ -254,20 +254,25 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteTask(Long taskId) {
         log.info("任务管理模块-删除任务：{}",taskId);
-        // 1.获取当前任务的所有子任务
+        // 1.仅允许教师或任务创建人删除任务
+        Task task = taskMapper.selectTaskById(taskId);
+        if(!SecurityUtils.isTeacher() && !SecurityUtils.getUserId().equals(task.getCreateUserId())){
+            throw new ServiceException("仅教师或任务创建人有权删除任务");
+        }
+        // 2.获取当前任务的所有子任务
         List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
-        // 2.递归删除所有子任务
+        // 3.递归删除所有子任务
         if(!CollectionUtils.isEmpty(subTaskIds)){
             // 递归删除子任务
             for(Long subTaskId : subTaskIds){
                 deleteTask(subTaskId);
             }
         }
-        // 3.删除当前任务
+        // 4.删除当前任务
         taskMapper.deleteTask(taskId);
-        // 4.删除任务用户关联
+        // 5.删除任务用户关联
         taskUserMapper.deleteTaskUsersByTaskId(taskId);
-        // 5.删除任务关联文件
+        // 6.删除任务关联文件
         List<String> filePaths = taskFileMapper.selectFilePathsByTaskId(taskId);
         if(CollectionUtils.isEmpty(filePaths)){
             return;

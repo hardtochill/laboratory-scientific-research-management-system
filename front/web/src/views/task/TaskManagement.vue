@@ -105,7 +105,8 @@
               <!-- 右侧按钮区域 -->
               <div class="right-buttons">
                 <!-- 新增子任务按钮 -->
-                <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
+                <!-- <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole"> -->
+                <el-tooltip content="新增子任务" placement="top">
                   <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
                 </el-tooltip>
                 <!-- 任务详情按钮 -->
@@ -239,31 +240,44 @@
         <!-- 任务状态 -->
         <el-form-item label="任务状态" prop="taskStatus">
           <!-- 对于teacher角色用户显示可编辑的下拉框 -->
-          <el-select v-if="isHasTeacherRole" v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
+          <!-- <el-select v-if="isHasTeacherRole" v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
+            <el-option label="未开始" value="1" />
+            <el-option label="进行中" value="2" />
+            <el-option label="已完成" value="3" />
+            <el-option label="已跳过" value="4" />
+          </el-select> -->
+          <!-- 对于非teacher角色用户显示只读标签 -->
+          <!-- <el-tag v-else :type="getStatusType(formData.taskStatus)">
+            {{ getStatusText(formData.taskStatus) }}
+          </el-tag> -->
+
+          <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
             <el-option label="未开始" value="1" />
             <el-option label="进行中" value="2" />
             <el-option label="已完成" value="3" />
             <el-option label="已跳过" value="4" />
           </el-select>
-          <!-- 对于非teacher角色用户显示只读标签 -->
-          <el-tag v-else :type="getStatusType(formData.taskStatus)">
-            {{ getStatusText(formData.taskStatus) }}
-          </el-tag>
         </el-form-item>
 
         <!-- 执行用户组 -->
         <el-form-item label="执行用户组" prop="participantUserIds">
-          <div v-if="!isHasTeacherRole" style="margin-bottom: 8px;">
+          <!-- <div v-if="!isHasTeacherRole" style="margin-bottom: 8px;">
             <el-tag type="info" size="small">
               <el-icon>
                 <InfoFilled />
               </el-icon>
               <span>无权修改执行用户</span>
             </el-tag>
-          </div>
+          </div> -->
+          <!-- <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
+            placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+            :disabled="!isHasTeacherRole" @focus="handleSelectFocus" clearable>
+            <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
+              :value="user.userId" />
+          </el-select> -->
           <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
             placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
-            :disabled="isReadOnlyUserGroup || !isHasTeacherRole" @focus="handleSelectFocus" clearable>
+            @focus="handleSelectFocus" clearable>
             <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
               :value="user.userId" />
           </el-select>
@@ -507,8 +521,6 @@ const formTitle = ref('新增任务')
 const formRef = ref(null)
 // 是否为子任务
 const isChildTask = ref(false)
-// 用户组字段是否为只读（非一级父任务）
-const isReadOnlyUserGroup = ref(false)
 // 父任务ID
 const parentTaskId = ref(0)
 // 未毕业用户列表
@@ -812,7 +824,6 @@ const handleAdd = () => {
   formTitle.value = '新增任务'
   // 设置为一级任务
   isChildTask.value = false
-  isReadOnlyUserGroup.value = false // 一级任务的用户组字段可编辑
   parentTaskId.value = 0
   // 打开表单
   formVisible.value = true
@@ -857,9 +868,6 @@ const handleEdit = (task) => {
   // 判断是否为子任务（非一级父任务）
   const isSubTask = task.parentTaskId && task.parentTaskId !== '0'
   isChildTask.value = isSubTask
-
-  // 移除子任务的用户组字段只读限制，允许子任务设置自己的用户组
-  isReadOnlyUserGroup.value = false
 
   // 填充表单数据
   Object.assign(formData, {
@@ -930,7 +938,6 @@ const resetForm = () => {
   })
   // 重置用户组相关状态
   isChildTask.value = false
-  isReadOnlyUserGroup.value = false
   parentTaskId.value = 0
 }
 
@@ -1007,7 +1014,6 @@ const handleAddSubTask = async (parentTask) => {
   formTitle.value = '新增子任务'
   // 设置为子任务
   isChildTask.value = true
-  isReadOnlyUserGroup.value = false // 允许子任务设置自己的用户组
   parentTaskId.value = parentTask.taskId
   // 设置父任务ID
   formData.parentTaskId = parentTask.taskId

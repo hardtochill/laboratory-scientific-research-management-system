@@ -31,7 +31,8 @@
       <!-- 右侧按钮区域 -->
         <div class="right-buttons">
           <!-- 新增子任务按钮 -->
-          <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole">
+          <!-- <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole"> -->
+          <el-tooltip content="新增子任务" placement="top">
             <el-button link type="primary" @click.stop="handleAddSubTask" :icon="Plus"></el-button>
           </el-tooltip>
           <!-- 任务详情按钮 -->
@@ -43,7 +44,8 @@
             <el-button link type="primary" @click.stop="handleShowFiles" :icon="Files" style="margin-left: 0px;"></el-button>
           </el-tooltip>
           <!-- 修改状态下拉菜单 -->
-          <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
+          <!-- <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole"> -->
+          <el-tooltip content="更新任务状态" placement="top">
             <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(newStatus)">
               <el-button link type="primary" :icon="Switch"></el-button>
               <template #dropdown>
@@ -57,7 +59,8 @@
             </el-dropdown>
           </el-tooltip>
           <!-- 删除任务按钮 -->
-          <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
+          <!-- <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole"> -->
+          <el-tooltip content="删除任务" placement="top">
             <el-button link type="primary" @click.stop="handleDeleteTask" :icon="Delete"></el-button>
           </el-tooltip>
         </div>
