@@ -36,6 +36,12 @@ public interface TaskMapper {
      Integer selectLastSubTaskOrder(Long parentTaskId);
 
     /**
+     * 查询是否有同名子任务
+     */
+    @Select("select task_id from task where parent_task_id=#{parentTaskId} and task_depth=#{taskDepth} and task_name=#{taskName} limit 1")
+    Long selectSameNameTasks(Task task);
+
+    /**
      * 新增任务
      */
     @AutoFill(OperationTypeEnum.INSERT)

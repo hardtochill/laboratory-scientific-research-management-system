@@ -126,7 +126,7 @@ public class TaskServiceImpl implements TaskService {
         }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
-        // 2.检查并设置深度和顺序
+        // 2.1.检查并设置深度和顺序
         if(null!=parentTask){
             // 深度
             if(Objects.equals(parentTask.getTaskDepth(), TaskConstants.MAX_TASK_DEPTH)){
@@ -143,6 +143,16 @@ public class TaskServiceImpl implements TaskService {
             task.setTaskDepth(1);
             task.setTaskOrder(1);
         }
+        // 2.2检查任务名称是否重复
+        Task taskForNameQuery = new Task();
+        taskForNameQuery.setParentTaskId(task.getParentTaskId());
+        taskForNameQuery.setTaskDepth(task.getTaskDepth());
+        taskForNameQuery.setTaskName(task.getTaskName());
+        Long sameNameTaskId = taskMapper.selectSameNameTasks(taskForNameQuery);
+        if(null!=sameNameTaskId){
+            throw new ServiceException("该层级下已存在同名任务");
+        }
+
         // 3.参与用户组，参与用户组自动添加任务创建者
         List<Long> participantUserIds = taskDTO.getParticipantUserIds();
         if(CollectionUtils.isEmpty(participantUserIds)){
