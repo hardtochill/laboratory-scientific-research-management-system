@@ -75,15 +75,15 @@
       <div class="task-list">
         <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
           <!-- 任务行 -->
-          <div class="task-row">
+          <div class="task-row" @click.stop="showTaskDetail(task)">
             <!-- 第一行：任务信息 -->
             <div class="task-main-row">
               <!-- 左侧内容区域 -->
               <div class="left-content">
                 <!-- 展开/收起按钮容器 -->
-                <div class="expand-btn-container">
-                  <el-button type="text" @click.stop="toggleSubTasks(task)"
-                    :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
+                <div class="expand-btn-container" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks">
+                  <el-button type="text"
+                    :icon="task.expanded ? CaretBottom : CaretRight"></el-button>
                 </div>
 
                 <!-- 任务名称 -->
@@ -103,7 +103,7 @@
               </div>
 
               <!-- 右侧按钮区域 -->
-              <div class="right-buttons">
+              <div class="right-buttons" @click.stop>
                 <!-- 新增子任务按钮 -->
                 <!-- <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole"> -->
                 <el-tooltip content="新增子任务" placement="top">
@@ -252,10 +252,10 @@
           </el-tag> -->
 
           <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
-            <el-option label="未开始" value="1" />
-            <el-option label="进行中" value="2" />
-            <el-option label="已完成" value="3" />
-            <el-option label="已跳过" value="4" />
+            <el-option label="未开始" :value="TASK_STATUS.PENDING" />
+            <el-option label="进行中" :value="TASK_STATUS.PROCESSING" />
+            <el-option label="已完成" :value="TASK_STATUS.FINISHED" />
+            <el-option label="已跳过" :value="TASK_STATUS.SKIPPED" />
           </el-select>
         </el-form-item>
 
@@ -404,9 +404,6 @@ const TASK_STATUS = {
   SKIPPED: 4
 }
 
-// 将TASK_STATUS暴露给模板
-const taskStatusEnum = TASK_STATUS
-
 // 任务状态类型映射
 const getStatusType = (status) => {
   // 将状态转换为数字类型进行比较
@@ -457,14 +454,14 @@ const getProgressColor = (task) => {
   // 确保task对象有效
   if (!task) return '#909399'
 
-  // 根据任务状态决定颜色
+  // 根据任务状态决定颜色，与统计卡片风格协调
   switch (task.taskStatus) {
     case TASK_STATUS.PENDING:
-      return '#909399'
+      return '#5c9ce6'
     case TASK_STATUS.PROCESSING:
-      return '#E6A23C'
+      return '#ff9800'
     case TASK_STATUS.FINISHED:
-      return '#67C23A'
+      return '#66bb6a'
     case TASK_STATUS.SKIPPED:
       return '#F56C6C'
     default:
@@ -545,7 +542,7 @@ const formData = reactive({
   parentTaskId: '0', // 默认一级任务
   taskName: '',
   taskDescription: '',
-  taskStatus: '', 
+  taskStatus: TASK_STATUS.PENDING, // 默认状态为未开始
   participantUserIds: [], // 参与用户ID列表
   expectedFinishTime: null,
   actualFinishTime: null,
@@ -875,7 +872,7 @@ const handleEdit = (task) => {
     parentTaskId: task.parentTaskId || '0',
     taskName: task.taskName,
     taskDescription: task.taskDescription,
-    taskStatus: String(task.taskStatus),
+    taskStatus: parseInt(task.taskStatus),
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark,
@@ -930,7 +927,7 @@ const resetForm = () => {
     parentTaskId: '0', // 默认一级任务
     taskName: '',
     taskDescription: '',
-    taskStatus: '',
+    taskStatus: TASK_STATUS.PENDING, // 默认状态为未开始
     participantUserIds: [],
     expectedFinishTime: null,
     actualFinishTime: null,
@@ -974,7 +971,9 @@ const handleFormSubmit = async () => {
     const submitData = {
       ...formData,
       // 确保parentTaskId为0时是数字类型
-      parentTaskId: formData.parentTaskId === '0' ? 0 : formData.parentTaskId
+      parentTaskId: formData.parentTaskId === '0' ? 0 : formData.parentTaskId,
+      // 确保taskStatus是整型数
+      taskStatus: parseInt(formData.taskStatus)
     }
     // 调用API
     if (formData.taskId) {
@@ -1222,22 +1221,46 @@ onMounted(async () => {
 }
 
 .task-item {
-  margin-bottom: 10px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.task-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #5c9ce6;
+  border-radius: 4px 0 0 4px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.task-item:hover::before {
+  opacity: 1;
 }
 
 .task-row {
   display: flex;
   flex-direction: column;
-  padding: 12px 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  border-left: 3px solid #79bbff;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(92, 156, 230, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(10px);
+  margin-left: 4px;
 }
 
 .task-row:hover {
-  background-color: #f0f0f0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(241, 245, 249, 1) 100%);
+  border-color: rgba(92, 156, 230, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
 }
 
 .task-main-row {
@@ -1245,31 +1268,49 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  gap: 12px;
 }
 
 .left-content {
   display: flex;
   align-items: center;
   flex: 1;
+  gap: 8px;
 }
 
 .right-buttons {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.right-buttons :deep(.el-button) {
+  transition: all 0.2s;
+}
+
+.right-buttons :deep(.el-button:hover) {
+  transform: scale(1.1);
 }
 
 .participant-users-row {
-  margin-top: 8px;
-  padding-left: 28px;
+  margin-top: 12px;
+  padding-left: 32px;
+  padding-right: 12px;
+  padding-bottom: 4px;
+  border-top: 1px dashed rgba(92, 156, 230, 0.15);
+  padding-top: 12px;
 }
 
 .task-info {
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  margin: 0 16px 0 0;
+  margin: 0 12px 0 0;
   min-width: 150px;
   max-width: 400px;
 }
@@ -1277,42 +1318,90 @@ onMounted(async () => {
 .task-name {
   flex: 0 1 auto;
   font-weight: 600;
-  font-size: 16px;
-  color: #2c3e50;
+  font-size: 15px;
+  color: #1a202c;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.3px;
 }
 
 .participant-users {
   font-size: 13px;
-  color: #606266;
+  color: #4a5568;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .task-status {
-  margin: 0 16px;
+  margin: 0 12px;
   width: 70px;
   text-align: center;
   flex-shrink: 0;
 }
 
+.task-status :deep(.el-tag) {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 4px 10px;
+  letter-spacing: 0.3px;
+}
+
 .expand-btn-container {
-  width: 24px;
+  width: 28px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  height: 28px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.expand-btn-container:hover {
+  background: rgba(92, 156, 230, 0.1);
+}
+
+.expand-btn-container :deep(.el-button) {
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .progress-container {
   flex: 3.6;
-  margin: 0 16px 0 0;
+  margin: 0 12px 0 0;
   min-width: 200px;
   max-width: 800px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
+}
+
+.progress-container :deep(.el-progress) {
+  border-radius: 8px;
+  overflow: hidden;
+  height: 12px;
+}
+
+.progress-container :deep(.el-progress__bar) {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s;
+}
+
+.progress-container :deep(.el-progress__bar:hover) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container :deep(.el-progress__innerText) {
+  color: #fff;
+  font-weight: 600;
+  font-size: 11px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  letter-spacing: 0.3px;
 }
 
 .sub-tasks {
@@ -1484,43 +1573,103 @@ onMounted(async () => {
 
 .stat-card {
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
-/* 强调效果样式 */
 .stat-card.highlighted {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-  border-width: 2px;
-  transition: all 0.3s ease;
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 
+    0 12px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.stat-card.highlighted::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+.stat-card.highlighted::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card.pending {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  border: 1px solid #90caf9;
+  background: linear-gradient(135deg, #9fc5f8 0%, #8e98c7 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.stat-card.pending.highlighted {
+  background: linear-gradient(135deg, #7eb8ff 0%, #5c9ce6 100%);
 }
 
 .stat-card.processing {
-  background: linear-gradient(135deg, #fff3e0 0%, #ffcc02 100%);
-  border: 1px solid #ffb74d;
+  background: linear-gradient(135deg, #ffdbb8 0%, #ffc28f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.stat-card.processing.highlighted {
+  background: linear-gradient(135deg, #ffb347 0%, #ff9800 100%);
 }
 
 .stat-card.finished {
-  background: linear-gradient(135deg, #e8f5e8 0%, #a5d6a7 100%);
-  border: 1px solid #81c784;
+  background: linear-gradient(135deg, #b8e0b9 0%, #95c997 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.stat-card.finished.highlighted {
+  background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
 }
 
 .stat-card.skipped {
-  background: linear-gradient(135deg, #ffebee 0%, #ef9a9a 100%);
-  border: 1px solid #e57373;
+  background: linear-gradient(135deg, #ffbdc2 0%, #ff9f81 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.stat-card.skipped.highlighted {
+  background: linear-gradient(135deg, #ef5350 0%, #e57373 100%);
 }
 
 .stat-content {
@@ -1537,25 +1686,45 @@ onMounted(async () => {
 }
 
 .stat-card.pending .stat-number {
-  color: #1976d2;
+  color: #5c9ce6;
+}
+
+.stat-card.pending.highlighted .stat-number {
+  color: #fff;
 }
 
 .stat-card.processing .stat-number {
-  color: #f57c00;
+  color: #ff9800;
+}
+
+.stat-card.processing.highlighted .stat-number {
+  color: #fff;
 }
 
 .stat-card.finished .stat-number {
-  color: #388e3c;
+  color: #43a047;
+}
+
+.stat-card.finished.highlighted .stat-number {
+  color: #fff;
 }
 
 .stat-card.skipped .stat-number {
-  color: #d32f2f;
+  color: #e57373;
+}
+
+.stat-card.skipped.highlighted .stat-number {
+  color: #fff;
 }
 
 .stat-label {
   font-size: 14px;
   font-weight: 500;
   color: #666666;
+}
+
+.stat-card.highlighted .stat-label {
+  color: #fff;
 }
 
 /* 响应式设计 */

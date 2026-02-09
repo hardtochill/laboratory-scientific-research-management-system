@@ -1,13 +1,13 @@
 <template>
   <div class="task-item">
     <!-- 任务行 -->
-    <div class="task-row">
+    <div class="task-row" @click.stop="$emit('show-detail', task)">
       <!-- 左侧内容区域 -->
       <div class="left-content">
         <!-- 展开/收起按钮容器 -->
-        <div class="expand-btn-container">
-          <el-button type="text" @click.stop="toggleSubTasks"
-            :icon="task.expanded ? CaretBottom : CaretRight" v-if="task.hasSubTasks"></el-button>
+        <div class="expand-btn-container" @click.stop="toggleSubTasks" v-if="task.hasSubTasks">
+          <el-button type="text"
+            :icon="task.expanded ? CaretBottom : CaretRight"></el-button>
         </div>
 
         <!-- 子任务序号 -->
@@ -29,7 +29,7 @@
       </div>
 
       <!-- 右侧按钮区域 -->
-        <div class="right-buttons">
+        <div class="right-buttons" @click.stop>
           <!-- 新增子任务按钮 -->
           <!-- <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole"> -->
           <el-tooltip content="新增子任务" placement="top">
@@ -181,14 +181,14 @@ const getProgressColor = (task) => {
   // 确保task对象有效
   if (!task) return '#909399'
   
-  // 根据任务状态决定颜色
+  // 根据任务状态决定颜色，与统计卡片风格协调
   switch (task.taskStatus) {
     case TASK_STATUS.PENDING:
-      return '#909399'
+      return '#5c9ce6'
     case TASK_STATUS.PROCESSING:
-      return '#E6A23C'
+      return '#ff9800'
     case TASK_STATUS.FINISHED:
-      return '#67C23A'
+      return '#66bb6a'
     case TASK_STATUS.SKIPPED:
       return '#F56C6C'
     default:
@@ -276,75 +276,133 @@ const loadSubTasks = async () => {
 <style scoped>
 .task-item {
   margin-bottom: 12px;
+  position: relative;
+}
+
+.task-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #5c9ce6;
+  border-radius: 3px 0 0 3px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.task-item:hover::before {
+  opacity: 0.8;
 }
 
 .task-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(92, 156, 230, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(8px);
+  margin-left: 3px;
+}
+
+.task-row:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%);
+  border-color: rgba(92, 156, 230, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
 }
 
 .left-content {
   display: flex;
   align-items: center;
   flex: 1;
+  gap: 6px;
 }
 
 .right-buttons {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 8px;
+  gap: 3px;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  backdrop-filter: blur(3px);
 }
 
-.right-buttons > .el-tooltip {
-  margin: 0;
+.right-buttons :deep(.el-button) {
+  transition: all 0.2s;
 }
 
-.task-row:hover {
-  background-color: #f0f0f0;
+.right-buttons :deep(.el-button:hover) {
+  transform: scale(1.1);
 }
 
 .task-name {
   flex: 0 1 auto;
-  margin: 0 16px 0 8px;
+  margin: 0 12px 0 6px;
   font-weight: 600;
-  font-size: 16px;
-  color: #2c3e50;
+  font-size: 14px;
+  color: #1a202c;
   min-width: 100px;
   max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.2px;
 }
 
 .task-number {
   flex: 0 0 auto;
-  margin: 0 8px 0 0;
+  margin: 0 6px 0 0;
   font-weight: 600;
-  font-size: 14px;
-  color: #606266;
+  font-size: 13px;
+  color: #4a5568;
   min-width: 20px;
   text-align: center;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .task-status {
-  margin: 0 16px;
+  margin: 0 12px;
   width: 70px;
   text-align: center;
   flex-shrink: 0;
 }
 
+.task-status :deep(.el-tag) {
+  border-radius: 5px;
+  font-weight: 500;
+  padding: 3px 8px;
+  letter-spacing: 0.2px;
+}
+
 .expand-btn-container {
-  width: 24px;
+  width: 26px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
+  height: 26px;
+  border-radius: 5px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.expand-btn-container:hover {
+  background: rgba(92, 156, 230, 0.08);
+}
+
+.expand-btn-container :deep(.el-button) {
+  padding: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .sub-tasks {
@@ -358,11 +416,35 @@ const loadSubTasks = async () => {
 
 .progress-container {
   flex: 3.6;
-  margin: 0 16px 0 0;
+  margin: 0 12px 0 0;
   min-width: 200px;
   max-width: 800px;
   animation: fadeIn 0.5s ease-in;
   flex-shrink: 1;
+}
+
+.progress-container :deep(.el-progress) {
+  border-radius: 7px;
+  overflow: hidden;
+  height: 11px;
+}
+
+.progress-container :deep(.el-progress__bar) {
+  border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s;
+}
+
+.progress-container :deep(.el-progress__bar:hover) {
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.progress-container :deep(.el-progress__innerText) {
+  color: #fff;
+  font-weight: 600;
+  font-size: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.2px;
 }
 
 /* 展开/收起动画 */
