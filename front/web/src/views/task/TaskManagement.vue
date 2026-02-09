@@ -614,7 +614,7 @@ const data = reactive({
   queryParams: {
     pageNum: 1,
     pageSize: 10,
-    userId: undefined,
+    userId: userStore.id,
     taskName: undefined,
     taskStatus: 2
   },
@@ -746,7 +746,7 @@ const resetQuery = () => {
   queryParams.value = {
     pageNum: 1,
     pageSize: 10,
-    userId: undefined,
+    userId: userStore.id,
     taskName: undefined,
     taskStatus: undefined,
     visibleType: undefined,
