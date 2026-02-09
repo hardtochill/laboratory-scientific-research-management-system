@@ -2,8 +2,14 @@
   <div class="task-management">
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+      <el-form-item label="任务类型" v-if="isHasTeacherRole">
+        <el-radio-group v-model="taskType" @change="handleTaskTypeChange">
+          <el-radio-button label="my">我的任务</el-radio-button>
+          <el-radio-button label="all">全部任务</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="学生姓名" v-if="isHasTeacherRole">
-        <el-select v-model="queryParams.userId" placeholder="请输入学生姓名" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading">
+        <el-select v-model="displayUserId" placeholder="请输入学生姓名" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading" @change="handleUserChange" :disabled="taskType === 'my'">
           <el-option v-for="item in selectableStudents" :key="item.userId" :label="`${item.nickName}(${item.userName})`" :value="item.userId" />
         </el-select>
       </el-form-item>
@@ -386,7 +392,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs } from 'vue'
+import { ref, onMounted, reactive, toRefs, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers,getSelectableStudents } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
@@ -524,8 +530,43 @@ const parentTaskId = ref(0)
 const ungraduatedUsers = ref([])
 // 可供选择的学生列表
 const selectableStudents = ref([])
-// 用户加载状态
+// 用户加载了状态
 const userLoading = ref(false)
+// 任务类型：my-我的任务，all-全部任务
+const taskType = ref('my')
+
+// 计算学生姓名选择器的显示值
+const displayUserId = computed({
+  get: () => {
+    if (taskType.value === 'my') {
+      return undefined
+    }
+    return queryParams.value.userId
+  },
+  set: (value) => {
+    queryParams.value.userId = value
+  }
+})
+
+// 任务类型切换处理
+const handleTaskTypeChange = () => {
+  if (taskType.value === 'my') {
+    // 我的任务：userId设置为当前用户ID
+    queryParams.value.userId = userStore.id
+  } else {
+    // 全部任务：userId跟随学生姓名查询字段
+    queryParams.value.userId = undefined
+  }
+  handleQuery()
+}
+
+// 学生姓名选择器change事件处理
+const handleUserChange = () => {
+  // 如果选择了学生，自动切换到全部任务
+  if (queryParams.value.userId) {
+    taskType.value = 'all'
+  }
+}
 
 // 文件管理相关状态
 const fileDialogVisible = ref(false)
@@ -678,6 +719,10 @@ const loadParentTasks = async () => {
 
 // 查询按钮操作
 const handleQuery = () => {
+  // 如果是"我的任务"模式，确保userId是当前用户的userId
+  if (taskType.value === 'my') {
+    queryParams.value.userId = userStore.id
+  }
   queryParams.value.pageNum = 1
   loadParentTasks()
 }
@@ -697,9 +742,11 @@ const handleStatusFilter = (status) => {
 // 重置按钮操作
 const resetQuery = () => {
   dateRange.value = []
+  taskType.value = 'my'
   queryParams.value = {
     pageNum: 1,
     pageSize: 10,
+    userId: undefined,
     taskName: undefined,
     taskStatus: undefined,
     visibleType: undefined,
