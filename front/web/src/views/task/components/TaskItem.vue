@@ -304,11 +304,12 @@ const loadSubTasks = async () => {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(92, 156, 230, 0.12);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
   backdrop-filter: blur(8px);
   margin-left: 3px;
+  will-change: transform, box-shadow;
 }
 
 .task-row:hover {
@@ -432,7 +433,8 @@ const loadSubTasks = async () => {
 .progress-container :deep(.el-progress__bar) {
   border-radius: 7px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s;
+  transition: box-shadow 0.3s;
+  will-change: box-shadow;
 }
 
 .progress-container :deep(.el-progress__bar:hover) {

@@ -9,7 +9,7 @@
         </el-radio-group>
       </el-form-item>
       <el-form-item label="学生姓名" v-if="isHasTeacherRole">
-        <el-select v-model="displayUserId" placeholder="请输入学生姓名" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading" @change="handleUserChange" :disabled="taskType === 'my'">
+        <el-select v-model="displayUserId" :placeholder="taskType === 'my' ? '' : '请输入学生姓名'" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading" @change="handleUserChange" :disabled="taskType === 'my'">
           <el-option v-for="item in selectableStudents" :key="item.userId" :label="`${item.nickName}(${item.userName})`" :value="item.userId" />
         </el-select>
       </el-form-item>
@@ -392,7 +392,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs, computed } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, toRefs, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers,getSelectableStudents } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
@@ -535,35 +535,37 @@ const userLoading = ref(false)
 // 任务类型：my-我的任务，all-全部任务
 const taskType = ref('my')
 
-// 计算学生姓名选择器的显示值
-const displayUserId = computed({
-  get: () => {
-    if (taskType.value === 'my') {
-      return undefined
-    }
-    return queryParams.value.userId
-  },
-  set: (value) => {
-    queryParams.value.userId = value
+// 计算学生姓名选择器的显示值（只读，避免循环更新）
+const displayUserId = computed(() => {
+  if (taskType.value === 'my') {
+    return undefined
   }
+  return queryParams.value.userId
 })
+
+// 统一更新 userId 的函数
+const updateUserId = (userId) => {
+  queryParams.value.userId = userId
+}
 
 // 任务类型切换处理
 const handleTaskTypeChange = () => {
   if (taskType.value === 'my') {
-    // 我的任务：userId设置为当前用户ID
-    queryParams.value.userId = userStore.id
+    // 我的任务：userId设置为当前用户ID（用于后台逻辑）
+    updateUserId(userStore.id)
   } else {
     // 全部任务：userId跟随学生姓名查询字段
-    queryParams.value.userId = undefined
+    updateUserId(undefined)
   }
   handleQuery()
 }
 
 // 学生姓名选择器change事件处理
-const handleUserChange = () => {
+const handleUserChange = (value) => {
+  // 更新 queryParams.userId
+  updateUserId(value)
   // 如果选择了学生，自动切换到全部任务
-  if (queryParams.value.userId) {
+  if (value) {
     taskType.value = 'all'
   }
 }
@@ -1247,8 +1249,17 @@ const handleFileDialogClose = () => {
 
 // 页面加载时初始化数据
 onMounted(async () => {
+  // 如果初始是"我的任务"模式，设置userId
+  if (taskType.value === 'my') {
+    queryParams.value.userId = userStore.id
+  }
   loadParentTasks()
   checkUserRoles() // 检查用户角色权限
+})
+
+// 组件卸载时清理资源
+onUnmounted(() => {
+  expandedTaskIds.value.clear()
 })
 </script>
 
@@ -1296,11 +1307,12 @@ onMounted(async () => {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(92, 156, 230, 0.15);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   backdrop-filter: blur(10px);
   margin-left: 4px;
+  will-change: transform, box-shadow;
 }
 
 .task-row:hover {
@@ -1436,7 +1448,8 @@ onMounted(async () => {
 .progress-container :deep(.el-progress__bar) {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s;
+  transition: box-shadow 0.3s;
+  will-change: box-shadow;
 }
 
 .progress-container :deep(.el-progress__bar:hover) {
@@ -1622,12 +1635,13 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 12px;
   text-align: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.3);
+  will-change: transform, box-shadow;
 }
 
 .stat-card:hover {
@@ -1651,7 +1665,12 @@ onMounted(async () => {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  animation: shimmer 2.5s infinite;
+  animation: shimmer 3s infinite;
+  animation-play-state: paused;
+}
+
+.stat-card.highlighted:hover::before {
+  animation-play-state: running;
 }
 
 @keyframes shimmer {
