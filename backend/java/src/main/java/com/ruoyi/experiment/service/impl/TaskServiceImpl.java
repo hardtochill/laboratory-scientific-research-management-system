@@ -170,7 +170,7 @@ public class TaskServiceImpl implements TaskService {
         // 6.记录任务参与用户组
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), participantUserIds);
         // 7.更新父任务的参与用户组
-        updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
+        // updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
     }
 
     @Override
@@ -210,7 +210,7 @@ public class TaskServiceImpl implements TaskService {
         // 4.3 插入新参与用户组
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), taskDTO.getParticipantUserIds());
         // 5.修改父任务的参与用户组
-        updateParentTaskParticipantUserIds(task.getParentTaskId(),taskDTO.getParticipantUserIds());
+        // updateParentTaskParticipantUserIds(task.getParentTaskId(),taskDTO.getParticipantUserIds());
     }
 
     /**
