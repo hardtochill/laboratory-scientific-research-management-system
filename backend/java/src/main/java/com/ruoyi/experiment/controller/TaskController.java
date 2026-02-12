@@ -1,15 +1,13 @@
 package com.ruoyi.experiment.controller;
 
-import com.ruoyi.experiment.annotations.CheckTeacher;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
-import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
 import com.ruoyi.framework.web.controller.BaseController;
 import com.ruoyi.framework.web.domain.AjaxResult;
-import com.ruoyi.framework.web.page.TableDataInfo;
 import com.ruoyi.project.system.domain.SysUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
@@ -70,8 +68,8 @@ public class TaskController extends BaseController {
      */
     @GetMapping("/getDetail/{taskId}")
     public AjaxResult getTaskDetail(@PathVariable Long taskId) {
-        Task task = taskService.getTaskById(taskId);
-        return AjaxResult.success(task);
+        TaskDetailVO taskDetailVO = taskService.getTaskDetail(taskId);
+        return AjaxResult.success(taskDetailVO);
     }
 
     /**

@@ -2,7 +2,7 @@ package com.ruoyi.experiment.service;
 
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
-import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.project.system.domain.SysUser;
@@ -20,13 +20,6 @@ public interface TaskService {
     TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO);
     
     /**
-     * 根据条件查询父任务列表（兼容旧版本）
-     * @param taskQueryDTO 查询条件
-     * @return 父任务列表
-     */
-    List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO);
-
-    /**
      * 根据父任务ID查询子任务列表
      * @param parentTaskId 父任务ID
      * @return 子任务列表
@@ -38,7 +31,7 @@ public interface TaskService {
      * @param taskId 任务ID
      * @return 任务详情
      */
-    Task getTaskById(Long taskId);
+    TaskDetailVO getTaskDetail(Long taskId);
     /**
      * 添加任务
      * @param taskDTO 任务DTO

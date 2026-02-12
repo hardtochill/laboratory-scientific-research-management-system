@@ -26,4 +26,12 @@ public class TaskVO {
      * 参与用户组
      */
     private List<SysUser> participantUsers;
+    /**
+     * 任务创建人
+     */
+    private Long createUserId;
+    /**
+     * 任务执行人
+     */
+    private Long executeUserId;
 }

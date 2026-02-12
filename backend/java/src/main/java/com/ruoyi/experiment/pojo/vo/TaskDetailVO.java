@@ -1,19 +1,18 @@
-package com.ruoyi.experiment.pojo.dto;
+package com.ruoyi.experiment.pojo.vo;
 
+import com.ruoyi.experiment.pojo.entity.BaseEntity;
+import com.ruoyi.project.system.domain.SysUser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class TaskDTO {
+@NoArgsConstructor
+public class TaskDetailVO extends BaseEntity {
     /**
      * 任务id
      */
@@ -21,13 +20,10 @@ public class TaskDTO {
     /**
      * 父任务id
      */
-    @NotNull
-    @Min(value = 0L)
     private Long parentTaskId;
     /**
      * 任务名称
      */
-    @NotBlank
     private String taskName;
     /**
      * 任务描述
@@ -37,26 +33,36 @@ public class TaskDTO {
      * 任务备注
      */
     private String taskRemark;
-    /**
+     /**
      * 任务状态
      */
-    @NotNull
     private Integer taskStatus;
+     /**
+     * 创建用户id
+     */
+    private Long createUserId;
+     /**
+     * 创建用户昵称
+     */
+    private String createNickName;
     /**
      * 执行用户id
      */
-    @NotNull
     private Long executorUserId;
     /**
-     * 参与用户ID列表
+     * 执行用户昵称
      */
-    private List<Long> participantUserIds;
-    /**
+     private String executorNickName;
+     /**
      * 预期完成时间
      */
     private LocalDateTime expectedFinishTime;
-    /**
+     /**
      * 实际完成时间
      */
     private LocalDateTime actualFinishTime;
+     /**
+     * 参与用户组
+     */
+    private List<SysUser> participantUsers;
 }

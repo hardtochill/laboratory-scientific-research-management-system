@@ -7,12 +7,15 @@ import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.enums.TaskStatusEnum;
 import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
+import com.ruoyi.experiment.mapper.TaskExecutorMapper;
 import com.ruoyi.experiment.mapper.TaskFileMapper;
 import com.ruoyi.experiment.mapper.TaskMapper;
 import com.ruoyi.experiment.mapper.TaskUserMapper;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.entity.TaskExecutor;
+import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
@@ -45,6 +48,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskUserMapper taskUserMapper;
     private final TaskFileMapper taskFileMapper;
     private final ExperimentConfig experimentConfig;
+    private final TaskExecutorMapper taskExecutorMapper;
     @Override
     public TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO) {
         log.info("任务管理模块-查询父任务列表：{}",taskQueryDTO);
@@ -87,8 +91,7 @@ public class TaskServiceImpl implements TaskService {
         return result;
     }
     
-    @Override
-    public List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
+    private List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
         taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
         // 学生用户只能查自己参与的任务；教师用户可以查所有任务
         if(SecurityUtils.isStudent()){
@@ -124,9 +127,25 @@ public class TaskServiceImpl implements TaskService {
         if(taskDTO.getParentTaskId()>TaskConstants.FIRST_PARENT_TASK_ID && null==parentTask){
             throw new ServiceException("父任务不存在");
         }
+
+        // 2.只有教师、父任务创建人、父任务执行人才能添加子任务
+        boolean isTeacher = SecurityUtils.isTeacher();
+        if (null != parentTask) {
+            boolean isParentTaskCreator =SecurityUtils.getUserId().equals(parentTask.getCreateUserId());
+            TaskExecutor parentTaskExecutor = taskExecutorMapper.selectByTaskId(parentTask.getTaskId());
+            boolean isParentTaskExecutor = null!=parentTaskExecutor && SecurityUtils.getUserId().equals(parentTaskExecutor.getUserId());
+            if(!isTeacher && !isParentTaskCreator && !isParentTaskExecutor){
+                throw new ServiceException("只有教师、任务创建人、任务执行人有权添加任务");
+            }
+        }else{
+            if(!isTeacher){
+                throw new ServiceException("只有教师有权添加任务");
+            }
+        }
+
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
-        // 2.1.检查并设置深度和顺序
+        // 3.1.检查并设置深度和顺序
         if(null!=parentTask){
             // 深度
             if(Objects.equals(parentTask.getTaskDepth(), TaskConstants.MAX_TASK_DEPTH)){
@@ -143,7 +162,8 @@ public class TaskServiceImpl implements TaskService {
             task.setTaskDepth(1);
             task.setTaskOrder(1);
         }
-        // 2.2检查任务名称是否重复
+
+        // 3.2检查任务名称是否重复
         Task taskForNameQuery = new Task();
         taskForNameQuery.setParentTaskId(task.getParentTaskId());
         taskForNameQuery.setTaskDepth(task.getTaskDepth());
@@ -153,7 +173,22 @@ public class TaskServiceImpl implements TaskService {
             throw new ServiceException("该层级下已存在同名任务");
         }
 
-        // 3.参与用户组，参与用户组自动添加任务创建者
+        // 4.设置任务的创建人信息
+        SysUser user = SecurityUtils.getLoginUser().getUser();
+        task.setCreateUserId(user.getUserId());
+        task.setCreateNickName(user.getNickName());
+
+        // 5.新增任务
+        taskMapper.insertTask(task);
+
+        // 6.记录任务执行用户
+        TaskExecutor taskExecutor = new TaskExecutor();
+        taskExecutor.setTaskId(task.getTaskId());
+        taskExecutor.setUserId(taskDTO.getExecutorUserId());
+        taskExecutorMapper.insert(taskExecutor);
+
+        // 7.记录任务参与用户组
+        // 7.1 参与用户组自动添加任务创建人、任务执行人
         List<Long> participantUserIds = taskDTO.getParticipantUserIds();
         if(CollectionUtils.isEmpty(participantUserIds)){
             participantUserIds = new ArrayList<>();
@@ -161,16 +196,13 @@ public class TaskServiceImpl implements TaskService {
         if(!participantUserIds.contains(SecurityUtils.getUserId())){
             participantUserIds.add(SecurityUtils.getUserId());
         }
-        // 4.设置任务的创建人信息
-        SysUser user = SecurityUtils.getLoginUser().getUser();
-        task.setCreateUserId(user.getUserId());
-        task.setCreateNickName(user.getNickName());
-        // 5.新增任务
-        taskMapper.insertTask(task);
-        // 6.记录任务参与用户组
+        if(!participantUserIds.contains(taskDTO.getExecutorUserId())){
+            participantUserIds.add(taskDTO.getExecutorUserId());
+        }
+        // 7.2记录当前任务参与用户组
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), participantUserIds);
-        // 7.更新父任务的参与用户组
-        // updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
+        // 7.3.更新父任务的参与用户组
+        updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
     }
 
     @Override
@@ -182,35 +214,54 @@ public class TaskServiceImpl implements TaskService {
         if(null==originTask){
             throw new ServiceException("任务不存在");
         }
-        // 2.非教师角色不能修改任务状态
-        /*boolean isTeacher = SecurityUtils.isTeacher();
-        if(!isTeacher && !taskDTO.getTaskStatus().equals(originTask.getTaskStatus())){
-            throw new ServiceException("非教师角色，无权限操作");
-        }*/
+        // 2.只有教师、创建人、执行人有权修改任务
+        boolean isTeacher = SecurityUtils.isTeacher();
+        boolean isCreator = SecurityUtils.getUserId().equals(originTask.getCreateUserId());
+        TaskExecutor originTaskExecutor = taskExecutorMapper.selectByTaskId(taskDTO.getTaskId());
+        boolean isExecutor = originTaskExecutor!=null && SecurityUtils.getUserId().equals(originTaskExecutor.getUserId());
+        if(!isTeacher && !isExecutor && !isCreator){
+            throw new ServiceException("只有教师、任务创建人、任务执行人有权修改任务");
+        }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
         // 3.修改任务
         taskMapper.updateTask(task);
-        // 4.修改任务的参与用户组
-        // 4.1 比较参与用户组是否更改
-        if(CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())){
-            taskDTO.setParticipantUserIds(new ArrayList<>());
-            if(!taskDTO.getParticipantUserIds().contains(SecurityUtils.getUserId())){
-                taskDTO.getParticipantUserIds().add(SecurityUtils.getUserId());
+        // 4.修改任务执行用户
+        TaskExecutor taskExecutor = new TaskExecutor();
+        taskExecutor.setTaskId(taskDTO.getTaskId());
+        taskExecutor.setUserId(taskDTO.getExecutorUserId());
+        if(null==originTaskExecutor){
+            taskExecutorMapper.insert(taskExecutor);
+        }else{
+            if(!originTaskExecutor.getUserId().equals(taskDTO.getExecutorUserId())){
+                taskExecutorMapper.updateByTaskId(taskExecutor);
             }
         }
+        // 5.修改任务的参与用户组
+        if(CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())){
+            taskDTO.setParticipantUserIds(new ArrayList<>());
+        }
+        // 5.1参与用户组自动添加任务创建人
+        if(!taskDTO.getParticipantUserIds().contains(originTask.getCreateUserId())){
+            taskDTO.getParticipantUserIds().add(originTask.getCreateUserId());
+        }
+        // 5.2参与用户组自动添加任务执行人
+        if(!taskDTO.getParticipantUserIds().contains(taskDTO.getExecutorUserId())){
+            taskDTO.getParticipantUserIds().add(taskDTO.getExecutorUserId());
+        }
+        // 5.3比较任务的参与用户组是否更改
         Set<Long> originParticipantUserIds = new HashSet<>(taskUserMapper.selectUserIdsByTaskId(task.getTaskId()));
         Set<Long> newParticipantUserIds = new HashSet<>(taskDTO.getParticipantUserIds());
         if(SetUtils.isEqualSet(originParticipantUserIds,newParticipantUserIds)){
             // 参与用户组未改变，无需更新
             return;
         }
-        // 4.2 删除原参与用户组
+        // 5.4 删除原参与用户组
         taskUserMapper.deleteTaskUsersByTaskId(task.getTaskId());
-        // 4.3 插入新参与用户组
+        // 5.5 插入新参与用户组
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), taskDTO.getParticipantUserIds());
-        // 5.修改父任务的参与用户组
-        // updateParentTaskParticipantUserIds(task.getParentTaskId(),taskDTO.getParticipantUserIds());
+        // 5.6.修改父任务的参与用户组
+        updateParentTaskParticipantUserIds(task.getParentTaskId(),taskDTO.getParticipantUserIds());
     }
 
     /**
@@ -254,10 +305,15 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(rollbackFor = Exception.class)
     public void deleteTask(Long taskId) {
         log.info("任务管理模块-删除任务：{}",taskId);
-        // 1.仅允许教师或任务创建人删除任务
         Task task = taskMapper.selectTaskById(taskId);
-        if(!SecurityUtils.isTeacher() && !SecurityUtils.getUserId().equals(task.getCreateUserId())){
-            throw new ServiceException("仅教师或任务创建人有权删除任务");
+
+        // 1.仅允许教师、任务创建人、任务执行人删除任务
+        boolean isTeacher = SecurityUtils.isTeacher();
+        boolean isCreator = SecurityUtils.getUserId().equals(task.getCreateUserId());
+        TaskExecutor taskExecutor = taskExecutorMapper.selectByTaskId(taskId);
+        boolean isExecutor = null!=taskExecutor && SecurityUtils.getUserId().equals(taskExecutor.getUserId());
+        if(!isTeacher && !isCreator && !isExecutor){
+            throw new ServiceException("仅教师、任务创建人、任务执行人有权删除任务");
         }
         // 2.获取当前任务的所有子任务
         List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
@@ -270,9 +326,11 @@ public class TaskServiceImpl implements TaskService {
         }
         // 4.删除当前任务
         taskMapper.deleteTask(taskId);
-        // 5.删除任务用户关联
+        // 5.删除任务执行人关联
+        taskExecutorMapper.deleteByTaskId(taskId);
+        // 6.删除任务用户关联
         taskUserMapper.deleteTaskUsersByTaskId(taskId);
-        // 6.删除任务关联文件
+        // 7.删除任务关联文件
         List<String> filePaths = taskFileMapper.selectFilePathsByTaskId(taskId);
         if(CollectionUtils.isEmpty(filePaths)){
             return;
@@ -292,15 +350,15 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task getTaskById(Long taskId) {
+    public TaskDetailVO getTaskDetail(Long taskId) {
         log.info("任务管理模块-查询任务详情：{}",taskId);
         // 1.查询任务信息
-        Task task = taskMapper.selectTaskById(taskId);
+        TaskDetailVO taskDetailVO = taskMapper.selectTaskDetailVOById(taskId);
         // 2.查询任务参与用户
-        if(null!=task){
-            task.setParticipantUsers(taskUserMapper.selectUsersByTaskId(taskId));
+        if(null!=taskDetailVO){
+            taskDetailVO.setParticipantUsers(taskUserMapper.selectUsersByTaskId(taskId));
         }
-        return task;
+        return taskDetailVO;
     }
     @Override
     public List<SysUser> getParticipantUsersByTaskId(Long taskId) {

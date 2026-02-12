@@ -4,6 +4,7 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
+import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import org.apache.ibatis.annotations.*;
 
@@ -24,11 +25,14 @@ public interface TaskMapper {
      */
     List<Long> selectParentIdsHaveSubTasks(List<Long> parentIds);
     /**
-     * 根据任务ID获取任务详情
+     * 根据任务ID获取任务
      */
     @Select("select * from task where task_id = #{taskId}")
     Task selectTaskById(Long taskId);
-
+    /**
+     * 根据任务ID获取任务详情
+     */
+    TaskDetailVO selectTaskDetailVOById(Long taskId);
     /**
      * 根据父任务id获取其最大子任务
      */

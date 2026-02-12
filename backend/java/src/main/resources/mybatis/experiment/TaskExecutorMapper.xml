@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.TaskExecutorMapper">
+
+    <insert id="insert">
+        insert into task_executor (task_id, user_id, create_time, update_time)
+        values (#{taskId}, #{userId}, #{createTime}, #{updateTime})
+    </insert>
+    <update id="updateByTaskId">
+        update task_executor
+        <set>
+            <if test="userId != null">user_id=#{userId},</if>
+            <if test="updateTime != null">update_time=#{updateTime},</if>
+        </set>
+        where task_id=#{taskId}
+    </update>
+</mapper>

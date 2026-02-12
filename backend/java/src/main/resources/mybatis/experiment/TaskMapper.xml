@@ -4,8 +4,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.TaskMapper">
     <select id="select" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
-        select t.task_id,t.task_name,t.task_status
-        from task t inner join task_user tu on t.task_id = tu.task_id
+        select t.task_id,t.task_name,t.task_status,t.create_user_id as createUserId,te.user_id as executeUserId
+        from task t
+            inner join task_user tu on t.task_id = tu.task_id
+            left outer join task_executor te on t.task_id = te.task_id
         <where>
             t.parent_task_id=#{parentTaskId}
             <if test="userId!=null">and tu.user_id=#{userId}</if>
@@ -14,7 +16,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createTimeStart!=null">and t.create_time &gt;= #{createTimeStart}</if>
             <if test="createTimeEnd!=null">and t.create_time &lt;= #{createTimeEnd}</if>
         </where>
-        group by t.task_id,t.task_name,t.task_status
+        group by t.task_id,t.task_name,t.task_status,t.create_user_id,te.user_id
         order by
         <if test="orderBy!=null and orderDirection!=null">t.${orderBy} ${orderDirection}</if>
         <if test="orderBy==null or orderDirection==null">t.create_time desc</if>
@@ -36,6 +38,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
                sum(case when task_status>=3 then 1 else 0 end) as completedSubTasks
         from task
         where parent_task_id=#{parentTaskId}
+    </select>
+    <select id="selectTaskDetailVOById" resultType="com.ruoyi.experiment.pojo.vo.TaskDetailVO">
+        select t.*,
+            su.user_id as executorUserId,
+            su.nick_name as executorNickName
+        from task t
+            left outer join task_executor te on t.task_id = te.task_id
+            left outer join sys_user su on te.user_id = su.user_id
+        where t.task_id=#{taskId}
     </select>
     <insert id="insertTask" useGeneratedKeys="true" keyProperty="taskId">
         insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
