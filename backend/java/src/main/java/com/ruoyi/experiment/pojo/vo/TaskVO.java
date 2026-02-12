@@ -33,5 +33,5 @@ public class TaskVO {
     /**
      * 任务执行人
      */
-    private Long executeUserId;
+    private Long executorUserId;
 }

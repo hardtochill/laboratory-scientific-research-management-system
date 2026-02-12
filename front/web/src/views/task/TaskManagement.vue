@@ -111,8 +111,7 @@
               <!-- 右侧按钮区域 -->
               <div class="right-buttons" @click.stop>
                 <!-- 新增子任务按钮 -->
-                <!-- <el-tooltip content="新增子任务" placement="top" v-if="isHasTeacherRole"> -->
-                <el-tooltip content="新增子任务" placement="top">
+                <el-tooltip content="新增子任务" placement="top" v-if="hasTaskPermission(task)">
                   <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
                 </el-tooltip>
                 <!-- 任务详情按钮 -->
@@ -125,7 +124,7 @@
                   <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files" style="margin-left: 0px;"></el-button>
                 </el-tooltip>
                 <!-- 修改状态下拉菜单 -->
-                <el-tooltip content="更新任务状态" placement="top" v-if="isHasTeacherRole">
+                <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
                   <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
                     <el-button link type="primary" :icon="Switch"></el-button>
                     <template #dropdown>
@@ -139,7 +138,7 @@
                   </el-dropdown>
                 </el-tooltip>
                 <!-- 删除任务按钮 -->
-                <el-tooltip content="删除任务" placement="top" v-if="isHasTeacherRole">
+                <el-tooltip content="删除任务" placement="top" v-if="hasTaskPermission(task)">
                   <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
                 </el-tooltip>
               </div>
@@ -196,6 +195,9 @@
           <el-descriptions-item label="创建人">
             {{ currentTask.createNickName }}
           </el-descriptions-item>
+          <el-descriptions-item label="执行人">
+            {{ currentTask.executorNickName || '-' }}
+          </el-descriptions-item>
           <el-descriptions-item label="参与用户">
             <span v-if="currentTask.participantUsers && currentTask.participantUsers.length > 0">
               {{currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ')}}
@@ -219,7 +221,19 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleClose">关闭</el-button>
-          <el-button type="primary" @click="handleEdit(currentTask)">修改</el-button>
+          <el-tooltip 
+            :content="!hasTaskPermission(currentTask) ? '只有教师、任务创建人、任务执行人有权修改任务' : ''" 
+            placement="top"
+            :disabled="hasTaskPermission(currentTask)"
+          >
+            <el-button 
+              type="primary" 
+              @click="handleEdit(currentTask)"
+              :disabled="!hasTaskPermission(currentTask)"
+            >
+              修改
+            </el-button>
+          </el-tooltip>
         </div>
       </template>
     </el-dialog>
@@ -245,18 +259,6 @@
 
         <!-- 任务状态 -->
         <el-form-item label="任务状态" prop="taskStatus">
-          <!-- 对于teacher角色用户显示可编辑的下拉框 -->
-          <!-- <el-select v-if="isHasTeacherRole" v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
-            <el-option label="未开始" value="1" />
-            <el-option label="进行中" value="2" />
-            <el-option label="已完成" value="3" />
-            <el-option label="已跳过" value="4" />
-          </el-select> -->
-          <!-- 对于非teacher角色用户显示只读标签 -->
-          <!-- <el-tag v-else :type="getStatusType(formData.taskStatus)">
-            {{ getStatusText(formData.taskStatus) }}
-          </el-tag> -->
-
           <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
             <el-option label="未开始" :value="TASK_STATUS.PENDING" />
             <el-option label="进行中" :value="TASK_STATUS.PROCESSING" />
@@ -265,24 +267,20 @@
           </el-select>
         </el-form-item>
 
-        <!-- 执行用户组 -->
-        <el-form-item label="执行用户组" prop="participantUserIds">
-          <!-- <div v-if="!isHasTeacherRole" style="margin-bottom: 8px;">
-            <el-tag type="info" size="small">
-              <el-icon>
-                <InfoFilled />
-              </el-icon>
-              <span>无权修改执行用户</span>
-            </el-tag>
-          </div> -->
-          <!-- <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
-            placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
-            :disabled="!isHasTeacherRole" @focus="handleSelectFocus" clearable>
+        <!-- 执行人 -->
+        <el-form-item label="执行人" prop="executorUserId">
+          <el-select v-model="formData.executorUserId" filterable remote reserve-keyword
+            placeholder="请选择执行人" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+            @focus="handleSelectFocus" clearable>
             <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
               :value="user.userId" />
-          </el-select> -->
+          </el-select>
+        </el-form-item>
+
+        <!-- 执行用户组 -->
+        <el-form-item label="参与用户组" prop="participantUserIds">
           <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
-            placeholder="请选择执行用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+            placeholder="请选择参与用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
             @focus="handleSelectFocus" clearable>
             <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
               :value="user.userId" />
@@ -323,7 +321,7 @@
         </div>
 
         <!-- 文件上传区域 -->
-        <div class="upload-section">
+        <div class="upload-section" v-if="hasTaskPermission(currentTaskForFile)">
           <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
             :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple
             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
@@ -343,6 +341,12 @@
             <el-button type="primary" @click="handleUploadFiles" :loading="uploading" :disabled="fileList.length === 0">
               {{ uploading ? '上传中...' : '上传文件' }}
             </el-button>
+          </div>
+        </div>
+        <div class="upload-section" v-else>
+          <div class="no-permission-tip">
+            <el-icon class="el-icon--info"><InfoFilled /></el-icon>
+            <span>只有教师、任务创建人、任务执行人有权上传文件</span>
           </div>
         </div>
 
@@ -371,7 +375,7 @@
                 <el-button link type="primary" @click="handleDownloadFile(row)" :icon="Download">
                   下载
                 </el-button>
-                <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete">
+                <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" v-if="hasTaskPermission(currentTaskForFile)">
                   删除
                 </el-button>
               </template>
@@ -512,6 +516,15 @@ const checkUserRoles = () => {
   userRoles.value = userStore.roles || []
   isHasTeacherRole.value = userRoles.value.includes('teacher') || userRoles.value.includes('admin')
 }
+
+// 检查用户是否有任务修改权限
+const hasTaskPermission = (task) => {
+  if (!task) return false
+  return isHasTeacherRole.value || 
+         task.createUserId === userStore.id || 
+         task.executorUserId === userStore.id
+}
+
 // 加载状态
 const loading = ref(true)
 // 日期范围
@@ -582,11 +595,12 @@ const uploadRef = ref(null)
 // 表单数据
 const formData = reactive({
   taskId: undefined,
-  parentTaskId: '0', // 默认一级任务
+  parentTaskId: '0',
   taskName: '',
   taskDescription: '',
-  taskStatus: TASK_STATUS.PENDING, // 默认状态为未开始
-  participantUserIds: [], // 参与用户ID列表
+  taskStatus: TASK_STATUS.PENDING,
+  executorUserId: undefined,
+  participantUserIds: [],
   expectedFinishTime: null,
   actualFinishTime: null,
   taskRemark: ''
@@ -600,10 +614,13 @@ const formRules = reactive({
   taskStatus: [
     { required: true, message: '请选择任务状态', trigger: 'change' }
   ],
+  executorUserId: [
+    { required: true, message: '请选择执行人', trigger: 'change' }
+  ],
   participantUserIds: [
-    { required: true, message: '请至少选择一个执行用户', trigger: 'change', validator: (rule, value, callback) => {
+    { required: true, message: '请至少选择一个参与用户', trigger: 'change', validator: (rule, value, callback) => {
       if (!value || value.length === 0) {
-        callback(new Error('请至少选择一个执行用户'))
+        callback(new Error('请至少选择一个参与用户'))
       } else {
         callback()
       }
@@ -752,7 +769,7 @@ const resetQuery = () => {
     taskName: undefined,
     taskStatus: undefined,
     visibleType: undefined,
-    executeNickName: undefined
+    executorNickName: undefined
   }
   handleQuery()
 }
@@ -922,6 +939,7 @@ const handleEdit = (task) => {
     taskName: task.taskName,
     taskDescription: task.taskDescription,
     taskStatus: parseInt(task.taskStatus),
+    executorUserId: task.executorUserId,
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark,
@@ -973,10 +991,11 @@ const resetForm = () => {
   // 重置表单数据
   Object.assign(formData, {
     taskId: undefined,
-    parentTaskId: '0', // 默认一级任务
+    parentTaskId: '0',
     taskName: '',
     taskDescription: '',
-    taskStatus: TASK_STATUS.PENDING, // 默认状态为未开始
+    taskStatus: TASK_STATUS.PENDING,
+    executorUserId: undefined,
     participantUserIds: [],
     expectedFinishTime: null,
     actualFinishTime: null,
