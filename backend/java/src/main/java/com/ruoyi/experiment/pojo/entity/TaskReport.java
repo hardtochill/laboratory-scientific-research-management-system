@@ -29,7 +29,7 @@ public class TaskReport extends BaseEntity{
     /**
      * 用户昵称
      */
-    private String userNickname;
+    private String userNickName;
     /**
      * 汇报内容
      */

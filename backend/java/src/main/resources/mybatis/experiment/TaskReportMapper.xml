@@ -4,6 +4,58 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.TaskReportMapper">
 
+    <resultMap type="com.ruoyi.experiment.pojo.vo.TaskReportVo" id="TaskReportResult">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userNickName" column="user_nick_name"/>
+        <result property="reportContent" column="report_content"/>
+        <result property="reportTime" column="report_time"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
 
+    <sql id="selectTaskReportVo">
+        select id, task_id, user_id, user_nick_name, report_content, report_time, create_time, update_time
+        from task_report
+    </sql>
+
+    <select id="selectTaskReportList" resultMap="TaskReportResult">
+        <include refid="selectTaskReportVo"/>
+        where task_id = #{taskId}
+        <if test="startTime != null">
+            and report_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and report_time &lt;= #{endTime}
+        </if>
+        order by report_time desc
+    </select>
+
+    <insert id="insertTaskReport" useGeneratedKeys="true" keyProperty="id">
+        insert into task_report
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">task_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="userNickName != null">user_nick_name,</if>
+            <if test="reportContent != null">report_content,</if>
+            <if test="reportTime != null">report_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="taskId != null">#{taskId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="userNickName != null">#{userNickName},</if>
+            <if test="reportContent != null">#{reportContent},</if>
+            <if test="reportTime != null">#{reportTime},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <delete id="deleteTaskReportById">
+        delete from task_report where id = #{reportId}
+    </delete>
 
 </mapper>
