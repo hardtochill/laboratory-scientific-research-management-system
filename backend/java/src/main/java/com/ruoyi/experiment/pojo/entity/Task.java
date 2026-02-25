@@ -40,6 +40,14 @@ public class Task extends BaseEntity {
      * 任务深度
      */
     private Integer taskDepth;
+    /**
+     * 是否要求执行人定时汇报，1需要，2不需要
+     */
+    private Integer reportFlag;
+    /**
+     * 执行人定时汇报频率（单位：天）
+     */
+    private Integer reportFrequency;
      /**
      * 任务状态
      */

@@ -65,4 +65,12 @@ public class TaskDetailVO extends BaseEntity {
      * 参与用户组
      */
     private List<SysUser> participantUsers;
+    /**
+     * 是否要求执行人定时汇报，1需要，2不需要
+     */
+    private Integer reportFlag;
+    /**
+     * 执行人定时汇报频率（单位：天）
+     */
+    private Integer reportFrequency;
 }

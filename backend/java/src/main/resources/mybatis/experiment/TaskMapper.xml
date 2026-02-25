@@ -49,9 +49,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where t.task_id=#{taskId}
     </select>
     <insert id="insertTask" useGeneratedKeys="true" keyProperty="taskId">
-        insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
+        insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, report_flag, report_frequency, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
         VALUES
-            (#{parentTaskId},#{taskName},#{taskDescription},#{taskRemark},#{taskOrder},#{taskDepth},#{taskStatus},#{createUserId},#{createNickName},#{createTime},#{expectedFinishTime},#{actualFinishTime},#{updateTime})
+            (#{parentTaskId},#{taskName},#{taskDescription},#{taskRemark},#{taskOrder},#{taskDepth},#{taskStatus},#{reportFlag},#{reportFrequency},#{createUserId},#{createNickName},#{createTime},#{expectedFinishTime},#{actualFinishTime},#{updateTime})
     </insert>
     <update id="updateTask">
         update task
@@ -60,6 +60,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="taskDescription!=null">task_description=#{taskDescription},</if>
             <if test="taskRemark!=null">task_remark=#{taskRemark},</if>
             <if test="taskStatus!=null">task_status=#{taskStatus},</if>
+            <if test="reportFlag!=null">report_flag=#{reportFlag},</if>
+            <if test="reportFrequency!=null">report_frequency=#{reportFrequency},</if>
             <if test="expectedFinishTime!=null">expected_finish_time=#{expectedFinishTime},</if>
             <if test="actualFinishTime!=null">actual_finish_time=#{actualFinishTime},</if>
             <if test="updateTime!=null">update_time=#{updateTime},</if>

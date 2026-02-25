@@ -1,512 +1,512 @@
 <template>
-  <div class="task-management">
-    <!-- 查询表单 -->
-    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
-      <el-form-item label="任务类型" v-if="isHasTeacherRole">
-        <el-radio-group v-model="taskType" @change="handleTaskTypeChange">
-          <el-radio-button label="my">我的任务</el-radio-button>
-          <el-radio-button label="all">全部任务</el-radio-button>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="学生姓名" v-if="isHasTeacherRole">
-        <el-select v-model="displayUserId" :placeholder="taskType === 'my' ? '' : '请输入学生姓名'" clearable style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents" :loading="userLoading" @change="handleUserChange" :disabled="taskType === 'my'">
-          <el-option v-for="item in selectableStudents" :key="item.userId" :label="`${item.nickName}(${item.userName})`" :value="item.userId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="任务名称" prop="taskName">
-        <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
-          @keyup.enter="handleQuery" />
-      </el-form-item>
-      <el-form-item label="任务状态" prop="taskStatus">
-        <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px" @change="handleQuery">
-          <el-option label="全部" :value="null" />
-          <el-option label="未开始" :value="1" />
-          <el-option label="进行中" :value="2" />
-          <el-option label="已完成" :value="3" />
-          <el-option label="已跳过" :value="4" />
-        </el-select>
-      </el-form-item>
+  <div class="app-container">
+    <div class="task-management">
+      <!-- 查询表单 -->
+      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="query-form">
+        <el-form-item label="任务类型" v-if="isHasTeacherRole">
+          <el-radio-group v-model="taskType" @change="handleTaskTypeChange">
+            <el-radio-button label="my">我的任务</el-radio-button>
+            <el-radio-button label="all">全部任务</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="学生姓名" v-if="isHasTeacherRole">
+          <el-select v-model="displayUserId" :placeholder="taskType === 'my' ? '' : '请输入学生姓名'" clearable
+            style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents"
+            :loading="userLoading" @change="handleUserChange" :disabled="taskType === 'my'">
+            <el-option v-for="item in selectableStudents" :key="item.userId"
+              :label="`${item.nickName}(${item.userName})`" :value="item.userId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="任务名称" prop="taskName">
+          <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
+            @keyup.enter="handleQuery" />
+        </el-form-item>
+        <el-form-item label="任务状态" prop="taskStatus">
+          <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px"
+            @change="handleQuery">
+            <el-option label="全部" :value="null" />
+            <el-option label="未开始" :value="1" />
+            <el-option label="进行中" :value="2" />
+            <el-option label="已完成" :value="3" />
+            <el-option label="已跳过" :value="4" />
+          </el-select>
+        </el-form-item>
 
 
-      <el-form-item label="创建时间" style="width: 308px">
-        <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-"
-          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+        <el-form-item label="创建时间" style="width: 308px">
+          <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-"
+            start-placeholder="开始日期" end-placeholder="结束日期" style="width: 100%"></el-date-picker>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
 
-    <!-- 统计面板 -->
-    <div class="statistics-panel" v-if="taskStatistics">
-      <div class="statistics-grid">
-          <div class="stat-card pending" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PENDING }" @click="handleStatusFilter(TASK_STATUS.PENDING)">
+      <!-- 统计面板 -->
+      <div class="statistics-panel" v-if="taskStatistics">
+        <div class="statistics-grid">
+          <div class="stat-card pending" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PENDING }"
+            @click="handleStatusFilter(TASK_STATUS.PENDING)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.pendingCount || 0 }}</div>
               <div class="stat-label">未开始</div>
             </div>
           </div>
-          <div class="stat-card processing" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PROCESSING }" @click="handleStatusFilter(TASK_STATUS.PROCESSING)">
+          <div class="stat-card processing"
+            :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.PROCESSING }"
+            @click="handleStatusFilter(TASK_STATUS.PROCESSING)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.processingCount || 0 }}</div>
               <div class="stat-label">进行中</div>
             </div>
           </div>
-          <div class="stat-card finished" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.FINISHED }" @click="handleStatusFilter(TASK_STATUS.FINISHED)">
+          <div class="stat-card finished" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.FINISHED }"
+            @click="handleStatusFilter(TASK_STATUS.FINISHED)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.finishedCount || 0 }}</div>
               <div class="stat-label">已完成</div>
             </div>
           </div>
-          <div class="stat-card skipped" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.SKIPPED }" @click="handleStatusFilter(TASK_STATUS.SKIPPED)">
+          <div class="stat-card skipped" :class="{ 'highlighted': queryParams.taskStatus === TASK_STATUS.SKIPPED }"
+            @click="handleStatusFilter(TASK_STATUS.SKIPPED)">
             <div class="stat-content">
               <div class="stat-number">{{ taskStatistics.skippedCount || 0 }}</div>
               <div class="stat-label">已跳过</div>
             </div>
           </div>
         </div>
-    </div>
+      </div>
 
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <span>任务列表</span>
-          <el-button type="primary" @click="handleAdd" v-if="isHasTeacherRole" :icon="Plus">新增任务</el-button>
-        </div>
-      </template>
-      <!-- 任务列表 -->
-      <div class="task-list">
-        <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
-          <!-- 任务行 -->
-          <div class="task-row" @click.stop="showTaskDetail(task)">
-            <!-- 第一行：任务信息 -->
-            <div class="task-main-row">
-              <!-- 左侧内容区域 -->
-              <div class="left-content">
-                <!-- 展开/收起按钮容器 -->
-                <div class="expand-btn-container" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks">
-                  <el-button type="text"
-                    :icon="task.expanded ? CaretBottom : CaretRight"></el-button>
+      <el-card>
+        <template #header>
+          <div class="card-header">
+            <span>任务列表</span>
+            <el-button type="primary" @click="handleAdd" v-if="isHasTeacherRole" :icon="Plus">新增任务</el-button>
+          </div>
+        </template>
+        <!-- 任务列表 -->
+        <div class="task-list">
+          <div v-for="task in parentTasks" :key="task.taskId" class="task-item">
+            <!-- 任务行 -->
+            <div class="task-row" @click.stop="showTaskDetail(task)">
+              <!-- 第一行：任务信息 -->
+              <div class="task-main-row">
+                <!-- 左侧内容区域 -->
+                <div class="left-content">
+                  <!-- 展开/收起按钮容器 -->
+                  <div class="expand-btn-container" @click.stop="toggleSubTasks(task)" v-if="task.hasSubTasks">
+                    <el-button type="text" :icon="task.expanded ? CaretBottom : CaretRight"></el-button>
+                  </div>
+
+                  <!-- 任务名称 -->
+                  <span class="task-name">{{ task.taskName }}</span>
+
+                  <!-- 任务状态 -->
+                  <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
+                    {{ getStatusText(task.taskStatus) }}
+                  </el-tag>
+
+                  <!-- 任务进度条 -->
+                  <div class="progress-container">
+                    <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
+                      :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11"
+                      striped striped-flow :duration="200"></el-progress>
+                  </div>
                 </div>
 
-                <!-- 任务名称 -->
-                <span class="task-name">{{ task.taskName }}</span>
+                <!-- 右侧按钮区域 -->
+                <div class="right-buttons" @click.stop>
+                  <!-- 新增子任务按钮 -->
+                  <el-tooltip content="新增子任务" placement="top" v-if="hasTaskPermission(task)">
+                    <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
+                  </el-tooltip>
+                  <!-- 任务详情按钮 -->
+                  <el-tooltip content="任务详情" placement="top">
+                    <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Document"
+                      style="margin-left: 0px;"></el-button>
+                  </el-tooltip>
+                  <!-- 文件信息按钮 -->
+                  <el-tooltip content="文件信息" placement="top">
+                    <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files"
+                      style="margin-left: 0px;"></el-button>
+                  </el-tooltip>
+                  <!-- 修改状态下拉菜单 -->
+                  <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
+                    <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
+                      <el-button link type="primary" :icon="Switch"></el-button>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item command="1">未开始</el-dropdown-item>
+                          <el-dropdown-item command="2">进行中</el-dropdown-item>
+                          <el-dropdown-item command="3">已完成</el-dropdown-item>
+                          <el-dropdown-item command="4">已跳过</el-dropdown-item>
+                        </el-dropdown-menu>
+                      </template>
+                    </el-dropdown>
+                  </el-tooltip>
+                  <!-- 删除任务按钮 -->
+                  <el-tooltip content="删除任务" placement="top" v-if="hasTaskPermission(task)">
+                    <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
+                  </el-tooltip>
+                </div>
+              </div>
 
-                <!-- 任务状态 -->
-                <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
-                  {{ getStatusText(task.taskStatus) }}
+              <!-- 第二行：参与用户 -->
+              <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
+                <span class="participant-users">参与用户：{{task.participantUsers.map(user => user.nickName).join(', ')
+                  }}</span>
+              </div>
+            </div>
+
+            <!-- 子任务列表（带动画效果） -->
+            <transition name="expand">
+              <div v-if="task.expanded" class="sub-tasks">
+                <div class="loading" v-if="task.loading">
+                  <el-skeleton :rows="3" animated />
+                </div>
+                <div v-else>
+                  <TaskItem v-for="(subTask, subTaskIndex) in task.subTasks" :key="subTask.taskId" :task="subTask"
+                    :task-index="subTaskIndex" :is-first-level-task="false" :expanded-task-ids="expandedTaskIds"
+                    :is-has-teacher-role="isHasTeacherRole" @show-detail="showTaskDetail"
+                    @add-sub-task="handleAddSubTask" @update-expanded="handleUpdateExpanded"
+                    @change-status="handleChangeStatus" @delete-task="handleDeleteTask"
+                    @show-files="showFileManagement" />
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+
+        <!-- 分页控件 -->
+        <div class="pagination-container">
+          <el-pagination v-model:current-page="queryParams.pageNum" v-model:page-size="queryParams.pageSize"
+            :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" :total="total"
+            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        </div>
+      </el-card>
+
+      <!-- 任务详情对话框 -->
+      <el-dialog v-model="dialogVisible" title="任务详情" width="650px" :before-close="handleClose">
+        <div v-if="currentTask" class="task-detail">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="任务名称">
+              {{ currentTask.taskName }}
+            </el-descriptions-item>
+            <el-descriptions-item label="任务描述">
+              {{ currentTask.taskDescription || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="任务状态">
+              <el-tag :type="getStatusType(currentTask.taskStatus)">
+                {{ getStatusText(currentTask.taskStatus) }}
+              </el-tag>
+            </el-descriptions-item>
+
+            <el-descriptions-item label="创建人">
+              {{ currentTask.createNickName }}
+            </el-descriptions-item>
+            <el-descriptions-item label="执行人">
+              {{ currentTask.executorNickName || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="定时汇报" label-width="135px">
+              <el-tooltip content="开启时，任务执行人需要定时进行任务汇报" placement="top">
+                <el-tag :type="currentTask.reportFlag === 1 ? 'success' : 'info'">
+                  {{ currentTask.reportFlag === 1 ? '开启' : '关闭' }}
                 </el-tag>
+              </el-tooltip>
+            </el-descriptions-item>
+            <el-descriptions-item label="定时汇报频率(天)" v-if="currentTask.reportFlag === 1">
+              {{ currentTask.reportFrequency || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="参与用户">
+              <span v-if="currentTask.participantUsers && currentTask.participantUsers.length > 0">
+                {{currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ')}}
+              </span>
+              <span v-else>-</span>
+            </el-descriptions-item>
+            <el-descriptions-item label="创建时间">
+              {{ parseTime(currentTask.createTime) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="预期完成时间">
+              {{ parseTime(currentTask.expectedFinishTime) || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="实际完成时间">
+              {{ parseTime(currentTask.actualFinishTime) || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="备注">
+              {{ currentTask.taskRemark || '-' }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleClose">关闭</el-button>
+            <el-button type="warning" @click="handleTaskReportClick(currentTask)">
+              任务汇报
+            </el-button>
+            <el-tooltip :content="!hasTaskPermission(currentTask) ? '只有教师、任务创建人、任务执行人有权修改任务' : ''" placement="top"
+              :disabled="hasTaskPermission(currentTask)">
+              <el-button type="primary" @click="handleEdit(currentTask)" :disabled="!hasTaskPermission(currentTask)">
+                修改
+              </el-button>
+            </el-tooltip>
+          </div>
+        </template>
+      </el-dialog>
 
-                <!-- 任务进度条 -->
-                <div class="progress-container">
-                  <el-progress :percentage="getProgressPercentage(task)" :color="getProgressColor(task)"
-                    :status="getProgressStatus(task)" :text-inside="true" style="font-size: 8px;" :stroke-width="11"
-                    striped striped-flow :duration="200"></el-progress>
+      <!-- 新增/修改任务对话框 -->
+      <el-dialog v-model="formVisible" :title="formTitle" width="620px" :before-close="handleFormClose">
+        <el-form :model="formData" ref="formRef" label-width="135px" :rules="formRules" class="task-form">
+          <!-- 隐藏字段 -->
+          <el-form-item prop="taskId" style="display: none;">
+            <el-input v-model="formData.taskId" type="hidden" />
+          </el-form-item>
+
+          <!-- 任务名称 -->
+          <el-form-item label="任务名称" prop="taskName">
+            <el-input v-model="formData.taskName" placeholder="请输入任务名称" maxlength="50" show-word-limit />
+          </el-form-item>
+
+          <!-- 任务描述 -->
+          <el-form-item label="任务描述" prop="taskDescription">
+            <el-input v-model="formData.taskDescription" type="textarea" placeholder="请输入任务描述" :rows="3" maxlength="255"
+              show-word-limit />
+          </el-form-item>
+
+          <!-- 任务状态 -->
+          <el-form-item label="任务状态" prop="taskStatus">
+            <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
+              <el-option label="未开始" :value="TASK_STATUS.PENDING" />
+              <el-option label="进行中" :value="TASK_STATUS.PROCESSING" />
+              <el-option label="已完成" :value="TASK_STATUS.FINISHED" />
+              <el-option label="已跳过" :value="TASK_STATUS.SKIPPED" />
+            </el-select>
+          </el-form-item>
+
+          <!-- 执行人 -->
+          <el-form-item label="执行人" prop="executorUserId">
+            <el-select v-model="formData.executorUserId" filterable remote reserve-keyword placeholder="请选择执行人"
+              style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+              @focus="handleSelectFocus" clearable>
+              <el-option v-for="user in ungraduatedUsers" :key="user.userId"
+                :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+            </el-select>
+          </el-form-item>
+
+          <!-- 定时汇报 -->
+          <el-form-item label="定时汇报" prop="reportFlag">
+            <el-radio-group v-model="formData.reportFlag">
+              <el-radio-button :label="2">关闭</el-radio-button>
+              <el-radio-button :label="1">开启</el-radio-button>
+            </el-radio-group>
+            <el-tooltip content="开启时，任务执行人需要定时进行任务汇报" placement="top">
+              <el-icon style="margin-left: 8px; color: #909399;"><InfoFilled /></el-icon>
+            </el-tooltip>
+          </el-form-item>
+
+          <!-- 定时汇报频率 -->
+          <el-form-item label="定时汇报频率(天)" prop="reportFrequency" v-if="formData.reportFlag === 1">
+            <el-input-number v-model="formData.reportFrequency" :min="0" :max="30" :precision="0" :step="1"
+              placeholder="请输入汇报频率" style="width: 100%;" />
+          </el-form-item>
+
+          <!-- 参与用户组 -->
+          <el-form-item label="参与用户组" prop="participantUserIds">
+            <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
+              placeholder="请选择参与用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
+              @focus="handleSelectFocus" clearable>
+              <el-option v-for="user in ungraduatedUsers" :key="user.userId"
+                :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+            </el-select>
+          </el-form-item>
+
+          <!-- 预期完成时间 -->
+          <el-form-item label="预期完成时间" prop="expectedFinishTime">
+            <el-date-picker v-model="formData.expectedFinishTime" type="datetime" placeholder="请选择预期完成时间"
+              style="width: 100%;" />
+          </el-form-item>
+
+          <!-- 实际完成时间 -->
+          <el-form-item label="实际完成时间" prop="actualFinishTime">
+            <el-date-picker v-model="formData.actualFinishTime" type="datetime" placeholder="请选择实际完成时间"
+              style="width: 100%;" />
+          </el-form-item>
+
+          <!-- 任务备注 -->
+          <el-form-item label="备注" prop="taskRemark">
+            <el-input v-model="formData.taskRemark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255"
+              show-word-limit />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleFormClose">取消</el-button>
+            <el-button type="primary" @click="handleFormSubmit">保存</el-button>
+          </div>
+        </template>
+      </el-dialog>
+
+      <!-- 文件管理对话框 -->
+      <el-dialog v-model="fileDialogVisible" title="任务文件管理" width="800px" height="500px"
+        :before-close="handleFileDialogClose">
+        <div v-if="currentTaskForFile" class="file-management">
+          <div class="task-info">
+            <h4>任务：{{ currentTaskForFile.taskName }}</h4>
+          </div>
+
+          <!-- 文件上传区域 -->
+          <div class="upload-section" v-if="hasTaskPermission(currentTaskForFile)">
+            <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
+              :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+              <el-icon class="el-icon--upload">
+                <UploadFilled />
+              </el-icon>
+              <div class="el-upload__text">
+                将文件拖到此处，或<em>点击上传</em>
+              </div>
+              <template #tip>
+                <div class="el-upload__tip">
+                  支持pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
                 </div>
-              </div>
-
-              <!-- 右侧按钮区域 -->
-              <div class="right-buttons" @click.stop>
-                <!-- 新增子任务按钮 -->
-                <el-tooltip content="新增子任务" placement="top" v-if="hasTaskPermission(task)">
-                  <el-button link type="primary" @click.stop="handleAddSubTask(task)" :icon="Plus"></el-button>
-                </el-tooltip>
-                <!-- 任务详情按钮 -->
-                <el-tooltip content="任务详情" placement="top">
-                  <el-button link type="primary" @click.stop="showTaskDetail(task)" :icon="Document"
-                    style="margin-left: 0px;"></el-button>
-                </el-tooltip>
-                <!-- 文件信息按钮 -->
-                <el-tooltip content="文件信息" placement="top">
-                  <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files" style="margin-left: 0px;"></el-button>
-                </el-tooltip>
-                <!-- 修改状态下拉菜单 -->
-                <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
-                  <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
-                    <el-button link type="primary" :icon="Switch"></el-button>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item command="1">未开始</el-dropdown-item>
-                        <el-dropdown-item command="2">进行中</el-dropdown-item>
-                        <el-dropdown-item command="3">已完成</el-dropdown-item>
-                        <el-dropdown-item command="4">已跳过</el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
-                </el-tooltip>
-                <!-- 删除任务按钮 -->
-                <el-tooltip content="删除任务" placement="top" v-if="hasTaskPermission(task)">
-                  <el-button link type="primary" @click.stop="handleDeleteTask(task)" :icon="Delete"></el-button>
-                </el-tooltip>
-              </div>
+              </template>
+            </el-upload>
+            <div class="upload-actions">
+              <el-button type="primary" @click="handleUploadFiles" :loading="uploading"
+                :disabled="fileList.length === 0">
+                {{ uploading ? '上传中...' : '上传文件' }}
+              </el-button>
             </div>
-
-            <!-- 第二行：参与用户 -->
-            <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
-              <span class="participant-users">参与用户：{{ task.participantUsers.map(user => user.nickName).join(', ') }}</span>
+          </div>
+          <div class="upload-section" v-else>
+            <div class="no-permission-tip">
+              <el-icon :size="20" color="#e6a23c">
+                <InfoFilled />
+              </el-icon>
+              <span>只有教师、任务创建人、任务执行人有权上传文件</span>
             </div>
           </div>
 
-          <!-- 子任务列表（带动画效果） -->
-          <transition name="expand">
-            <div v-if="task.expanded" class="sub-tasks">
-              <div class="loading" v-if="task.loading">
-                <el-skeleton :rows="3" animated />
-              </div>
-              <div v-else>
-                <TaskItem v-for="(subTask, subTaskIndex) in task.subTasks" :key="subTask.taskId" :task="subTask"
-                  :task-index="subTaskIndex" :is-first-level-task="false" :expanded-task-ids="expandedTaskIds"
-                  :is-has-teacher-role="isHasTeacherRole" @show-detail="showTaskDetail" @add-sub-task="handleAddSubTask"
-                  @update-expanded="handleUpdateExpanded" @change-status="handleChangeStatus"
-                  @delete-task="handleDeleteTask" @show-files="showFileManagement" />
-              </div>
+          <!-- 文件列表 -->
+          <div class="file-list-section">
+            <h4>已上传文件</h4>
+            <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading">
+              <el-table-column prop="fileName" label="文件名" min-width="200">
+                <template #default="{ row }">
+                  <span class="file-name">{{ row.fileName + "." + row.fileType }}</span>
+                </template>
+              </el-table-column>
+              <el-table-column prop="fileSize" label="文件大小" width="120">
+                <template #default="{ row }">
+                  {{ formatFileSize(row.fileSize) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="userNickName" label="上传者" width="120" />
+              <el-table-column prop="uploadTime" label="上传时间" width="160">
+                <template #default="{ row }">
+                  {{ parseTime(row.uploadTime) }}
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="200" fixed="right">
+                <template #default="{ row }">
+                  <el-button link type="primary" @click="handleDownloadFile(row)" :icon="Download">
+                    下载
+                  </el-button>
+                  <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete"
+                    v-if="hasTaskPermission(currentTaskForFile)">
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <div v-if="taskFileList.length === 0 && !fileLoading" class="no-files">
+              <el-empty description="暂无文件" />
             </div>
-          </transition>
+          </div>
         </div>
-      </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleFileDialogClose">关闭</el-button>
+          </div>
+        </template>
+      </el-dialog>
 
-      <!-- 分页控件 -->
-      <div class="pagination-container">
-        <el-pagination v-model:current-page="queryParams.pageNum" v-model:page-size="queryParams.pageSize"
-          :page-sizes="[5, 10, 20, 50]" layout="total, sizes, prev, pager, next, jumper" :total="total"
-          @size-change="handleSizeChange" @current-change="handleCurrentChange" />
-      </div>
-    </el-card>
-
-    <!-- 任务详情对话框 -->
-    <el-dialog v-model="dialogVisible" title="任务详情" width="600px" :before-close="handleClose">
-      <div v-if="currentTask" class="task-detail">
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="任务名称">
-            {{ currentTask.taskName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="任务描述">
-            {{ currentTask.taskDescription || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="任务状态">
-            <el-tag :type="getStatusType(currentTask.taskStatus)">
-              {{ getStatusText(currentTask.taskStatus) }}
-            </el-tag>
-          </el-descriptions-item>
-
-          <el-descriptions-item label="创建人">
-            {{ currentTask.createNickName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="执行人">
-            {{ currentTask.executorNickName || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="参与用户">
-            <span v-if="currentTask.participantUsers && currentTask.participantUsers.length > 0">
-              {{currentTask.participantUsers.map(user => `${user.nickName}(${user.userName})`).join(', ')}}
-            </span>
-            <span v-else>-</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="创建时间">
-            {{ parseTime(currentTask.createTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="预期完成时间">
-            {{ parseTime(currentTask.expectedFinishTime) || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="实际完成时间">
-            {{ parseTime(currentTask.actualFinishTime) || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="备注">
-            {{ currentTask.taskRemark || '-' }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleClose">关闭</el-button>
-          <el-button
-            type="warning"
-            @click="handleTaskReportClick(currentTask)"
-          >
-            任务汇报
-          </el-button>
-          <el-tooltip
-            :content="!hasTaskPermission(currentTask) ? '只有教师、任务创建人、任务执行人有权修改任务' : ''"
-            placement="top"
-            :disabled="hasTaskPermission(currentTask)"
-          >
-            <el-button
-              type="primary"
-              @click="handleEdit(currentTask)"
-              :disabled="!hasTaskPermission(currentTask)"
-            >
-              修改
-            </el-button>
-          </el-tooltip>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 新增/修改任务对话框 -->
-    <el-dialog v-model="formVisible" :title="formTitle" width="620px" :before-close="handleFormClose">
-      <el-form :model="formData" ref="formRef" label-width="120px" :rules="formRules" class="task-form">
-        <!-- 隐藏字段 -->
-        <el-form-item prop="taskId" style="display: none;">
-          <el-input v-model="formData.taskId" type="hidden" />
-        </el-form-item>
-
-        <!-- 任务名称 -->
-        <el-form-item label="任务名称" prop="taskName">
-          <el-input v-model="formData.taskName" placeholder="请输入任务名称" maxlength="50" show-word-limit />
-        </el-form-item>
-
-        <!-- 任务描述 -->
-        <el-form-item label="任务描述" prop="taskDescription">
-          <el-input v-model="formData.taskDescription" type="textarea" placeholder="请输入任务描述" :rows="3" maxlength="255"
-            show-word-limit />
-        </el-form-item>
-
-        <!-- 任务状态 -->
-        <el-form-item label="任务状态" prop="taskStatus">
-          <el-select v-model="formData.taskStatus" placeholder="请选择任务状态" style="width: 100%;">
-            <el-option label="未开始" :value="TASK_STATUS.PENDING" />
-            <el-option label="进行中" :value="TASK_STATUS.PROCESSING" />
-            <el-option label="已完成" :value="TASK_STATUS.FINISHED" />
-            <el-option label="已跳过" :value="TASK_STATUS.SKIPPED" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 执行人 -->
-        <el-form-item label="执行人" prop="executorUserId">
-          <el-select v-model="formData.executorUserId" filterable remote reserve-keyword
-            placeholder="请选择执行人" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
-            @focus="handleSelectFocus" clearable>
-            <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
-              :value="user.userId" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 执行用户组 -->
-        <el-form-item label="参与用户组" prop="participantUserIds">
-          <el-select v-model="formData.participantUserIds" multiple filterable remote reserve-keyword
-            placeholder="请选择参与用户组" style="width: 100%;" :remote-method="querySelectableUsers" :loading="userLoading"
-            @focus="handleSelectFocus" clearable>
-            <el-option v-for="user in ungraduatedUsers" :key="user.userId" :label="`${user.nickName}(${user.userName})`"
-              :value="user.userId" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 预期完成时间 -->
-        <el-form-item label="预期完成时间" prop="expectedFinishTime">
-          <el-date-picker v-model="formData.expectedFinishTime" type="datetime" placeholder="请选择预期完成时间"
-            style="width: 100%;" />
-        </el-form-item>
-
-        <!-- 实际完成时间 -->
-        <el-form-item label="实际完成时间" prop="actualFinishTime">
-          <el-date-picker v-model="formData.actualFinishTime" type="datetime" placeholder="请选择实际完成时间"
-            style="width: 100%;" />
-        </el-form-item>
-
-        <!-- 任务备注 -->
-        <el-form-item label="备注" prop="taskRemark">
-          <el-input v-model="formData.taskRemark" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="255"
-            show-word-limit />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleFormClose">取消</el-button>
-          <el-button type="primary" @click="handleFormSubmit">保存</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <!-- 文件管理对话框 -->
-    <el-dialog v-model="fileDialogVisible" title="任务文件管理" width="800px" height="500px" :before-close="handleFileDialogClose">
-      <div v-if="currentTaskForFile" class="file-management">
-        <div class="task-info">
-          <h4>任务：{{ currentTaskForFile.taskName }}</h4>
-        </div>
-
-        <!-- 文件上传区域 -->
-        <div class="upload-section" v-if="hasTaskPermission(currentTaskForFile)">
-          <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
-            :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
-            <el-icon class="el-icon--upload">
-              <UploadFilled />
-            </el-icon>
-            <div class="el-upload__text">
-              将文件拖到此处，或<em>点击上传</em>
+      <!-- 任务汇报对话框 -->
+      <el-dialog v-model="reportDialogVisible" title="任务汇报" width="700px" :before-close="handleReportDialogClose">
+        <div class="report-dialog-content">
+          <!-- 时间范围查询 -->
+          <div class="report-query-section">
+            <div class="query-row">
+              <span class="query-label">时间范围：</span>
+              <el-date-picker v-model="reportQuery.dateRange" type="datetimerange" range-separator="至"
+                start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss"
+                style="width: 360px;" />
+              <el-button type="primary" @click="loadTaskReports" style="margin-left: 10px;">查询</el-button>
             </div>
-            <template #tip>
-              <div class="el-upload__tip">
-                支持pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
-              </div>
-            </template>
-          </el-upload>
-          <div class="upload-actions">
-            <el-button type="primary" @click="handleUploadFiles" :loading="uploading" :disabled="fileList.length === 0">
-              {{ uploading ? '上传中...' : '上传文件' }}
-            </el-button>
+            <div class="quick-query-row">
+              <span class="quick-query-label">快捷查询：</span>
+              <el-segmented v-model="selectedDateRange" :options="dateSegmentOptions" @change="handleDateSegmentChange"
+                size="small" />
+            </div>
           </div>
-        </div>
-        <div class="upload-section" v-else>
-          <div class="no-permission-tip">
-            <el-icon :size="20" color="#e6a23c"><InfoFilled /></el-icon>
-            <span>只有教师、任务创建人、任务执行人有权上传文件</span>
-          </div>
-        </div>
 
-        <!-- 文件列表 -->
-        <div class="file-list-section">
-          <h4>已上传文件</h4>
-          <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading">
-            <el-table-column prop="fileName" label="文件名" min-width="200">
-              <template #default="{ row }">
-                <span class="file-name">{{ row.fileName+"."+row.fileType }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column prop="fileSize" label="文件大小" width="120">
-              <template #default="{ row }">
-                {{ formatFileSize(row.fileSize) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="userNickName" label="上传者" width="120" />
-            <el-table-column prop="uploadTime" label="上传时间" width="160">
-              <template #default="{ row }">
-                {{ parseTime(row.uploadTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="handleDownloadFile(row)" :icon="Download">
-                  下载
-                </el-button>
-                <el-button link type="danger" @click="handleDeleteFile(row)" :icon="Delete" v-if="hasTaskPermission(currentTaskForFile)">
-                  删除
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div v-if="taskFileList.length === 0 && !fileLoading" class="no-files">
-            <el-empty description="暂无文件" />
+          <!-- 添加汇报按钮 - 只有有权限的用户才能添加汇报 -->
+          <div class="add-report-section" v-if="hasTaskPermission(currentTaskForReport)">
+            <el-button type="primary" @click="showAddReportInput" :icon="Plus">添加汇报</el-button>
           </div>
-        </div>
-      </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleFileDialogClose">关闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
 
-    <!-- 任务汇报对话框 -->
-    <el-dialog v-model="reportDialogVisible" title="任务汇报" width="700px" :before-close="handleReportDialogClose">
-      <div class="report-dialog-content">
-        <!-- 时间范围查询 -->
-        <div class="report-query-section">
-          <div class="query-row">
-            <span class="query-label">时间范围：</span>
-            <el-date-picker
-              v-model="reportQuery.dateRange"
-              type="datetimerange"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-              value-format="YYYY-MM-DD HH:mm:ss"
-              style="width: 360px;"
-            />
-            <el-button type="primary" @click="loadTaskReports" style="margin-left: 10px;">查询</el-button>
+          <!-- 添加汇报输入框 -->
+          <div v-if="showAddReportForm" class="add-report-form">
+            <el-input v-model="newReportContent" type="textarea" :rows="4" placeholder="请输入汇报内容..." maxlength="500"
+              show-word-limit />
+            <div class="add-report-actions">
+              <el-button @click="cancelAddReport">取消</el-button>
+              <el-button type="primary" @click="submitReport" :loading="submittingReport">提交</el-button>
+            </div>
           </div>
-          <div class="quick-query-row">
-            <span class="quick-query-label">快捷查询：</span>
-            <el-segmented
-              v-model="selectedDateRange"
-              :options="dateSegmentOptions"
-              @change="handleDateSegmentChange"
-              size="small"
-            />
-          </div>
-        </div>
 
-        <!-- 添加汇报按钮 - 只有有权限的用户才能添加汇报 -->
-        <div class="add-report-section" v-if="hasTaskPermission(currentTaskForReport)">
-          <el-button type="primary" @click="showAddReportInput" :icon="Plus">添加汇报</el-button>
-        </div>
-
-        <!-- 添加汇报输入框 -->
-        <div v-if="showAddReportForm" class="add-report-form">
-          <el-input
-            v-model="newReportContent"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入汇报内容..."
-            maxlength="500"
-            show-word-limit
-          />
-          <div class="add-report-actions">
-            <el-button @click="cancelAddReport">取消</el-button>
-            <el-button type="primary" @click="submitReport" :loading="submittingReport">提交</el-button>
+          <!-- 汇报记录时间线 -->
+          <div class="report-timeline-section">
+            <h4 class="section-title">汇报记录</h4>
+            <div v-if="reportLoading" class="report-loading">
+              <el-skeleton :rows="3" animated />
+            </div>
+            <div v-else-if="reportList.length === 0" class="no-reports">
+              <el-empty description="暂无汇报记录" />
+            </div>
+            <div v-else class="report-timeline-container">
+              <el-timeline class="report-timeline">
+                <el-timeline-item v-for="report in reportList" :key="report.id" :timestamp="report.reportTime"
+                  placement="top" type="primary">
+                  <el-card class="report-card" shadow="hover">
+                    <div class="report-header">
+                      <span class="report-user">{{ report.userNickName }}</span>
+                      <el-button v-if="hasTaskPermission(currentTaskForReport)" link type="danger" size="small"
+                        :icon="Delete" @click="handleDeleteReport(report)">删除</el-button>
+                    </div>
+                    <div class="report-content-wrapper">
+                      <p class="report-content" :class="{ 'expanded': report.expanded }"
+                        @click="toggleReportExpand(report)">
+                        {{ report.expanded ? report.reportContent : truncateContent(report.reportContent) }}
+                      </p>
+                      <el-link v-if="report.reportContent && report.reportContent.length > 30" type="primary"
+                        :underline="false" @click="toggleReportExpand(report)" class="expand-link">
+                        {{ report.expanded ? '收起' : '展开' }}
+                      </el-link>
+                    </div>
+                  </el-card>
+                </el-timeline-item>
+              </el-timeline>
+            </div>
           </div>
         </div>
-
-        <!-- 汇报记录时间线 -->
-        <div class="report-timeline-section">
-          <h4 class="section-title">汇报记录</h4>
-          <div v-if="reportLoading" class="report-loading">
-            <el-skeleton :rows="3" animated />
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleReportDialogClose">关闭</el-button>
           </div>
-          <div v-else-if="reportList.length === 0" class="no-reports">
-            <el-empty description="暂无汇报记录" />
-          </div>
-          <div v-else class="report-timeline-container">
-            <el-timeline class="report-timeline">
-              <el-timeline-item
-                v-for="report in reportList"
-                :key="report.id"
-                :timestamp="report.reportTime"
-                placement="top"
-                type="primary"
-              >
-                <el-card class="report-card" shadow="hover">
-                  <div class="report-header">
-                    <span class="report-user">{{ report.userNickName }}</span>
-                    <el-button
-                      v-if="hasTaskPermission(currentTaskForReport)"
-                      link
-                      type="danger"
-                      size="small"
-                      :icon="Delete"
-                      @click="handleDeleteReport(report)"
-                    >删除</el-button>
-                  </div>
-                  <div class="report-content-wrapper">
-                    <p 
-                      class="report-content" 
-                      :class="{ 'expanded': report.expanded }"
-                      @click="toggleReportExpand(report)"
-                    >
-                      {{ report.expanded ? report.reportContent : truncateContent(report.reportContent) }}
-                    </p>
-                    <el-link 
-                      v-if="report.reportContent && report.reportContent.length > 30" 
-                      type="primary" 
-                      :underline="false"
-                      @click="toggleReportExpand(report)"
-                      class="expand-link"
-                    >
-                      {{ report.expanded ? '收起' : '展开' }}
-                    </el-link>
-                  </div>
-                </el-card>
-              </el-timeline-item>
-            </el-timeline>
-          </div>
-        </div>
-      </div>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleReportDialogClose">关闭</el-button>
-        </div>
-      </template>
-    </el-dialog>
+        </template>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
@@ -741,7 +741,9 @@ const formData = reactive({
   participantUserIds: [],
   expectedFinishTime: null,
   actualFinishTime: null,
-  taskRemark: ''
+  taskRemark: '',
+  reportFlag: 2,
+  reportFrequency: 4
 })
 // 表单验证规则
 const formRules = reactive({
@@ -759,6 +761,18 @@ const formRules = reactive({
     { required: true, message: '请至少选择一个参与用户', trigger: 'change', validator: (rule, value, callback) => {
       if (!value || value.length === 0) {
         callback(new Error('请至少选择一个参与用户'))
+      } else {
+        callback()
+      }
+    } }
+  ],
+  reportFlag: [
+    { required: true, message: '请选择是否定时汇报', trigger: 'change' }
+  ],
+  reportFrequency: [
+    { required: true, message: '请输入定时汇报频率', trigger: 'blur', validator: (rule, value, callback) => {
+      if (formData.reportFlag === 1 && (value === undefined || value === null)) {
+        callback(new Error('请输入定时汇报频率'))
       } else {
         callback()
       }
@@ -1084,7 +1098,9 @@ const handleEdit = (task) => {
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
     taskRemark: task.taskRemark,
-    participantUserIds: task.participantUsers?.map(user => user.userId) || []
+    participantUserIds: task.participantUsers?.map(user => user.userId) || [],
+    reportFlag: task.reportFlag || 2,
+    reportFrequency: task.reportFrequency || 4
   })
 
   // 将已选择的用户添加到ungraduatedUsers数组中，确保初始显示正确
@@ -1140,7 +1156,9 @@ const resetForm = () => {
     participantUserIds: [],
     expectedFinishTime: null,
     actualFinishTime: null,
-    taskRemark: ''
+    taskRemark: '',
+    reportFlag: 2,
+    reportFrequency: 4
   })
   // 重置用户组相关状态
   isChildTask.value = false

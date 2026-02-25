@@ -59,4 +59,13 @@ public class TaskDTO {
      * 实际完成时间
      */
     private LocalDateTime actualFinishTime;
+    /**
+     * 是否要求执行人定时汇报，1需要，2不需要
+     */
+    @NotNull
+    private Integer reportFlag;
+    /**
+     * 执行人定时汇报频率（单位：天）
+     */
+    private Integer reportFrequency;
 }
