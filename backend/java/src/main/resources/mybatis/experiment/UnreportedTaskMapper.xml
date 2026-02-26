@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.experiment.mapper.UnreportedTaskMapper">
+
+    <!-- 查询待汇报任务列表 -->
+    <select id="selectUnreportedTaskList" resultType="com.ruoyi.experiment.pojo.vo.UnreportedTaskVO">
+        SELECT
+            t.task_id,
+            t.parent_task_id,
+            t.task_name,
+            t.task_status,
+            t.task_depth,
+            t.report_frequency,
+            t.create_user_id,
+            t.create_time,
+            cu.nick_name AS createUserNickName,
+            cu.user_name AS createUserName,
+            te.user_id AS executorUserId,
+            COALESCE(sub_task_counts.sub_count, 0) as subTaskCount,
+            COALESCE(sub_task_counts.completed_count, 0) as completedSubTaskCount,
+            tr.last_report_time AS lastReportTime
+        FROM task t
+        INNER JOIN task_executor te ON t.task_id = te.task_id
+        LEFT JOIN sys_user cu ON t.create_user_id = cu.user_id
+        LEFT JOIN (
+            SELECT 
+                task_id,
+                MAX(report_time) as last_report_time
+            FROM task_report 
+            GROUP BY task_id
+        ) tr ON t.task_id = tr.task_id
+        LEFT JOIN (
+            SELECT 
+                parent_task_id,
+                COUNT(*) as sub_count,
+                SUM(CASE WHEN task_status >= 3 THEN 1 ELSE 0 END) as completed_count
+            FROM task 
+            GROUP BY parent_task_id
+        ) sub_task_counts ON t.task_id = sub_task_counts.parent_task_id
+        <where>
+            t.task_status = 2
+            AND t.report_flag = 1
+            <choose>
+                <when test="userRole == 'teacher'">
+                    <!-- 教师角色：查询参与用户包含当前用户的任务 -->
+                    AND EXISTS (
+                        SELECT 1 FROM task_user tu
+                        WHERE tu.task_id = t.task_id AND tu.user_id = #{currentUserId}
+                    )
+                    <if test="executorUserId != null">
+                        AND te.user_id = #{executorUserId}
+                    </if>
+                </when>
+                <otherwise>
+                    <!-- 学生角色：查询执行者为当前用户的任务 -->
+                    AND te.user_id = #{currentUserId}
+                </otherwise>
+            </choose>
+            <choose>
+                <when test="timeoutFlag == 1">
+                    <!-- 已汇报/未超时：最后汇报时间不为空且距离当前时间不超过reportFrequency天 -->
+                    AND tr.last_report_time IS NOT NULL
+                    AND DATEDIFF(NOW(), tr.last_report_time) &lt;= t.report_frequency
+                </when>
+                <when test="timeoutFlag == 2">
+                    <!-- 超时未汇报：最后汇报时间为空，或距离当前时间超过reportFrequency天 -->
+                    AND (
+                        tr.last_report_time IS NULL
+                        OR DATEDIFF(NOW(), tr.last_report_time) > t.report_frequency
+                    )
+                </when>
+            </choose>
+        </where>
+        ORDER BY t.create_time DESC
+    </select>
+
+    <!-- 根据任务ID查询从根任务到当前任务的完整层级链 -->
+    <select id="selectParentTasksByTaskId" resultType="com.ruoyi.experiment.pojo.vo.UnreportedTaskVO">
+        WITH RECURSIVE task_path AS (
+            -- 递归基础：从当前任务开始
+            SELECT
+                t.task_id,
+                t.parent_task_id,
+                t.task_name,
+                t.task_status,
+                t.task_depth,
+                t.report_frequency,
+                t.create_user_id,
+                t.create_time,
+                cu.nick_name AS createUserNickName,
+                cu.user_name AS createUserName,
+                te.user_id AS executorUserId,
+                0 as level
+            FROM task t
+            INNER JOIN task_executor te ON t.task_id = te.task_id
+            LEFT JOIN sys_user cu ON t.create_user_id = cu.user_id
+            WHERE t.task_id = #{taskId}
+            
+            UNION ALL
+            
+            -- 递归查询：向上查找父任务
+            SELECT
+                p.task_id,
+                p.parent_task_id,
+                p.task_name,
+                p.task_status,
+                p.task_depth,
+                p.report_frequency,
+                p.create_user_id,
+                p.create_time,
+                cu.nick_name AS createUserNickName,
+                cu.user_name AS createUserName,
+                te.user_id AS executorUserId,
+                tp.level + 1
+            FROM task p
+            INNER JOIN task_executor te ON p.task_id = te.task_id
+            LEFT JOIN sys_user cu ON p.create_user_id = cu.user_id
+            INNER JOIN task_path tp ON p.task_id = tp.parent_task_id
+        )
+        SELECT
+            task_id,
+            parent_task_id,
+            task_name,
+            task_status,
+            task_depth,
+            report_frequency,
+            create_user_id,
+            create_time,
+            createUserNickName,
+            createUserName,
+            executorUserId,
+            (SELECT COUNT(*) FROM task sub WHERE sub.parent_task_id = task_path.task_id) as subTaskCount,
+            (SELECT COUNT(*) FROM task sub WHERE sub.parent_task_id = task_path.task_id AND sub.task_status >= 3) as completedSubTaskCount,
+            (SELECT MAX(tr.report_time) FROM task_report tr WHERE tr.task_id = task_path.task_id) AS lastReportTime
+        FROM task_path
+        ORDER BY level DESC
+    </select>
+
+</mapper>
