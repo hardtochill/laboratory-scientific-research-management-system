@@ -239,30 +239,9 @@ const loadTasks = async () => {
   }
 }
 
-// 加载当前标签页的任务列表
-const loadTaskList = async () => {
-  loading.value = true
-  try {
-    const timeoutFlag = activeTab.value === 'reported' ? 1 : 2
-    const response = await getUnreportedTaskList(timeoutFlag, queryParams.executorUserId)
-    const taskList = response.data || []
-
-    if (activeTab.value === 'reported') {
-      reportedTaskList.value = taskList
-    } else {
-      timeoutTaskList.value = taskList
-    }
-  } catch (error) {
-    ElMessage.error('加载任务列表失败')
-    console.error('加载任务列表失败:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
 // Tab切换
 const handleTabChange = () => {
-  loadTaskList()
+  loadTasks()
 }
 
 // 查询

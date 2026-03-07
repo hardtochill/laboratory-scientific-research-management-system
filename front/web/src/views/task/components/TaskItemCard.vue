@@ -48,6 +48,10 @@
             <div class="detail-label">创建人</div>
             <div class="detail-value">{{ formatCreator(task.createUserNickName, task.createUserName) }}</div>
           </div>
+          <div class="detail-item">
+            <div class="detail-label">执行人</div>
+            <div class="detail-value">{{ formatCreator(task.executorNickName, task.executorUserName) }}</div>
+          </div>
         </div>
         
         <!-- 汇报状态提示 -->
@@ -280,7 +284,7 @@ const handleShowSingle = () => {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
@@ -325,6 +329,12 @@ const handleShowSingle = () => {
     justify-content: space-between;
   }
   
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
   .detail-grid {
     grid-template-columns: 1fr;
   }

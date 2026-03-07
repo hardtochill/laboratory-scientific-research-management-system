@@ -18,12 +18,15 @@
             cu.nick_name AS createUserNickName,
             cu.user_name AS createUserName,
             te.user_id AS executorUserId,
+            eu.nick_name AS executorNickName,
+            eu.user_name AS executorUserName,
             COALESCE(sub_task_counts.sub_count, 0) as subTaskCount,
             COALESCE(sub_task_counts.completed_count, 0) as completedSubTaskCount,
             tr.last_report_time AS lastReportTime
         FROM task t
         INNER JOIN task_executor te ON t.task_id = te.task_id
         LEFT JOIN sys_user cu ON t.create_user_id = cu.user_id
+        LEFT JOIN sys_user eu ON te.user_id = eu.user_id
         LEFT JOIN (
             SELECT 
                 task_id,
@@ -92,10 +95,13 @@
                 cu.nick_name AS createUserNickName,
                 cu.user_name AS createUserName,
                 te.user_id AS executorUserId,
+                eu.nick_name AS executorNickName,
+                eu.user_name AS executorUserName,
                 0 as level
             FROM task t
             INNER JOIN task_executor te ON t.task_id = te.task_id
             LEFT JOIN sys_user cu ON t.create_user_id = cu.user_id
+            LEFT JOIN sys_user eu ON te.user_id = eu.user_id
             WHERE t.task_id = #{taskId}
             
             UNION ALL
@@ -113,10 +119,13 @@
                 cu.nick_name AS createUserNickName,
                 cu.user_name AS createUserName,
                 te.user_id AS executorUserId,
+                eu.nick_name AS executorNickName,
+                eu.user_name AS executorUserName,
                 tp.level + 1
             FROM task p
             INNER JOIN task_executor te ON p.task_id = te.task_id
             LEFT JOIN sys_user cu ON p.create_user_id = cu.user_id
+            LEFT JOIN sys_user eu ON te.user_id = eu.user_id
             INNER JOIN task_path tp ON p.task_id = tp.parent_task_id
         )
         SELECT
@@ -131,6 +140,8 @@
             createUserNickName,
             createUserName,
             executorUserId,
+            executorNickName,
+            executorUserName,
             (SELECT COUNT(*) FROM task sub WHERE sub.parent_task_id = task_path.task_id) as subTaskCount,
             (SELECT COUNT(*) FROM task sub WHERE sub.parent_task_id = task_path.task_id AND sub.task_status >= 3) as completedSubTaskCount,
             (SELECT MAX(tr.report_time) FROM task_report tr WHERE tr.task_id = task_path.task_id) AS lastReportTime

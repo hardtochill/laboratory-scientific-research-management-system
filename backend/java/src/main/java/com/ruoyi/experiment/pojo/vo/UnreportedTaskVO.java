@@ -87,4 +87,14 @@ public class UnreportedTaskVO {
      * 创建人昵称
      */
     private String createUserNickName;
+    
+    /**
+     * 执行人姓名
+     */
+    private String executorUserName;
+    
+    /**
+     * 执行人昵称
+     */
+    private String executorNickName;
 }
