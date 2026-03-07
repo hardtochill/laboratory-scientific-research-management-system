@@ -155,15 +155,15 @@ public class TaskServiceImpl implements TaskService {
         // 3.1.检查并设置深度和顺序
         if(null!=parentTask){
             // 深度
-            if(Objects.equals(parentTask.getTaskDepth(), TaskConstants.MAX_TASK_DEPTH)){
+            /*if(Objects.equals(parentTask.getTaskDepth(), TaskConstants.MAX_TASK_DEPTH)){
                 throw new ServiceException("任务深度不能超过 "+TaskConstants.MAX_TASK_DEPTH);
-            }
+            }*/
             task.setTaskDepth(parentTask.getTaskDepth()+1);
             // 顺序
             Integer lastSubTaskOrder = taskMapper.selectLastSubTaskOrder(parentTask.getTaskId());
-            if(Objects.equals(lastSubTaskOrder,TaskConstants.MAX_TASK_ORDER)){
+            /*if(Objects.equals(lastSubTaskOrder,TaskConstants.MAX_TASK_ORDER)){
                 throw new ServiceException("任务顺序不能超过 "+TaskConstants.MAX_TASK_ORDER);
-            }
+            }*/
             task.setTaskOrder(lastSubTaskOrder==null?1:lastSubTaskOrder+1);
         }else{
             task.setTaskDepth(1);
