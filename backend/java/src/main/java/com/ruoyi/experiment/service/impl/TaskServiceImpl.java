@@ -61,13 +61,20 @@ public class TaskServiceImpl implements TaskService {
             task.setParticipantUsers(participantUsers);
         }
         
-        // 3.统计各状态任务个数
+        // 3.统计各状态任务个数——任务统计只依赖查询条件的用户id
         Long pendingCount = 0L;
         Long processingCount = 0L;
         Long finishedCount = 0L;
         Long skippedCount = 0L;
-        
-        for (TaskVO task : tasks) {
+        TaskQueryDTO taskQueryDTO1 = new TaskQueryDTO();
+        taskQueryDTO1.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+        taskQueryDTO1.setUserId(taskQueryDTO.getUserId());
+        if(SecurityUtils.isStudent()){
+            taskQueryDTO.setUserId(SecurityUtils.getUserId());
+        }
+        List<TaskVO> taskVOS = taskMapper.selectTasksForStatistics(taskQueryDTO1);
+
+        for (TaskVO task : taskVOS) {
             if(TaskStatusEnum.PENDING.getStatus().equals(task.getTaskStatus())){
                 pendingCount++;
             }else if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
@@ -86,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
         result.setProcessingCount(processingCount);
         result.setFinishedCount(finishedCount);
         result.setSkippedCount(skippedCount);
-        result.setTotal((long) tasks.size());
+        result.setTotal((long) taskVOS.size());
         
         return result;
     }

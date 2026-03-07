@@ -16,6 +16,8 @@ public interface TaskMapper {
 
     List<TaskVO> select(TaskQueryDTO taskQueryDTO);
 
+    List<TaskVO> selectTasksForStatistics(TaskQueryDTO taskQueryDTO);
+
     /**
      * 计算子任务的完成情况
      */

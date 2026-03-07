@@ -21,6 +21,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <if test="orderBy!=null and orderDirection!=null">t.${orderBy} ${orderDirection}</if>
         <if test="orderBy==null or orderDirection==null">t.create_time desc</if>
     </select>
+    <select id="selectTasksForStatistics" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
+        select t.task_id,t.task_status
+        from task t
+        inner join task_user tu on t.task_id = tu.task_id
+        <where>
+            t.parent_task_id=#{parentTaskId}
+            <if test="userId!=null">and tu.user_id=#{userId}</if>
+        </where>
+        group by t.task_id,t.task_status
+    </select>
 
     <select id="selectParentIdsHaveSubTasks" resultType="java.lang.Long">
         select parent_task_id from task
