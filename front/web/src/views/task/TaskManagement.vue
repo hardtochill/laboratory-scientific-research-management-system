@@ -1181,7 +1181,6 @@ const handleChangeStatus = async (task, newStatus) => {
     // 重新加载任务列表
     loadParentTasks()
   } catch (error) {
-    ElMessage.error('任务状态修改失败')
     console.error('任务状态修改失败:', error)
   }
 }

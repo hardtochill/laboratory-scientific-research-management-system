@@ -221,13 +221,19 @@ public class TaskServiceImpl implements TaskService {
         if(null==originTask){
             throw new ServiceException("任务不存在");
         }
-        // 2.只有教师、创建人、执行人有权修改任务
+        // 2.1.只有教师、创建人、执行人有权修改任务
         boolean isTeacher = SecurityUtils.isTeacher();
         boolean isCreator = SecurityUtils.getUserId().equals(originTask.getCreateUserId());
         TaskExecutor originTaskExecutor = taskExecutorMapper.selectByTaskId(taskDTO.getTaskId());
         boolean isExecutor = originTaskExecutor!=null && SecurityUtils.getUserId().equals(originTaskExecutor.getUserId());
         if(!isTeacher && !isExecutor && !isCreator){
             throw new ServiceException("只有教师、任务创建人、任务执行人有权修改任务");
+        }
+        // 2.2 只有任务创建人可以将任务状态更改为已完成或者已跳过
+        if(!originTask.getTaskStatus().equals(taskDTO.getTaskStatus())
+                && (TaskStatusEnum.FINISHED.getStatus().equals(taskDTO.getTaskStatus()) || TaskStatusEnum.SKIPPED.getStatus().equals(taskDTO.getTaskStatus()))
+                && !isCreator){
+            throw new ServiceException("只有任务创建人可以将任务状态更改为已完成或者已跳过");
         }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
@@ -301,6 +307,18 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void updateTaskStatus(Long taskId,Integer status) {
         log.info("任务管理模块-更新任务状态：{},{}",taskId,status);
+        // 查出原任务
+        Task originTask = taskMapper.selectTaskById(taskId);
+        if(null==originTask){
+            throw new ServiceException("任务不存在");
+        }
+        // 只有任务创建人可以将任务状态更改为已完成或者已跳过
+        boolean isCreator = SecurityUtils.getUserId().equals(originTask.getCreateUserId());
+        if(!originTask.getTaskStatus().equals(status)
+                && (TaskStatusEnum.FINISHED.getStatus().equals(status) || TaskStatusEnum.SKIPPED.getStatus().equals(status))
+                && !isCreator){
+            throw new ServiceException("只有任务创建人可以将任务状态更改为已完成或者已跳过");
+        }
         Task task = new Task();
         task.setTaskId(taskId);
         task.setTaskStatus(status);
