@@ -664,27 +664,18 @@ const userLoading = ref(false)
 // 任务类型：my-我的任务，all-全部任务
 const taskType = ref('my')
 
-// 计算学生姓名选择器的显示值（只读，避免循环更新）
-const displayUserId = computed(() => {
-  if (taskType.value === 'my') {
-    return undefined
-  }
-  return queryParams.value.userId
-})
-
-// 统一更新 userId 的函数
-const updateUserId = (userId) => {
-  queryParams.value.userId = userId
-}
+// 学生姓名选择器的显示值
+const displayUserId = ref(undefined)
 
 // 任务类型切换处理
 const handleTaskTypeChange = () => {
   if (taskType.value === 'my') {
     // 我的任务：userId设置为当前用户ID（用于后台逻辑）
-    updateUserId(userStore.id)
+    queryParams.value.userId = userStore.id
+    displayUserId.value = undefined
   } else {
     // 全部任务：userId跟随学生姓名查询字段
-    updateUserId(undefined)
+    queryParams.value.userId = displayUserId.value
   }
   handleQuery()
 }
@@ -692,7 +683,8 @@ const handleTaskTypeChange = () => {
 // 学生姓名选择器change事件处理
 const handleUserChange = (value) => {
   // 更新 queryParams.userId
-  updateUserId(value)
+  queryParams.value.userId = value
+  displayUserId.value = value
   // 如果选择了学生，自动切换到全部任务
   if (value) {
     taskType.value = 'all'
