@@ -1748,6 +1748,39 @@ onMounted(async () => {
   color: #409eff;
 }
 
+.tag-file-group {
+  margin-bottom: 16px;
+}
+
+.tag-file-group .el-row {
+  display: block;
+}
+
+.tag-label {
+  font-size: 15px;
+  color: #606266;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.tag-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 0;
+}
+
+.file-link {
+  word-break: break-all;
+  white-space: normal;
+  text-align: left;
+  max-width: 100%;
+  display: block;
+  padding: 2px 0;
+  margin: 0;
+  font-size: 14px;
+}
+
 .files-label {
   font-size: 15px;
   color: #606266;
@@ -1762,6 +1795,16 @@ onMounted(async () => {
 
 .no-files {
   text-align: center;
+  color: #909399;
+  font-style: italic;
+}
+
+.process-detail {
+  padding: 8px 0;
+}
+
+.related-files {
+  padding: 4px 0;
 }
 
 /* 上传区域样式 */

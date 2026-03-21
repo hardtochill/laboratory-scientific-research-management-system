@@ -29,6 +29,9 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,17 +55,50 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     public List<SubmissionProcessVO> listSubmissionProcessesByPlanId(Long planId) {
         log.info("投稿流程模块-查询投稿计划下的投稿流程列表：{}",planId);
         List<SubmissionProcessVO> submissionProcessVOs = submissionProcessMapper.selectByPlanId(planId);
+        
+        if (submissionProcessVOs.isEmpty()) {
+            return submissionProcessVOs;
+        }
+        
+        // 提取所有流程ID
+        List<Long> processIds = submissionProcessVOs.stream()
+                .map(SubmissionProcessVO::getId)
+                .collect(Collectors.toList());
+        
+        // 批量查询所有流程的文件，避免N+1查询
+        List<SubmissionProcessFile> allFiles = submissionProcessFileMapper.selectByProcessIds(processIds);
+        
+        // 按流程ID分组文件
+        Map<Long, List<SubmissionProcessFile>> filesByProcessId = allFiles.stream()
+                .collect(Collectors.groupingBy(SubmissionProcessFile::getProcessId));
+        
+        // 转换为VO列表的映射
+        Map<Long, List<SubmissionProcessFileVO>> voFilesByProcessId = new HashMap<>();
+        for (Map.Entry<Long, List<SubmissionProcessFile>> entry : filesByProcessId.entrySet()) {
+            Long processId = entry.getKey();
+            List<SubmissionProcessFile> files = entry.getValue();
+            List<SubmissionProcessFileVO> voFiles = files.stream()
+                    .map(file -> {
+                        SubmissionProcessFileVO vo = new SubmissionProcessFileVO();
+                        BeanUtils.copyProperties(file, vo);
+                        return vo;
+                    })
+                    .collect(Collectors.toList());
+            voFilesByProcessId.put(processId, voFiles);
+        }
+        
+        // 处理每个流程的文件分类
         for (SubmissionProcessVO submissionProcessVO : submissionProcessVOs) {
-            // 关联文件列表
-            List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(
-                    submissionProcessVO.getId());
+            Long processId = submissionProcessVO.getId();
+            List<SubmissionProcessFileVO> processFiles = voFilesByProcessId.getOrDefault(processId, Collections.emptyList());
+            
             // 文件分类
             if(SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcessVO.getName())){ // 一审
                 // 提交给期刊的文件
                 List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
                 // 原始数据与程序
                 List<SubmissionProcessFileVO> rawDataAndProgramFiles = new ArrayList<>();
-                for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                for (SubmissionProcessFileVO submissionProcessFile : processFiles) {
                     if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
                         journalSubmissionFiles.add(submissionProcessFile);
                     }else if(SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())){
@@ -73,7 +109,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
                 submissionProcessVO.setRawDataAndProgramFiles(rawDataAndProgramFiles);
             }else if(SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcessVO.getName())){ // 校稿
                 // 最终稿
-                submissionProcessVO.setFinalDraftFiles(submissionProcessFiles);
+                submissionProcessVO.setFinalDraftFiles(processFiles);
             }else{ // n审
                 // 审稿意见
                 List<SubmissionProcessFileVO> reviewCommentsFiles = new ArrayList<>();
@@ -81,7 +117,7 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
                 List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
                 // 补充数据
                 List<SubmissionProcessFileVO> supplementaryDataFiles = new ArrayList<>();
-                for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
+                for (SubmissionProcessFileVO submissionProcessFile : processFiles) {
                     if(SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())){
                         reviewCommentsFiles.add(submissionProcessFile);
                     }else if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
