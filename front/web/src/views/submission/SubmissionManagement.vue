@@ -2,6 +2,12 @@
   <div class="submission-management">
     <!-- 查询表单 -->
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="100px" class="query-form">
+      <el-form-item label="计划类型" v-if="isHasTeacherRole">
+        <el-radio-group v-model="planType" @change="handlePlanTypeChange">
+          <el-radio-button label="my">我的计划</el-radio-button>
+          <el-radio-button label="all">所有计划</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="计划名称" prop="name">
         <el-select v-model="queryParams.name" placeholder="请选择计划名称" clearable style="width: 240px" filterable remote
           reserve-keyword :remote-method="querySelectablePlans" :loading="planLoading">
@@ -51,7 +57,7 @@
       </template>
       <!-- 投稿计划列表 -->
       <div class="submission-list">
-        <div v-for="plan in submissionPlans" :key="plan.id" class="submission-item">
+        <div v-for="plan in submissionPlans" :key="plan.id" class="submission-item" @click="showPlanDetail(plan)">
           <!-- 投稿计划行 -->
           <div class="submission-row">
             <!-- 左侧内容区域 -->
@@ -87,7 +93,7 @@
               </el-tooltip>
               <!-- 修改状态下拉菜单 -->
               <el-tooltip content="更新计划状态" placement="top">
-                <el-dropdown trigger="click" @command="(newStatus) => handleChangePlanStatus(plan, newStatus)">
+                <el-dropdown trigger="click" @command.stop="(newStatus) => handleChangePlanStatus(plan, newStatus)">
                   <el-button link type="primary" :icon="Switch"></el-button>
                   <template #dropdown>
                     <el-dropdown-menu>
@@ -113,7 +119,7 @@
                 <el-skeleton :rows="3" animated />
               </div>
               <div v-else class="process-list">
-                <div v-for="process in plan.processes" :key="process.id" class="process-item">
+                <div v-for="process in plan.processes" :key="process.id" class="process-item" @click.stop>
                   <div class="process-header">
                     <span class="process-name">{{ process.name }}</span>
                     <el-tag :type="getProcessStatusType(process.status)" size="small" class="process-status">
@@ -497,6 +503,7 @@ import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmiss
 import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles, downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { parseTime } from '@/utils/ruoyi'
 import { CaretRight, CaretBottom, Plus, Switch, Delete, Document, Files, Check, UploadFilled, Download } from '@element-plus/icons-vue'
+import useUserStore from '@/store/modules/user'
 
 // 投稿计划状态枚举
 const PLAN_STATUS = {
@@ -664,7 +671,8 @@ const data = reactive({
     createUserId: undefined,
     createUserNickName: undefined,
     type: undefined,
-    status: undefined
+    status: undefined,
+    participantUserId: undefined
   },
   total: 0
 })
@@ -793,6 +801,32 @@ const creatorLoading = ref(false)
 const selectableParticipantUsers = ref([])
 const participantUserLoading = ref(false)
 
+// 用户角色信息
+const userStore = useUserStore()
+const userRoles = ref([])
+const isHasTeacherRole = ref(false)
+
+// 计划类型：my-我的计划，all-所有计划
+const planType = ref('my')
+
+// 检查用户是否含有teacher角色
+const checkUserRoles = () => {
+  userRoles.value = userStore.roles || []
+  isHasTeacherRole.value = userRoles.value.includes('teacher') || userRoles.value.includes('admin')
+}
+
+// 计划类型切换处理
+const handlePlanTypeChange = () => {
+  if (planType.value === 'my') {
+    // 我的计划：设置participantUserId为当前用户ID
+    queryParams.value.participantUserId = userStore.id
+  } else {
+    // 所有计划：清除participantUserId
+    queryParams.value.participantUserId = undefined
+  }
+  handleQuery()
+}
+
 // 加载投稿计划列表
 const loadSubmissionPlans = async () => {
   loading.value = true
@@ -837,10 +871,12 @@ const resetQuery = () => {
     pageNum: 1,
     pageSize: 10,
     name: undefined,
+    createUserId: undefined,
     createUserNickName: undefined,
     type: undefined,
     journal: undefined,
-    status: undefined
+    status: undefined,
+    participantUserId: planType.value === 'my' ? userStore.id : undefined
   }
   handleQuery()
 }
@@ -1516,6 +1552,9 @@ const downloadFile = async (fileId, fileName) => {
 
 // 页面加载时初始化数据
 onMounted(async () => {
+  checkUserRoles()
+  // 初始化查询参数
+  queryParams.value.participantUserId = userStore.id
   await loadSubmissionPlans()
 })
 </script>

@@ -56,7 +56,10 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     @Override
     public List<SubmissionPlan> listSubmissionPlans(SubmissionPlanQueryDTO submissionPlanQueryDTO) {
         log.info("投稿计划模块-查询投稿计划列表：{}",submissionPlanQueryDTO);
-        submissionPlanQueryDTO.setParticipantUserId(SecurityUtils.getUserId());
+        // 学生只能查自己的计划
+        if(SecurityUtils.isStudent()){
+            submissionPlanQueryDTO.setParticipantUserId(SecurityUtils.getUserId());
+        }
         return submissionPlanMapper.selectSubmissionPlanList(submissionPlanQueryDTO);
     }
 
