@@ -68,6 +68,9 @@
                   :icon="plan.expanded ? CaretBottom : CaretRight"></el-button>
               </div>
 
+              <!-- 投稿类型 -->
+              <el-tag size="small" class="submission-type">{{ getSubmissionTypeText(plan.type) }}</el-tag>
+
               <!-- 计划名称 -->
               <span class="submission-name">{{ plan.name }}</span>
 
@@ -1623,6 +1626,17 @@ onMounted(async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.submission-type {
+  background-color: #ecf5ff;
+  color: #409eff;
+  border: 1px solid #b3d8ff;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 2px 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
 .journal-name {
