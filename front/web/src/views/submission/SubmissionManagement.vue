@@ -455,7 +455,7 @@
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              支持java、py、pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过50MB
+              支持java、py、pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过5GB
             </div>
           </template>
         </el-upload>
@@ -1268,9 +1268,9 @@ const handleTempFileRemove = (file, fileList) => {
 
 // 上传前验证
 const beforeUpload = (file) => {
-  const isLt50M = file.size / 1024 / 1024 < 50
-  if (!isLt50M) {
-    ElMessage.error('文件大小不能超过50MB')
+  const isLt5G = file.size / 1024 / 1024 / 1024 < 5
+  if (!isLt5G) {
+    ElMessage.error('文件大小不能超过5GB')
     return false
   }
   return true

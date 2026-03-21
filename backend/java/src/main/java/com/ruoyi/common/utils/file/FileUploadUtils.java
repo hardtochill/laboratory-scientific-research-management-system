@@ -24,14 +24,14 @@ import com.ruoyi.framework.config.RuoYiConfig;
 public class FileUploadUtils
 {
     /**
-     * 默认大小 50M
+     * 默认大小 5GB
      */
-    public static final long DEFAULT_MAX_SIZE = 50 * 1024 * 1024L;
+    public static final long DEFAULT_MAX_SIZE = 5 * 1024 * 1024 * 1024L;
 
     /**
-     * 默认的文件名最大长度 1000
+     * 默认的文件名最大长度 2000
      */
-    public static final int DEFAULT_FILE_NAME_LENGTH = 1000;
+    public static final int DEFAULT_FILE_NAME_LENGTH = 2000;
 
     /**
      * 默认上传的地址

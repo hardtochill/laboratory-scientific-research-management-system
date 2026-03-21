@@ -65,3 +65,6 @@ coverage/
 # 本地文件
 *.local
 backend/file/
+
+# 代码统计工具
+.VSCodeCounter/

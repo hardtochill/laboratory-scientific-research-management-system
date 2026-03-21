@@ -847,10 +847,10 @@ async function handleDeleteComment(comment) {
 
 /** 处理文件选择变化 */
 function handleFileChange(file, fileList) {
-    // 检查文件大小 (50MB限制)
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    // 检查文件大小 (5GB限制)
+    const maxSize = 5 * 1024 * 1024 * 1024 // 5GB
     if (file.size > maxSize) {
-        ElMessage.warning(`文件 ${file.name} 大小超过50MB限制，请重新选择`)
+        ElMessage.warning(`文件 ${file.name} 大小超过5GB限制，请重新选择`)
         // 移除超过大小限制的文件
         const index = fileList.findIndex(f => f.uid === file.uid)
         if (index > -1) {
