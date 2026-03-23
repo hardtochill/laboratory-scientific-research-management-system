@@ -16,7 +16,7 @@
       <div class="nav-content">
         <el-row :gutter="30">
           <el-col :xs="24" :sm="12" :md="8">
-            <div class="nav-card" @click="navigateTo('/task')">
+            <div class="nav-card" @click="navigateTo('/task/all')">
               <div class="card-icon task-icon">
                 <svg-icon icon-class="task" />
               </div>
