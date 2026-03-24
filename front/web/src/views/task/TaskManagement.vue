@@ -152,7 +152,23 @@
                 </div>
               </div>
 
-              <!-- 第二行：参与用户 -->
+              <!-- 第二行：子任务状态统计 -->
+              <div class="status-stats-row" v-if="task.subTaskStatusStats">
+                <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.PENDING }) }">
+                  未开始：{{ task.subTaskStatusStats.pendingCount || 0 }}
+                </span>
+                <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.PROCESSING }) }">
+                  进行中：{{ task.subTaskStatusStats.processingCount || 0 }}
+                </span>
+                <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.FINISHED }) }">
+                  已完成：{{ task.subTaskStatusStats.finishedCount || 0 }}
+                </span>
+                <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.SKIPPED }) }">
+                  已跳过：{{ task.subTaskStatusStats.skippedCount || 0 }}
+                </span>
+              </div>
+
+              <!-- 第三行：参与用户 -->
               <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
                 <span class="participant-users">参与用户：{{task.participantUsers.map(user => user.nickName).join(', ')
                   }}</span>
@@ -329,7 +345,7 @@
           <!-- 实际完成时间 -->
           <el-form-item label="实际完成时间" prop="actualFinishTime">
             <el-date-picker v-model="formData.actualFinishTime" type="datetime" placeholder="请选择实际完成时间"
-              style="width: 100%;" />
+              style="width: 100%;" :disabled="true" />
           </el-form-item>
 
           <!-- 任务备注 -->
@@ -743,6 +759,9 @@ const formRules = reactive({
     { required: true, message: '请输入任务名称', trigger: 'blur' },
     { min: 1, max: 50, message: '长度在 1 到 50 个字符', trigger: 'blur' }
   ],
+  taskDescription: [
+    { required: true, message: '请输入任务描述', trigger: 'blur' }
+  ],
   taskStatus: [
     { required: true, message: '请选择任务状态', trigger: 'change' }
   ],
@@ -757,6 +776,9 @@ const formRules = reactive({
         callback()
       }
     } }
+  ],
+  expectedFinishTime: [
+    { required: true, message: '请选择预期完成时间', trigger: 'change' }
   ],
   reportFlag: [
     { required: true, message: '请选择是否定时汇报', trigger: 'change' }
@@ -1716,6 +1738,20 @@ onUnmounted(() => {
 
 .right-buttons :deep(.el-button:hover) {
   transform: scale(1.1);
+}
+
+.status-stats-row {
+  margin-top: 12px;
+  padding-left: 32px;
+  padding-right: 12px;
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-stat {
+  white-space: nowrap;
 }
 
 .participant-users-row {

@@ -16,6 +16,7 @@ import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.entity.TaskExecutor;
 import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
+import com.ruoyi.experiment.pojo.vo.TaskStatusStats;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
 import com.ruoyi.experiment.service.TaskService;
@@ -36,6 +37,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -107,6 +109,17 @@ public class TaskServiceImpl implements TaskService {
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
         // 2.计算子任务状态
         calculateTaskList(tasks);
+        
+        // 统计子任务状态数量和查询参与用户
+        for (TaskVO task : tasks) {
+            TaskStatusStats stats = calculateSubTaskStatusStats(task.getTaskId());
+            task.setSubTaskStatusStats(stats);
+            
+            // 查询参与用户
+            List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
+            task.setParticipantUsers(participants);
+        }
+        
         return tasks;
     }
 
@@ -123,6 +136,17 @@ public class TaskServiceImpl implements TaskService {
         taskQueryDTO.setOrderDirection(TaskConstants.SUB_TASK_ORDER_DIRECTION);
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
         calculateTaskList(tasks);
+        
+        // 统计子任务状态数量和查询参与用户
+        for (TaskVO task : tasks) {
+            TaskStatusStats stats = calculateSubTaskStatusStats(task.getTaskId());
+            task.setSubTaskStatusStats(stats);
+            
+            // 查询参与用户
+            List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
+            task.setParticipantUsers(participants);
+        }
+        
         return tasks;
     }
     @Override
@@ -237,6 +261,10 @@ public class TaskServiceImpl implements TaskService {
         }
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
+        
+        // 处理实际完成时间
+        handleActualFinishTime(task, taskDTO, originTask);
+        
         // 3.修改任务
         taskMapper.updateTask(task);
         // 4.修改任务执行用户
@@ -322,6 +350,14 @@ public class TaskServiceImpl implements TaskService {
         Task task = new Task();
         task.setTaskId(taskId);
         task.setTaskStatus(status);
+        
+        // 处理实际完成时间
+        if (TaskStatusEnum.FINISHED.getStatus().equals(status)) {
+            task.setActualFinishTime(LocalDateTime.now());
+        } else if (TaskStatusEnum.FINISHED.getStatus().equals(originTask.getTaskStatus())) {
+            task.setActualFinishTime(null);
+        }
+        
         // 更新任务状态
         taskMapper.updateTask(task);
     }
@@ -475,5 +511,68 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         return 0;
+    }
+    
+    /**
+     * 计算子任务状态统计
+     * @param taskId 任务ID
+     * @return 子任务状态统计
+     */
+    private TaskStatusStats calculateSubTaskStatusStats(Long taskId) {
+        TaskStatusStats stats = new TaskStatusStats();
+        // 查询该任务的所有子任务状态
+        List<TaskVO> subTasks = taskMapper.select(new TaskQueryDTO() {
+            {
+                setParentTaskId(taskId);
+            }
+        });
+        
+        // 统计各状态任务数量
+        int pendingCount = 0;
+        int processingCount = 0;
+        int finishedCount = 0;
+        int skippedCount = 0;
+        
+        for (TaskVO subTask : subTasks) {
+            if (TaskStatusEnum.PENDING.getStatus().equals(subTask.getTaskStatus())) {
+                pendingCount++;
+            } else if (TaskStatusEnum.PROCESSING.getStatus().equals(subTask.getTaskStatus())) {
+                processingCount++;
+            } else if (TaskStatusEnum.FINISHED.getStatus().equals(subTask.getTaskStatus())) {
+                finishedCount++;
+            } else if (TaskStatusEnum.SKIPPED.getStatus().equals(subTask.getTaskStatus())) {
+                skippedCount++;
+            }
+        }
+        
+        stats.setPendingCount(pendingCount);
+        stats.setProcessingCount(processingCount);
+        stats.setFinishedCount(finishedCount);
+        stats.setSkippedCount(skippedCount);
+        
+        return stats;
+    }
+    
+    /**
+     * 处理实际完成时间
+     * @param task 任务对象
+     * @param taskDTO 任务DTO
+     * @param originTask 原始任务
+     */
+    private void handleActualFinishTime(Task task, TaskDTO taskDTO, Task originTask) {
+        // 如果状态改为已完成，设置实际完成时间
+        if (TaskStatusEnum.FINISHED.getStatus().equals(taskDTO.getTaskStatus()) && 
+            !TaskStatusEnum.FINISHED.getStatus().equals(originTask.getTaskStatus())) {
+            task.setActualFinishTime(LocalDateTime.now());
+        }
+        // 如果状态从已完成改为其他状态，清除实际完成时间
+        else if (!TaskStatusEnum.FINISHED.getStatus().equals(taskDTO.getTaskStatus()) && 
+                 TaskStatusEnum.FINISHED.getStatus().equals(originTask.getTaskStatus())) {
+            task.setActualFinishTime(null);
+        }
+        // 保持原有值
+        else {
+            task.setActualFinishTime(originTask.getActualFinishTime());
+        }
     }
 }

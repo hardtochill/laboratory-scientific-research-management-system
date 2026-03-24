@@ -34,4 +34,9 @@ public class TaskVO {
      * 任务执行人
      */
     private Long executorUserId;
+    
+    /**
+     * 子任务状态统计
+     */
+    private TaskStatusStats subTaskStatusStats;
 }

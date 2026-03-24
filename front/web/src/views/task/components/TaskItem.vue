@@ -63,6 +63,27 @@
         </div>
     </div>
 
+    <!-- 第二行：子任务状态统计 -->
+    <div class="status-stats-row" v-if="task.subTaskStatusStats">
+      <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.PENDING }) }">
+        未开始：{{ task.subTaskStatusStats.pendingCount || 0 }}
+      </span>
+      <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.PROCESSING }) }">
+        进行中：{{ task.subTaskStatusStats.processingCount || 0 }}
+      </span>
+      <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.FINISHED }) }">
+        已完成：{{ task.subTaskStatusStats.finishedCount || 0 }}
+      </span>
+      <span class="status-stat" :style="{ color: getProgressColor({ taskStatus: TASK_STATUS.SKIPPED }) }">
+        已跳过：{{ task.subTaskStatusStats.skippedCount || 0 }}
+      </span>
+    </div>
+
+    <!-- 第三行：参与用户 -->
+    <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
+      <span class="participant-users">参与用户：{{task.participantUsers.map(user => user.nickName).join(', ')}}</span>
+    </div>
+
     <!-- 子任务列表（带动画效果） -->
     <transition name="expand">
       <div v-if="task.expanded" class="sub-tasks">
@@ -415,6 +436,38 @@ const loadSubTasks = async () => {
   padding: 0;
   width: 100%;
   height: 100%;
+}
+
+.status-stats-row {
+  margin-top: 12px;
+  padding-left: 32px;
+  padding-right: 12px;
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-stat {
+  white-space: nowrap;
+}
+
+.participant-users-row {
+  margin-top: 12px;
+  padding-left: 32px;
+  padding-right: 12px;
+  padding-bottom: 4px;
+  border-top: 1px dashed rgba(92, 156, 230, 0.15);
+  padding-top: 12px;
+}
+
+.participant-users {
+  font-size: 13px;
+  color: #4a5568;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .sub-tasks {
