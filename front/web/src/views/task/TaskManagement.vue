@@ -1200,13 +1200,30 @@ const handleFormSubmit = async () => {
   try {
     // 表单验证
     await formRef.value.validate()
+    
+    // 确保创建人和执行人在参与用户组中
+    const currentUserId = userStore.id
+    let participantUserIds = formData.participantUserIds || []
+    
+    // 添加创建人（当前用户）
+    if (!participantUserIds.includes(currentUserId)) {
+      participantUserIds = [...participantUserIds, currentUserId]
+    }
+    
+    // 添加执行人
+    if (formData.executorUserId && !participantUserIds.includes(formData.executorUserId)) {
+      participantUserIds = [...participantUserIds, formData.executorUserId]
+    }
+    
     // 准备提交数据
     const submitData = {
       ...formData,
       // 确保parentTaskId为0时是数字类型
       parentTaskId: formData.parentTaskId === '0' ? 0 : formData.parentTaskId,
       // 确保taskStatus是整型数
-      taskStatus: parseInt(formData.taskStatus)
+      taskStatus: parseInt(formData.taskStatus),
+      // 更新参与用户组，确保包含创建人和执行人
+      participantUserIds: participantUserIds
     }
     // 调用API
     if (formData.taskId) {
