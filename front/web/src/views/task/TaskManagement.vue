@@ -408,8 +408,16 @@
 
           <!-- 文件列表 -->
           <div class="file-list-section">
-            <h4>已上传文件</h4>
-            <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading">
+            <div class="file-list-header">
+              <h4>已上传文件</h4>
+              <el-button type="primary" @click="handleBatchDownload" :disabled="selectedFiles.length === 0"
+                :icon="Download" size="small">
+                批量下载 ({{ selectedFiles.length }})
+              </el-button>
+            </div>
+            <el-table :data="taskFileList" stripe style="width: 100%" v-loading="fileLoading"
+              @selection-change="handleSelectionChange">
+              <el-table-column type="selection" width="55" />
               <el-table-column prop="fileName" label="文件名" min-width="200">
                 <template #default="{ row }">
                   <span class="file-name">{{ row.fileName + "." + row.fileType }}</span>
@@ -718,6 +726,7 @@ const fileList = ref([]) // 待上传文件列表
 const fileLoading = ref(false)
 const uploading = ref(false)
 const uploadRef = ref(null)
+const selectedFiles = ref([]) // 选中的文件列表
 
 // 任务汇报相关状态
 const reportDialogVisible = ref(false)
@@ -1413,6 +1422,38 @@ const handleDownloadFile = async (file) => {
   }
 }
 
+// 处理表格选择变化
+const handleSelectionChange = (selection) => {
+  selectedFiles.value = selection
+}
+
+// 批量下载文件
+const handleBatchDownload = async () => {
+  if (selectedFiles.value.length === 0) {
+    ElMessage.warning('请先选择要下载的文件')
+    return
+  }
+
+  try {
+    ElMessage.info(`开始批量下载 ${selectedFiles.value.length} 个文件...`)
+    
+    // 逐个下载文件
+    for (let i = 0; i < selectedFiles.value.length; i++) {
+      const file = selectedFiles.value[i]
+      try {
+        await download(`/taskFile/download/${file.id}`, {}, file.fileName+"."+file.fileType, {}, false)
+      } catch (error) {
+        console.error(`文件 ${file.fileName} 下载失败:`, error)
+      }
+    }
+    
+    ElMessage.success(`批量下载完成，共下载 ${selectedFiles.value.length} 个文件`)
+  } catch (error) {
+    ElMessage.error('批量下载失败')
+    console.error('批量下载失败:', error)
+  }
+}
+
 // 删除文件
 const handleDeleteFile = async (file) => {
   try {
@@ -1965,8 +2006,15 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 
-.file-list-section h4 {
+.file-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 16px;
+}
+
+.file-list-header h4 {
+  margin: 0;
   color: #303133;
   font-weight: 600;
 }
