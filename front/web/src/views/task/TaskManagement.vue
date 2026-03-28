@@ -246,9 +246,13 @@
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="handleClose">关闭</el-button>
-            <el-button type="warning" @click="handleTaskReportClick(currentTask)">
-              任务汇报
-            </el-button>
+            <el-tooltip :content="currentTask?.taskStatus !== TASK_STATUS.PROCESSING ? '只有进行中的任务才能进行汇报' : ''" placement="top"
+              :disabled="currentTask?.taskStatus === TASK_STATUS.PROCESSING">
+              <el-button type="warning" @click="handleTaskReportClick(currentTask)"
+                :disabled="currentTask?.taskStatus !== TASK_STATUS.PROCESSING">
+                任务汇报
+              </el-button>
+            </el-tooltip>
             <el-tooltip :content="!hasTaskPermission(currentTask) ? '只有教师、任务创建人、任务执行人有权修改任务' : ''" placement="top"
               :disabled="hasTaskPermission(currentTask)">
               <el-button type="primary" @click="handleEdit(currentTask)" :disabled="!hasTaskPermission(currentTask)">
