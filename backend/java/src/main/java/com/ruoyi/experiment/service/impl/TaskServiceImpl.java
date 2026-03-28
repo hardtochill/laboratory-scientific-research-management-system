@@ -62,9 +62,9 @@ public class TaskServiceImpl implements TaskService {
             List<SysUser> participantUsers = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participantUsers);
         }
-        
+
         // 3.统计各状态任务个数——任务统计只依赖查询条件的用户id
-        Long pendingCount = 0L;
+        /*Long pendingCount = 0L;
         Long processingCount = 0L;
         Long finishedCount = 0L;
         Long skippedCount = 0L;
@@ -87,7 +87,7 @@ public class TaskServiceImpl implements TaskService {
                 skippedCount++;
             }
         }
-        
+
         // 4.创建返回结果
         TaskStatisticsVO result = new TaskStatisticsVO();
         result.setList(tasks);
@@ -96,6 +96,34 @@ public class TaskServiceImpl implements TaskService {
         result.setFinishedCount(finishedCount);
         result.setSkippedCount(skippedCount);
         result.setTotal((long) taskVOS.size());
+
+        return result;*/
+
+        // 3.统计各状态任务个数——依赖所有查询条件
+        Long pendingCount = 0L;
+        Long processingCount = 0L;
+        Long finishedCount = 0L;
+        Long skippedCount = 0L;
+        for (TaskVO task : tasks) {
+            if(TaskStatusEnum.PENDING.getStatus().equals(task.getTaskStatus())){
+                pendingCount++;
+            }else if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
+                processingCount++;
+            }else if(TaskStatusEnum.FINISHED.getStatus().equals(task.getTaskStatus())){
+                finishedCount++;
+            }else if(TaskStatusEnum.SKIPPED.getStatus().equals(task.getTaskStatus())){
+                skippedCount++;
+            }
+        }
+        
+        // 4.创建返回结果
+        TaskStatisticsVO result = new TaskStatisticsVO();
+        result.setList(tasks);
+        result.setPendingCount(pendingCount);
+        result.setProcessingCount(processingCount);
+        result.setFinishedCount(finishedCount);
+        result.setSkippedCount(skippedCount);
+        result.setTotal((long) tasks.size());
         
         return result;
     }
