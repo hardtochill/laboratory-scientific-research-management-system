@@ -21,17 +21,6 @@
           <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
             @keyup.enter="handleQuery" />
         </el-form-item>
-        <el-form-item label="任务状态" prop="taskStatus">
-          <el-select v-model="queryParams.taskStatus" placeholder="请选择任务状态" clearable style="width: 240px"
-            @change="handleQuery">
-            <el-option label="全部" :value="null" />
-            <el-option label="未开始" :value="1" />
-            <el-option label="进行中" :value="2" />
-            <el-option label="已完成" :value="3" />
-            <el-option label="已跳过" :value="4" />
-          </el-select>
-        </el-form-item>
-
 
         <el-form-item label="创建时间" style="width: 308px">
           <el-date-picker v-model="dateRange" value-format="YYYY-MM-DD HH:mm:ss" type="daterange" range-separator="-"
