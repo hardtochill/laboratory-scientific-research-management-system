@@ -120,6 +120,11 @@
                     <el-button link type="primary" @click.stop="showFileManagement(task)" :icon="Files"
                       style="margin-left: 0px;"></el-button>
                   </el-tooltip>
+                  <!-- 任务汇报按钮 -->
+                  <el-tooltip content="任务汇报" placement="top" v-if="task.taskStatus === TASK_STATUS.PROCESSING">
+                    <el-button link type="primary" @click.stop="handleTaskReportClick(task)" :icon="Clock"
+                      style="margin-left: 0px;"></el-button>
+                  </el-tooltip>
                   <!-- 修改状态下拉菜单 -->
                   <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
                     <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
@@ -176,7 +181,7 @@
                     :is-has-teacher-role="isHasTeacherRole" @show-detail="showTaskDetail"
                     @add-sub-task="handleAddSubTask" @update-expanded="handleUpdateExpanded"
                     @change-status="handleChangeStatus" @delete-task="handleDeleteTask"
-                    @show-files="showFileManagement" />
+                    @show-files="showFileManagement" @task-report="handleTaskReportClick" />
                 </div>
               </div>
             </transition>
@@ -246,6 +251,11 @@
         <template #footer>
           <div class="dialog-footer">
             <el-button @click="handleClose">关闭</el-button>
+            <el-tooltip content="文件信息" placement="top">
+              <el-button @click="showFileManagement(currentTask)" :icon="Files">
+                文件信息
+              </el-button>
+            </el-tooltip>
             <el-tooltip :content="currentTask?.taskStatus !== TASK_STATUS.PROCESSING ? '只有进行中的任务才能进行汇报' : ''" placement="top"
               :disabled="currentTask?.taskStatus === TASK_STATUS.PROCESSING">
               <el-button type="warning" @click="handleTaskReportClick(currentTask)"
@@ -527,7 +537,7 @@ import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/task
 import { getTaskReportList, addTaskReport, deleteTaskReport } from '@/api/task/taskReport'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight, CaretBottom, Plus, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files } from '@element-plus/icons-vue'
+import { CaretRight, CaretBottom, Plus, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files, Clock } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
 import { download } from "@/utils/request"
 

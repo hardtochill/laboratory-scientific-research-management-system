@@ -42,6 +42,10 @@
           <el-tooltip content="文件信息" placement="top">
             <el-button link type="primary" @click.stop="handleShowFiles" :icon="Files" style="margin-left: 0px;"></el-button>
           </el-tooltip>
+          <!-- 任务汇报按钮 -->
+          <el-tooltip content="任务汇报" placement="top" v-if="task.taskStatus === TASK_STATUS.PROCESSING">
+            <el-button link type="primary" @click.stop="handleTaskReportClick" :icon="Clock" style="margin-left: 0px;"></el-button>
+          </el-tooltip>
           <!-- 修改状态下拉菜单 -->
           <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
             <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(newStatus)">
@@ -101,7 +105,8 @@
             @update-expanded="(...args) => $emit('update-expanded', ...args)"
             @change-status="(...args) => $emit('change-status', ...args)"
             @delete-task="(...args) => $emit('delete-task', ...args)"
-            @show-files="(...args) => $emit('show-files', ...args)" />
+            @show-files="(...args) => $emit('show-files', ...args)"
+            @task-report="(...args) => $emit('task-report', ...args)" />
         </div>
       </div>
     </transition>
@@ -112,7 +117,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
-import {CaretRight,CaretBottom,Plus, Files, Switch, Delete, Document } from '@element-plus/icons-vue'
+import {CaretRight,CaretBottom,Plus, Files, Switch, Delete, Document, Clock } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
 
 // 用户角色信息
@@ -153,7 +158,12 @@ const props = defineProps({
 })
 
 // 组件事件
-const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status', 'delete-task', 'show-files'])
+const emit = defineEmits(['show-detail', 'add-sub-task', 'update-expanded', 'change-status', 'delete-task', 'show-files', 'task-report'])
+
+// 任务汇报
+const handleTaskReportClick = () => {
+  emit('task-report', props.task)
+}
 
 // 任务状态枚举
 const TASK_STATUS = {
