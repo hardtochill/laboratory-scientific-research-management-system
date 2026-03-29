@@ -53,7 +53,7 @@
           </template>
           <!-- 待审核任务列表 -->
           <el-table :data="toReviewList" stripe style="width: 100%" v-loading="toReviewLoading" table-layout="fixed">
-            <el-table-column prop="id" label="编号" width="80" align="center" />
+            <el-table-column type="index" label="编号" width="80" align="center" />
             <el-table-column prop="planName" label="投稿计划" min-width="200" align="center" />
             <el-table-column prop="processName" label="投稿流程" min-width="150" align="center" />
             <el-table-column prop="reviewedUserNickName" label="申请人" width="150" align="center" />
@@ -136,7 +136,7 @@
           </template>
           <!-- 审核历史记录列表 -->
           <el-table :data="reviewedList" stripe style="width: 100%" v-loading="reviewedLoading">
-            <el-table-column prop="id" label="编号" width="80" align="center" />
+            <el-table-column type="index" label="编号" width="80" align="center" />
             <el-table-column prop="planName" label="投稿计划" min-width="200" align="center" />
             <el-table-column prop="processName" label="投稿流程" min-width="150" align="center" />
             <el-table-column prop="reviewedUserNickName" label="申请人" width="120" align="center" />
