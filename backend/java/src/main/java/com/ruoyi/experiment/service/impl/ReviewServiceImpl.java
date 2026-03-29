@@ -107,4 +107,17 @@ public class ReviewServiceImpl implements ReviewService {
         queryDTO.setGraduateFlag(UserGraduateFlagEnum.UNGRADUATED.getValue());
         return userMapper.selectVOForSelect(queryDTO);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteReview(Long id) {
+        log.info("审核模块-删除审核记录：{}", id);
+        Review review = reviewMapper.selectById(id);
+        if (review == null) {
+            throw new RuntimeException("审核记录不存在");
+        }
+        
+        // 删除审核记录
+        reviewMapper.deleteById(id);
+    }
 }

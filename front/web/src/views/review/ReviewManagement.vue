@@ -65,11 +65,14 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="230" fixed="right" align="center">
+            <el-table-column label="操作" min-width="280" fixed="right" align="center">
               <template #default="{ row }">
-                <el-button link type="primary" @click="showReviewDetail(row)" :icon="Document">详情</el-button>
-                <el-button link type="success" @click="handleApproveReview(row)" :icon="Check" v-if="row.status === 1">通过</el-button>
-                <el-button link type="danger" @click="handleRejectReview(row)" :icon="CircleClose" v-if="row.status === 1">拒绝</el-button>
+                <div class="action-buttons">
+                  <el-button link type="primary" @click="showReviewDetail(row)" :icon="Document">详情</el-button>
+                  <el-button link type="success" @click="handleApproveReview(row)" :icon="Check" v-if="row.status === 1">通过</el-button>
+                  <el-button link type="danger" @click="handleRejectReview(row)" :icon="CircleClose" v-if="row.status === 1">拒绝</el-button>
+                  <el-button link type="warning" @click="handleDeleteReview(row)" :icon="Delete">删除</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -150,9 +153,12 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="120" fixed="right" align="center">
+            <el-table-column label="操作" width="150" fixed="right" align="center">
               <template #default="{ row }">
-                <el-button link type="primary" @click="showReviewDetail(row)" :icon="Document">详情</el-button>
+                <div class="action-buttons">
+                  <el-button link type="primary" @click="showReviewDetail(row)" :icon="Document">详情</el-button>
+                  <el-button link type="warning" @click="handleDeleteReview(row)" :icon="Delete">删除</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -310,12 +316,12 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listReviews, getReview, approveReview, rejectReview,getSelectableReviewedUsers } from '@/api/review/review'
+import { listReviews, getReview, approveReview, rejectReview, getSelectableReviewedUsers, deleteReview } from '@/api/review/review'
 import { listSubmissionPlansForSelect, getSubmissionPlan } from '@/api/submission/submissionPlan'
 import { getSubmissionProcessDetail } from '@/api/submission/submissionProcess'
 import { downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { parseTime } from '@/utils/ruoyi'
-import { Document, Check, CircleClose } from '@element-plus/icons-vue'
+import { Document, Check, CircleClose, Delete } from '@element-plus/icons-vue'
 
 // 审核状态枚举
 const REVIEW_STATUS = {
@@ -946,6 +952,67 @@ const handleReviewDialogClose = () => {
   reviewForm.reviewerRemark = ''
 }
 
+// 删除审核
+const handleDeleteReview = async (review) => {
+  try {
+    // 检查投稿计划是否被删除
+    let planDeleted = false
+    if (review.planId) {
+      try {
+        const planResponse = await getSubmissionPlan(review.planId)
+        if (!planResponse.data) {
+          planDeleted = true
+        }
+      } catch (error) {
+        planDeleted = true
+      }
+    }
+    
+    // 检查投稿流程是否被删除
+    let processDeleted = false
+    if (review.processId) {
+      try {
+        const processResponse = await getSubmissionProcessDetail(review.processId)
+        if (!processResponse.data) {
+          processDeleted = true
+        }
+      } catch (error) {
+        processDeleted = true
+      }
+    }
+    
+    // 只有当投稿计划或投稿流程被删除时，才允许删除审核
+    if (planDeleted || processDeleted) {
+      await ElMessageBox.confirm(
+        '确定要删除该审核记录吗？删除后将无法恢复。',
+        '确认删除',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      )
+      
+      await deleteReview(review.id)
+      ElMessage.success('删除成功')
+      
+      // 根据当前激活的标签页重新加载数据
+      if (activeTab.value === 'toReview') {
+        loadToReviewList()
+      } else {
+        loadReviewedList()
+      }
+    } else {
+      ElMessage.warning('只有当审核关联的投稿计划或投稿流程被删除时，才能删除该审核记录')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+      console.error('删除失败:', error)
+    }
+  }
+}
+
 // 关闭详情对话框
 const handleDetailDialogClose = () => {
   detailDialogVisible.value = false
@@ -1085,5 +1152,16 @@ onMounted(async () => {
 
 .review-detail-dialog .el-dialog__body {
   padding: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-buttons .el-button {
+  margin: 0;
 }
 </style>

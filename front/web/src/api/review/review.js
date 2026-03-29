@@ -47,3 +47,11 @@ export function getSelectableReviewedUsers(params) {
     params
   })
 }
+
+// 删除审核
+export function deleteReview(id) {
+  return request({
+    url: `/review/${id}`,
+    method: 'delete'
+  })
+}

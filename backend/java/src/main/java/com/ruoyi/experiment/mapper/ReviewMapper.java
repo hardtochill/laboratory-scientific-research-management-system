@@ -5,6 +5,7 @@ import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -62,4 +63,11 @@ public interface ReviewMapper {
      * @return 影响行数
      */
     int deleteReviewByProcessId(@Param("processId") Long processId);
+
+    /**
+     * 删除审核记录
+     * @param id 审核ID
+     */
+    @Delete("delete from review where id=#{id}")
+    void deleteById(Long id);
 }

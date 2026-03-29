@@ -39,6 +39,12 @@ public interface ReviewService {
      */
     void rejectReview(Long id, String reviewerRemark);
 
+    /**
+     * 删除审核记录
+     * @param id 审核ID
+     */
+    void deleteReview(Long id);
+
      /**
       * 获取用户列表（用于前端用户选择）
       */

@@ -61,4 +61,13 @@ public class ReviewController extends BaseController {
         reviewService.rejectReview(id, reviewerRemark);
         return success();
     }
+    
+    /**
+     * 删除审核记录
+     */
+    @DeleteMapping("/{id}")
+    public AjaxResult deleteReview(@PathVariable("id") Long id) {
+        reviewService.deleteReview(id);
+        return success("删除成功");
+    }
 }
