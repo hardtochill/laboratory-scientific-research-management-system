@@ -30,17 +30,17 @@
        <el-table-column type="index" width="50" align="center" />
       <el-table-column label="文献名称" width="400" align="center" prop="title" v-if="columns[0].visible">
         <template #default="scope">
-          <span>{{ scope.row.title }}</span>
+          <div class="wrap-text">{{ scope.row.title }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="作者" align="center" prop="authors" v-if="columns[2].visible" width="150" :show-overflow-tooltip="true">
+      <el-table-column label="作者" align="left" prop="authors" v-if="columns[2].visible" min-width="150" :show-overflow-tooltip="false">
         <template #default="scope">
-          <span>{{ scope.row.authors }}</span>
+          <div class="wrap-text">{{ scope.row.authors }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="来源" align="center" prop="journal" v-if="columns[3].visible" width="150" :show-overflow-tooltip="true">
+      <el-table-column label="来源" align="left" prop="journal" v-if="columns[3].visible" min-width="150" :show-overflow-tooltip="false">
         <template #default="scope">
-          <span>{{ scope.row.journal }}</span>
+          <div class="wrap-text">{{ scope.row.journal }}</div>
         </template>
       </el-table-column>
       <el-table-column label="发表时间" align="center" prop="publishTime" v-if="columns[5].visible" width="120" :sortable="true">
@@ -936,5 +936,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
+.wrap-text {
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.4;
+  padding: 4px 0;
+}
 </style>
