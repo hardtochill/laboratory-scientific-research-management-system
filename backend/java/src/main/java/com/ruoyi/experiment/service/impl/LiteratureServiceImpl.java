@@ -464,8 +464,8 @@ public class LiteratureServiceImpl implements LiteratureService {
         originAuthors = originAuthors.trim();
 
         // 定义人名匹配的正则表达式
-        // 匹配：中文名(2-4字) | 英文名(可带连字符) | 英文姓+名(中间有空格)
-        String namePattern = "[\\u4e00-\\u9fa5]{2,4}|[A-Z][a-z]+(?:[-·][A-Z][a-z]+)*|[A-Z][a-z]+\\s+[A-Z][a-z]+";
+        // 匹配：中文名(2-4字) | 英文名(可带连字符) | 英文姓+名(中间有空格)（不区分大小写）
+        String namePattern = "[\\u4e00-\\u9fa5]{2,4}|[A-Za-z]+(?:[-·][A-Za-z]+)*|[A-Za-z]+\\s+[A-Za-z]+";
 
         // 先提取所有人名
         Pattern pattern = Pattern.compile(namePattern);
@@ -481,8 +481,8 @@ public class LiteratureServiceImpl implements LiteratureService {
 
         // 如果没有匹配到，使用原始逻辑
         if (names.isEmpty()) {
-            // 移除所有非字母数字和汉字的字符，并用", "替换
-            return originAuthors.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5]", ", ")
+            // 保留空格，只移除特殊字符，并用", "替换
+            return originAuthors.replaceAll("[^a-zA-Z0-9\\u4e00-\\u9fa5\\s]", ", ")
                     .replaceAll(",{2,}", ", ")  // 去除连续逗号
                     .trim();
         }
@@ -492,9 +492,9 @@ public class LiteratureServiceImpl implements LiteratureService {
         for (int i = 0; i < names.size(); i++) {
             String current = names.get(i);
             // 如果是单个英文名，且下一个也是英文名，尝试合并
-            if (current.matches("[A-Z][a-z]+") && i + 1 < names.size()) {
+            if (current.matches("[A-Za-z]+") && i + 1 < names.size()) {
                 String next = names.get(i + 1);
-                if (next.matches("[A-Z][a-z]+") && !current.contains(" ") && !next.contains(" ")) {
+                if (next.matches("[A-Za-z]+") && !current.contains(" ") && !next.contains(" ")) {
                     // 检查是否是常见的英文名字组合
                     formattedNames.add(current + " " + next);
                     i++;  // 跳过下一个

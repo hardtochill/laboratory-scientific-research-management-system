@@ -56,9 +56,10 @@
           <span>{{ scope.row.keywords }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="DOI" align="center" prop="doi" v-if="columns[4].visible" width="200" :show-overflow-tooltip="true">
+      <el-table-column label="DOI" align="center" prop="doi" v-if="columns[4].visible" min-width="200">
         <template #default="scope">
-          <span>{{ scope.row.doi }}</span>
+          <span v-if="!scope.row.url || !scope.row.doi">{{ scope.row.doi || '-' }}</span>
+          <a v-else :href="scope.row.url" target="_blank" class="doi-link" :title="scope.row.url">{{ scope.row.doi }}</a>
         </template>
       </el-table-column>
       <el-table-column label="下载数" align="center" prop="downloadCount" v-if="columns[6].visible" width="100" :sortable="true">
@@ -122,55 +123,75 @@
     </el-dialog>
 
     <!-- 编辑文献对话框 -->
-    <el-dialog :title="'编辑文献：' + editForm.title" v-model="editOpen" width="800px" append-to-body>
-      <el-form :model="editForm" :rules="editRules" ref="editRef" label-width="110px">
+    <el-dialog :title="'编辑文献：' + editForm.title" v-model="editOpen" width="900px" append-to-body>
+      <el-form :model="editForm" :rules="editRules" ref="editRef" label-width="120px">
         <el-row>
-          <el-form-item label="文献名称" prop="title">
-            <el-tooltip content="外文文献填写原名称，无需翻译" placement="top">
-              <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
-            </el-tooltip>
-          </el-form-item>
-          <el-form-item label="文献作者" prop="authors">
-            <el-tooltip content="外文作者填写全名" placement="top">
-              <el-input v-model="editForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit />
-            </el-tooltip>
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="文献名称" prop="title">
+              <el-tooltip content="外文文献填写原名称，无需翻译" placement="top" :trigger-keys="[]">
+                <el-input v-model="editForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文献作者" prop="authors">
+              <el-tooltip content="外文作者填写全名" placement="top" :trigger-keys="[]">
+                <el-input v-model="editForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit trim="false" />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="文献来源" prop="journal">
-            <el-input v-model="editForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
-          </el-form-item>
-          <el-form-item label="发表时间" prop="publishTime">
-            <el-date-picker v-model="editForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期"
-              style="width: 250px" />
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="发表期刊" prop="journal">
+              <el-input v-model="editForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="发表时间" prop="publishTime">
+              <el-date-picker v-model="editForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="关键词" prop="keywordIds">
-            <el-select v-model="editForm.keywordIds" multiple filterable remote placeholder="请选择关键词"
-              :remote-method="remoteMethod" :loading="keywordLoading" style="width: 250px">
-              <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="文献DOI" prop="doi">
-            <el-input v-model="editForm.doi" placeholder="请输入文献DOI" maxlength="255" show-word-limit />
-          </el-form-item>
+          <el-col :span="24">
+            <el-form-item label="关键词" prop="keywordIds">
+              <el-select v-model="editForm.keywordIds" multiple filterable remote placeholder="请选择关键词" :remote-method="remoteMethod" :loading="keywordLoading" style="width: 100%">
+                <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="文献摘要" prop="abstract" style="width: 100%;">
-            <el-input v-model="editForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000"
-              show-word-limit />
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="文献DOI" prop="doi">
+              <el-input v-model="editForm.doi" placeholder="请输入文献DOI" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文献源网页URL" prop="url">
+              <el-input v-model="editForm.url" placeholder="请输入文献源网页URL" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
         </el-row>
-        <el-form-item label="更换文献源文件" style="width: 100%;">
-          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
-            <el-upload style="width: 100%;" ref="editFileUpload" :file-list="editFileList" :limit="1"
-              :on-exceed="editOnExceed" :on-change="editOnChange" :on-remove="editOnRemove" :auto-upload="false"
-              accept=".pdf">
-              <el-button type="warning">选择新文件</el-button>
-            </el-upload>
-          </el-tooltip>
-        </el-form-item>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="文献摘要" prop="abstract">
+              <el-input v-model="editForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000" show-word-limit />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="更换文献源文件">
+              <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
+                <el-upload style="width: 100%;" ref="editFileUpload" :file-list="editFileList" :limit="1" :on-exceed="editOnExceed" :on-change="editOnChange" :on-remove="editOnRemove" :auto-upload="false" accept=".pdf">
+                  <el-button type="warning">选择新文件</el-button>
+                </el-upload>
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
@@ -181,77 +202,100 @@
     </el-dialog>
 
     <!-- 上传文献对话框 -->
-    <el-dialog title="上传文献" v-model="uploadOpen" width="800px" append-to-body>
-      <el-form :model="uploadForm" :rules="uploadRules" ref="uploadRef" label-width="100px"
-        enctype="multipart/form-data">
+    <el-dialog title="上传文献" v-model="uploadOpen" width="900px" append-to-body>
+      <el-form :model="uploadForm" :rules="uploadRules" ref="uploadRef" label-width="120px" enctype="multipart/form-data">
        <el-row>
-          <el-form-item label="文献名称" prop="title">
-            <el-tooltip content="外文文献填写原名称，无需翻译" placement="top">
-              <el-input v-model="uploadForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
-            </el-tooltip>
-          </el-form-item>
-
-          <el-form-item label="文献作者" prop="authors">
-            <el-tooltip content="外文作者填写全名" placement="top">
-              <el-input v-model="uploadForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit />
-            </el-tooltip>
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="文献名称" prop="title">
+              <el-tooltip content="外文文献填写原名称，无需翻译" placement="top" :trigger-keys="[]">
+                <el-input v-model="uploadForm.title" placeholder="请输入文献名称" maxlength="1000" show-word-limit />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文献作者" prop="authors">
+              <el-tooltip content="外文作者填写全名" placement="top" :trigger-keys="[]">
+                <el-input v-model="uploadForm.authors" placeholder="多个作者请用逗号分隔" maxlength="1000" show-word-limit trim="false" />
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="发表期刊" prop="journal">
-            <el-input v-model="uploadForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
-          </el-form-item>
-          <el-form-item label="发表时间" prop="publishTime">
-            <el-date-picker v-model="uploadForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期"
-              style="width: 250px;" />
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="发表期刊" prop="journal">
+              <el-input v-model="uploadForm.journal" placeholder="请输入文献来源" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="发表时间" prop="publishTime">
+              <el-date-picker v-model="uploadForm.publishTime" type="date" value-format="YYYY-MM-DD" placeholder="选择日期" style="width: 100%" />
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="关键词" prop="keywordIds">
-            <el-select v-model="uploadForm.keywordIds" multiple filterable remote placeholder="请选择关键词"
-              :remote-method="remoteMethod" :loading="keywordLoading" style="width: 250px;">
-              <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="文献DOI" prop="doi">
-            <el-input v-model="uploadForm.doi" placeholder="请输入文献DOI" maxlength="255" show-word-limit />
-          </el-form-item>
+          <el-col :span="24">
+            <el-form-item label="关键词" prop="keywordIds">
+              <el-select v-model="uploadForm.keywordIds" multiple filterable remote placeholder="请选择关键词" :remote-method="remoteMethod" :loading="keywordLoading" style="width: 100%">
+                <el-option v-for="item in keywordOptions" :key="item.id" :label="item.keywordName" :value="item.id" />
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
-          <el-form-item label="文献摘要" prop="abstract" style="width: 100%;">
-            <el-input v-model="uploadForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000"
-              show-word-limit style="width: 100%;" />
-          </el-form-item>
+          <el-col :span="12">
+            <el-form-item label="文献DOI" prop="doi">
+              <el-input v-model="uploadForm.doi" placeholder="请输入文献DOI" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="文献源网页URL" prop="url">
+              <el-input v-model="uploadForm.url" placeholder="请输入文献源网页URL" maxlength="255" show-word-limit />
+            </el-form-item>
+          </el-col>
         </el-row>
-        <el-form-item label="论文原文" prop="file" style="width: 100%;">
-          <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
-            <el-upload style="width: 100%;" ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed"
-              :on-change="onChange" :on-remove="onRemove" :auto-upload="false" accept=".pdf">
-              <el-button type="primary">选择文件</el-button>
-            </el-upload>
-          </el-tooltip>
-        </el-form-item>
         <el-row>
-          <!-- 新增评论相关字段 -->
-          <el-form-item label="第一条评论" prop="firstComment" style="margin-bottom: 20px; width: 100%;">
-            <el-input v-model="uploadForm.firstComment" type="textarea" :rows="3" maxlength="500" show-word-limit
-              placeholder="请输入评论内容（最多500字）"></el-input>
-          </el-form-item>
-       </el-row>
-        <el-form-item label="评论可见范围" prop="commentVisibleType">
-          <el-radio-group v-model="uploadForm.commentVisibleType">
-           <el-radio :label="1">仅自己可见</el-radio>
-            <el-radio :label="2">公开</el-radio>
-          </el-radio-group>
-        </el-form-item>
+          <el-col :span="24">
+            <el-form-item label="文献摘要" prop="abstract">
+              <el-input v-model="uploadForm.abstract" type="textarea" placeholder="请输入文献摘要" :rows="3" maxlength="1000" show-word-limit />
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-row>
-          <el-form-item label="评论关联文件" prop="commentFiles" style="width: 100%;">
-              <el-upload style="width: 100%;" ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList"
-                :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple
-                :accept="'.gif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,txt,.rar,.zip,.gz,.bz2,.pdf'">
+          <el-col :span="24">
+            <el-form-item label="论文原文" prop="file">
+              <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
+                <el-upload style="width: 100%;" ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :on-remove="onRemove" :auto-upload="false" accept=".pdf">
+                  <el-button type="primary">选择文件</el-button>
+                </el-upload>
+              </el-tooltip>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="第一条评论" prop="firstComment">
+              <el-input v-model="uploadForm.firstComment" type="textarea" :rows="3" maxlength="500" show-word-limit placeholder="请输入评论内容（最多500字）"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="评论可见范围" prop="commentVisibleType">
+              <el-radio-group v-model="uploadForm.commentVisibleType">
+                <el-radio :label="1">仅自己可见</el-radio>
+                <el-radio :label="2">公开</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="24">
+            <el-form-item label="评论关联文件" prop="commentFiles">
+              <el-upload style="width: 100%;" ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList" :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple accept=".gif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,txt,.rar,.zip,.gz,.bz2,.pdf">
                 <el-button type="primary">选择文件</el-button>
               </el-upload>
             </el-form-item>
+          </el-col>
         </el-row>
       </el-form>
       <template #footer>
@@ -335,6 +379,7 @@ const data = reactive({
     authors: undefined,
     journal: undefined,
     doi: undefined,
+    url: undefined,
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
@@ -354,6 +399,7 @@ const data = reactive({
     authors: undefined,
     journal: undefined,
     doi: undefined,
+    url: undefined,
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
@@ -490,6 +536,7 @@ async function handleEdit(row) {
     editForm.value.authors = literatureDetail.authors
     editForm.value.journal = literatureDetail.journal
     editForm.value.doi = literatureDetail.doi
+    editForm.value.url = literatureDetail.url
     editForm.value.abstract = literatureDetail.abstractText
     editForm.value.publishTime = literatureDetail.publishTime ? parseTime(literatureDetail.publishTime, '{y}-{m}-{d}') : undefined
     
@@ -565,6 +612,7 @@ async function submitEdit() {
           authors: editForm.value.authors,
           journal: editForm.value.journal,
           doi: editForm.value.doi,
+          url: editForm.value.url,
           publishTime: editForm.value.publishTime,
           abstractText: editForm.value.abstract,
           keywordIds: editForm.value.keywordIds
@@ -595,6 +643,7 @@ function cancelEdit() {
     authors: undefined,
     journal: undefined,
     doi: undefined,
+    url: undefined,
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
@@ -636,6 +685,7 @@ function resetUploadForm() {
     authors: undefined,
     journal: undefined,
     doi: undefined,
+    url: undefined,
     publishTime: undefined,
     abstract: undefined,
     keywordIds: [],
@@ -670,6 +720,7 @@ async function submitUpload() {
       formData.append('authors', uploadForm.value.authors || '')
       formData.append('journal', uploadForm.value.journal || '')
       formData.append('doi', uploadForm.value.doi || '')
+      formData.append('url', uploadForm.value.url || '')
       formData.append('abstract', uploadForm.value.abstract || '')
       
       // 处理发表时间 - 只有当有值时才添加
@@ -789,9 +840,6 @@ function onExceed(files, fileList) {
     status: 'ready',
     raw: newFile
   })
-  
-  // 更新响应式的fileList
-  fileList.value = [...fileList]
   
   // 设置上传表单的文件
   uploadForm.value.file = newFile

@@ -28,7 +28,8 @@
                     </div>
                     <div class="info-item">
                         <span class="label">DOI：</span>
-                        <span style="color: #555;">{{ literature.doi }}</span>
+                        <span v-if="!literature.url || !literature.doi" style="color: #555;">{{ literature.doi || '-' }}</span>
+                        <a v-else :href="literature.url" target="_blank" class="doi-link" :title="literature.url" style="color: #409EFF; text-decoration: underline;">{{ literature.doi }}</a>
                     </div>
                     <div class="info-item">
                         <span class="label">下载数：</span>

@@ -42,6 +42,10 @@ public class LiteratureDTO {
      */
     private String doi;
     /**
+     * 文献源网页url
+     */
+    private String url;
+    /**
      * 文献发表时间
      */
     private LocalDate publishTime;

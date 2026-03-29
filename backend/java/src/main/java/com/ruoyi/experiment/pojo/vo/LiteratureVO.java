@@ -36,6 +36,10 @@ public class LiteratureVO {
      */
     private String doi;
     /**
+     * 文献源网页url
+     */
+    private String url;
+    /**
      * 发表时间
      */
     private LocalDate publishTime;

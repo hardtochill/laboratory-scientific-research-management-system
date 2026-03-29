@@ -76,6 +76,7 @@ public class LiteratureController extends BaseController {
             @RequestParam(value = "authors") String authors,
             @RequestParam(value = "journal") String journal,
             @RequestParam(value = "doi") String doi,
+            @RequestParam(value = "url", required = false) String url,
             @RequestParam(value = "publishTime") LocalDate publishTime,
             @RequestParam(value = "abstract") String abstractText,
             @RequestParam(value = "keywordIds", required = false) List<Long> keywordIds,
@@ -90,6 +91,7 @@ public class LiteratureController extends BaseController {
         literatureDTO.setAuthors(authors);
         literatureDTO.setJournal(journal);
         literatureDTO.setDoi(doi);
+        literatureDTO.setUrl(url);
         literatureDTO.setPublishTime(publishTime);
         literatureDTO.setAbstractText(abstractText);
         literatureDTO.setKeywordIds(keywordIds);
