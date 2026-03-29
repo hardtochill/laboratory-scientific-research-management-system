@@ -18,7 +18,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         select literature.id, title, authors, journal,doi, publish_time, download_count, final_score,score,
                upload_user_id, upload_user_nick_name,
                group_concat(k.keyword_name order by k.usage_count desc, k.keyword_name asc separator ', ') as keywords,
-                (select comment.user_nick_name from comment where literature.id=comment.literature_id and comment.parent_id=0 order by comment.comment_time desc limit 1) as recentCommentUserNickName
+                (select comment.user_nick_name from comment where literature.id=comment.literature_id and comment.parent_id=0 order by comment.comment_time desc limit 1) as recentCommentUserNickName,
+                (select count(*) from comment where literature.id=comment.literature_id) as commentCount
         from literature 
         left join literature_score on literature.id = literature_score.literature_id and #{queryDTO.userId} = literature_score.user_id
         left join literature_keyword lk on literature.id = lk.literature_id

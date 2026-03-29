@@ -71,12 +71,17 @@
           <span>{{ scope.row.finalScore }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="上传用户" align="center" prop="uploadUserName" v-if="columns[8].visible" width="100" :show-overflow-tooltip="true">
+      <el-table-column label="评论数" align="center" prop="commentCount" v-if="columns[8].visible" width="90" :sortable="true">
+        <template #default="scope">
+          <span>{{ scope.row.commentCount || 0 }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="上传用户" align="center" prop="uploadUserName" v-if="columns[9].visible" width="100" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.uploadUserNickName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="最近评论" align="center" prop="uploadUserName" v-if="columns[9].visible" width="100" :show-overflow-tooltip="true">
+      <el-table-column label="最近评论" align="center" prop="uploadUserName" v-if="columns[10].visible" width="100" :show-overflow-tooltip="true">
         <template #default="scope">
           <span>{{ scope.row.recentCommentUserNickName }}</span>
         </template>
@@ -302,8 +307,9 @@ const columns = ref([
   { key: 5, label: `发表时间`, visible: true },
   { key: 6, label: `下载数`, visible: true },
   { key: 7, label: `评分`, visible: true },
-  { key: 8, label: `上传用户`, visible: true },
-  { key: 9, label: `最近评论`, visible: true }
+  { key: 8, label: `评论数`, visible: true },
+  { key: 9, label: `上传用户`, visible: true },
+  { key: 10, label: `最近评论`, visible: true }
 ])
 
 const data = reactive({

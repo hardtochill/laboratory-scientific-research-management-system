@@ -67,4 +67,9 @@ public class LiteratureVO {
      * 最近评论用户
      */
     private String recentCommentUserNickName;
+    
+    /**
+     * 评论数
+     */
+    private Integer commentCount;
 }

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +74,33 @@ public class LiteratureServiceImpl implements LiteratureService {
         } else {
             queryDTO.setKeywordIdsSize(0);
         }
-        return literatureMapper.selectLiteratureList(queryDTO);
+        List<LiteratureVO> literatureList = literatureMapper.selectLiteratureList(queryDTO);
+        
+        // 批量查询评论数量，避免N+1查询问题
+        /*if (!literatureList.isEmpty()) {
+            // 提取所有文献ID
+            List<Long> literatureIds = literatureList.stream()
+                    .map(LiteratureVO::getId)
+                    .collect(Collectors.toList());
+            
+            // 批量查询评论数量
+            List<Map<String, Object>> commentCounts = commentMapper.countByLiteratureIds(literatureIds);
+            
+            // 将评论数量转换为Map，方便查找
+            Map<Long, Integer> commentCountMap = commentCounts.stream()
+                    .collect(Collectors.toMap(
+                            map -> (Long) map.get("literature_id"),
+                            map -> ((Number) map.get("comment_count")).intValue(),
+                            (existing, replacement) -> existing
+                    ));
+            
+            // 为每个文献设置评论数量
+            for (LiteratureVO literature : literatureList) {
+                literature.setCommentCount(commentCountMap.getOrDefault(literature.getId(), 0));
+            }
+        }*/
+        
+        return literatureList;
     }
     
     @Override

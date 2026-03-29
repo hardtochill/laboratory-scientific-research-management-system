@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 文献评论Mapper接口
@@ -72,4 +73,18 @@ public interface CommentMapper {
      */
     @Update("update comment set visible_type = #{visibleType} where id = #{commentId}")
     void updateVisibleType(Long commentId, Integer visibleType);
+    
+    /**
+     * 查询文献的评论数量
+     */
+    @Select("SELECT COUNT(*) FROM comment WHERE literature_id = #{literatureId}")
+    Integer countByLiteratureId(Long literatureId);
+    
+    /**
+     * 批量查询文献的评论数量
+     */
+    @Select("<script>SELECT literature_id, COUNT(*) as comment_count FROM comment WHERE literature_id IN " +
+            "<foreach collection='literatureIds' item='id' open='(' separator=',' close=')'>#{id}</foreach> " +
+            "GROUP BY literature_id</script>")
+    List<Map<String, Object>> countByLiteratureIds(List<Long> literatureIds);
 }
