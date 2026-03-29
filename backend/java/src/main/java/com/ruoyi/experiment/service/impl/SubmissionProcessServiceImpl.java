@@ -281,6 +281,9 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     public SubmissionProcessDetailVO getSubmissionProcessDetail(Long id) {
         log.info("投稿流程模块-查询投稿流程详情：{}",id);
         SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
+        if (vo == null) {
+            return null;
+        }
         // 关联文件列表
         List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);
         // 文件分类

@@ -67,6 +67,9 @@ public class SubmissionPlanServiceImpl implements SubmissionPlanService {
     public SubmissionPlanDetailVO getSubmissionPlanById(Long id) {
         log.info("投稿计划模块-查询投稿计划详情：{}",id);
         SubmissionPlanDetailVO submissionPlanDetailVO = submissionPlanMapper.selectById(id);
+        if (submissionPlanDetailVO == null) {
+            return null;
+        }
         submissionPlanDetailVO.setParticipantUsers(submissionPlanUserMapper.selectUsersByPlanId(id));
         return submissionPlanDetailVO;
     }

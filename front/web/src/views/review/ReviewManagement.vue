@@ -168,56 +168,120 @@
     </el-tabs>
 
     <!-- 审核详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" :title="detailDialogTitle" width="600px" :before-close="handleDetailDialogClose">
-      <div v-if="currentReview" class="review-detail">
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="审核ID">
-            {{ currentReview.id }}
-          </el-descriptions-item>
-          <el-descriptions-item label="投稿计划">
-            {{ currentReview.planName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="投稿流程">
-            {{ currentReview.processName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="申请人">
-            {{ currentReview.reviewedUserNickName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="审核人">
-            {{ currentReview.reviewerUserNickName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="审核状态">
-            <el-tag :type="getReviewStatusType(currentReview.status)">
-              {{ getReviewStatusText(currentReview.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="审核申请备注">
-            {{ currentReview.reviewedRemark || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="审核备注">
-            {{ currentReview.reviewerRemark || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="发起时间">
-            {{ parseTime(currentReview.reviewCreateTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="审核时间">
-            {{ parseTime(currentReview.reviewFinishTime) || '-' }}
-          </el-descriptions-item>
-        </el-descriptions>
-
-        <!-- 关联文件列表 -->
-        <div class="related-files" v-if="currentReviewFiles.length > 0">
-          <h4>关联文件</h4>
-          <el-table :data="currentReviewFiles" stripe style="width: 100%">
-            <el-table-column prop="fileName" label="文件名" min-width="200" align="center" />
-            <el-table-column prop="filePath" label="文件路径" width="300" align="center">
-              <template #default="{ row }">
-                {{ row.filePath || '-' }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="上传时间" width="160" :formatter="formatDate" align="center" />
-          </el-table>
-        </div>
+    <el-dialog v-model="detailDialogVisible" :title="detailDialogTitle" width="700px" :before-close="handleDetailDialogClose" class="review-detail-dialog">
+      <div v-if="currentReview" class="review-detail-container">
+        <el-scrollbar max-height="600px">
+          <div class="review-detail">
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="申请人">
+                {{ currentReview.reviewedUserNickName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="审核人">
+                {{ currentReview.reviewerUserNickName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="审核状态">
+                <el-tag :type="getReviewStatusType(currentReview.status)">
+                  {{ getReviewStatusText(currentReview.status) }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="审核申请备注">
+                {{ currentReview.reviewedRemark || '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="审核备注">
+                {{ currentReview.reviewerRemark || '-' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="发起时间">
+                {{ parseTime(currentReview.reviewCreateTime) }}
+              </el-descriptions-item>
+              <el-descriptions-item label="审核时间">
+                {{ parseTime(currentReview.reviewFinishTime) || '-' }}
+              </el-descriptions-item>
+            </el-descriptions>
+            
+            <!-- 投稿详情卡片 -->
+            <div class="submission-detail-card">
+              <div class="card-header">
+                <span>投稿详情</span>
+              </div>
+              <div v-if="!submissionPlanDetail || !submissionProcessDetail" class="submission-detail-empty">
+                <el-empty description="关联的投稿计划或投稿流程已被删除" />
+              </div>
+              <el-tabs v-else v-model="submissionDetailTab" class="submission-detail-tabs">
+                <el-tab-pane label="投稿计划" name="plan" v-if="submissionPlanDetail">
+                  <div class="submission-plan-detail">
+                    <el-descriptions :column="1" border>
+                      <el-descriptions-item label="投稿类型">
+                        {{ getSubmissionTypeText(submissionPlanDetail.type) }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="计划名称">
+                        {{ submissionPlanDetail.name }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="投稿期刊">
+                        {{ submissionPlanDetail.journal || '-' }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="计划状态">
+                        <el-tag :type="getPlanStatusType(submissionPlanDetail.status)">
+                          {{ getPlanStatusText(submissionPlanDetail.status) }}
+                        </el-tag>
+                      </el-descriptions-item>
+                      <el-descriptions-item label="创建人">
+                        {{ submissionPlanDetail.createUserNickName || '-' }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="创建时间">
+                        {{ parseTime(submissionPlanDetail.submissionCreateTime) }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="参与用户">
+                        {{ submissionPlanDetail.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-' }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="备注">
+                        {{ submissionPlanDetail.remark || '-' }}
+                      </el-descriptions-item>
+                    </el-descriptions>
+                  </div>
+                </el-tab-pane>
+                <el-tab-pane label="投稿流程" name="process" v-if="submissionProcessDetail">
+                  <div class="submission-process-detail">
+                    <el-descriptions :column="1" border :label-width="120">
+                      <el-descriptions-item label="流程名称">
+                        {{ submissionProcessDetail.name }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="流程状态">
+                        <el-tag :type="getProcessStatusType(submissionProcessDetail.status)">
+                          {{ getProcessStatusText(submissionProcessDetail.status) }}
+                        </el-tag>
+                      </el-descriptions-item>
+                      <el-descriptions-item label="审核人">
+                        {{ submissionProcessDetail.reviewerUserNickName || '-' }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="创建时间">
+                        {{ parseTime(submissionProcessDetail.processCreateTime) }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="备注">
+                        {{ submissionProcessDetail.remark || '-' }}
+                      </el-descriptions-item>
+                      <el-descriptions-item label="关联文件">
+                        <div class="related-files">
+                          <div v-for="tag in PROCESS_TAG_CONFIG[submissionProcessDetail.name]" :key="tag" class="tag-file-group">
+                            <el-row>
+                              <div class="tag-label">{{ FILE_TAG_TEXT[tag] }}：</div>
+                              <div v-if="getFilesByTag(submissionProcessDetail, tag).length > 0" class="tag-file-list">
+                                <el-button v-for="file in getFilesByTag(submissionProcessDetail, tag)" :key="file.id" type="text"
+                                  class="file-link" @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                  {{ file.fileName }}.{{ file.fileType }}
+                                </el-button>
+                              </div>
+                              <span v-else class="no-files">-</span>
+                            </el-row>
+                          </div>
+                        </div>
+                      </el-descriptions-item>
+                    </el-descriptions>
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </div>
+        </el-scrollbar>
       </div>
       <template #footer>
         <div class="dialog-footer">
@@ -244,10 +308,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, toRefs, watch } from 'vue'
+import { ref, onMounted, reactive, toRefs, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listReviews, getReview, approveReview, rejectReview,getSelectableReviewedUsers } from '@/api/review/review'
-import { listSubmissionPlansForSelect } from '@/api/submission/submissionPlan'
+import { listSubmissionPlansForSelect, getSubmissionPlan } from '@/api/submission/submissionPlan'
+import { getSubmissionProcessDetail } from '@/api/submission/submissionProcess'
+import { downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { parseTime } from '@/utils/ruoyi'
 import { Document, Check, CircleClose } from '@element-plus/icons-vue'
 
@@ -257,6 +323,60 @@ const REVIEW_STATUS = {
   PENDING: 1,
   PASSED: 2,
   FAILED: 3
+}
+
+// 投稿计划状态枚举
+const PLAN_STATUS = {
+  WAITING_REVIEW: 1,
+  UNDER_REVIEW: 2,
+  PUBLISHED_SUCCESS: 3,
+  PUBLISHED_FAILED: 4
+}
+
+// 投稿类型枚举
+const SUBMISSION_TYPE = {
+  JOURNAL_PAPER: 1,
+  CONFERENCE_PAPER: 2,
+  INVENTION_PATENT: 3,
+  UTILITY_MODEL_PATENT: 4,
+  SOFTWARE_COPYRIGHT: 5
+}
+
+// 投稿流程状态枚举
+const PROCESS_STATUS = {
+  WAITING_SUBMIT_REVIEW: 1,
+  REVIEWING: 2,
+  REVIEW_PASSED: 3,
+  REVIEW_FAILED: 4
+}
+
+// 投稿流程文件标签枚举
+const FILE_TAG = {
+  JOURNAL_SUBMISSION: 1, // 提交给期刊的文件
+  RAW_DATA_AND_PROGRAM: 2, // 原始数据与程序
+  REVIEW_COMMENTS: 3, // 审稿意见
+  SUPPLEMENTARY_DATA: 4, // 补充数据
+  FINAL_DRAFT: 5 // 最终稿
+}
+
+// 流程名称对应的文件标签配置
+const PROCESS_TAG_CONFIG = {
+  '一审': [FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.RAW_DATA_AND_PROGRAM],
+  '二审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '三审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '四审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '五审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '六审': [FILE_TAG.REVIEW_COMMENTS, FILE_TAG.JOURNAL_SUBMISSION, FILE_TAG.SUPPLEMENTARY_DATA],
+  '校稿': [FILE_TAG.FINAL_DRAFT]
+}
+
+// 文件标签文本映射
+const FILE_TAG_TEXT = {
+  [FILE_TAG.JOURNAL_SUBMISSION]: '提交给期刊的文件',
+  [FILE_TAG.RAW_DATA_AND_PROGRAM]: '原始数据与程序',
+  [FILE_TAG.REVIEW_COMMENTS]: '审稿意见',
+  [FILE_TAG.SUPPLEMENTARY_DATA]: '补充数据',
+  [FILE_TAG.FINAL_DRAFT]: '最终稿'
 }
 
 // 获取审核状态类型
@@ -286,6 +406,136 @@ const getReviewStatusText = (status) => {
       return '审核不通过'
     default:
       return '未知状态'
+  }
+}
+
+// 获取投稿计划状态类型
+const getPlanStatusType = (status) => {
+  const numStatus = parseInt(status)
+  switch (numStatus) {
+    case PLAN_STATUS.WAITING_REVIEW:
+      return 'info'
+    case PLAN_STATUS.UNDER_REVIEW:
+      return 'warning'
+    case PLAN_STATUS.PUBLISHED_SUCCESS:
+      return 'success'
+    case PLAN_STATUS.PUBLISHED_FAILED:
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+// 获取投稿计划状态文本
+const getPlanStatusText = (status) => {
+  const numStatus = parseInt(status)
+  switch (numStatus) {
+    case PLAN_STATUS.WAITING_REVIEW:
+      return '待审核'
+    case PLAN_STATUS.UNDER_REVIEW:
+      return '审核中'
+    case PLAN_STATUS.PUBLISHED_SUCCESS:
+      return '发表成功'
+    case PLAN_STATUS.PUBLISHED_FAILED:
+      return '发表失败'
+    default:
+      return '未知状态'
+  }
+}
+
+// 获取投稿类型文本
+const getSubmissionTypeText = (type) => {
+  const numType = parseInt(type)
+  switch (numType) {
+    case SUBMISSION_TYPE.JOURNAL_PAPER:
+      return '期刊论文'
+    case SUBMISSION_TYPE.CONFERENCE_PAPER:
+      return '会议论文'
+    case SUBMISSION_TYPE.INVENTION_PATENT:
+      return '发明专利'
+    case SUBMISSION_TYPE.UTILITY_MODEL_PATENT:
+      return '实用新型专利'
+    case SUBMISSION_TYPE.SOFTWARE_COPYRIGHT:
+      return '软件著作权'
+    default:
+      return '未知类型'
+  }
+}
+
+// 获取投稿流程状态类型
+const getProcessStatusType = (status) => {
+  const numStatus = parseInt(status)
+  switch (numStatus) {
+    case PROCESS_STATUS.WAITING_SUBMIT_REVIEW:
+      return 'info'
+    case PROCESS_STATUS.REVIEWING:
+      return 'warning'
+    case PROCESS_STATUS.REVIEW_PASSED:
+      return 'success'
+    case PROCESS_STATUS.REVIEW_FAILED:
+      return 'danger'
+    default:
+      return 'info'
+  }
+}
+
+// 获取投稿流程状态文本
+const getProcessStatusText = (status) => {
+  const numStatus = parseInt(status)
+  switch (numStatus) {
+    case PROCESS_STATUS.WAITING_SUBMIT_REVIEW:
+      return '待审核'
+    case PROCESS_STATUS.REVIEWING:
+      return '审核中'
+    case PROCESS_STATUS.REVIEW_PASSED:
+      return '审核通过'
+    case PROCESS_STATUS.REVIEW_FAILED:
+      return '审核不通过'
+    default:
+      return '未知状态'
+  }
+}
+
+// 根据tag获取文件列表
+const getFilesByTag = (process, tag) => {
+  // 优先从后端返回的分类文件列表中获取
+  if (process.journalSubmissionFiles && tag === FILE_TAG.JOURNAL_SUBMISSION) {
+    return process.journalSubmissionFiles
+  } else if (process.rawDataAndProgramFiles && tag === FILE_TAG.RAW_DATA_AND_PROGRAM) {
+    return process.rawDataAndProgramFiles
+  } else if (process.reviewCommentsFiles && tag === FILE_TAG.REVIEW_COMMENTS) {
+    return process.reviewCommentsFiles
+  } else if (process.supplementaryDataFiles && tag === FILE_TAG.SUPPLEMENTARY_DATA) {
+    return process.supplementaryDataFiles
+  } else if (process.finalDraftFiles && tag === FILE_TAG.FINAL_DRAFT) {
+    return process.finalDraftFiles
+  }
+  // 兼容旧的files数组
+  return process.files?.filter(file => file.tag === tag) || []
+}
+
+// 下载投稿流程文件
+const downloadFile = async (fileId, fileName) => {
+  try {
+    // 显示正在后台下载的提示
+    ElMessage.info('正在后台下载文件，请稍候...')
+    
+    const response = await downloadSubmissionProcessFile(fileId)
+    // 创建下载链接并触发下载
+    const blob = new Blob([response])
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = fileName
+    document.body.appendChild(link)
+    link.click()
+    // 清理
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(link)
+    ElMessage.success('文件下载成功')
+  } catch (error) {
+    ElMessage.error('文件下载失败')
+    console.error('文件下载失败:', error)
   }
 }
 
@@ -485,7 +735,11 @@ const handleDateChange = () => {
 const detailDialogVisible = ref(false)
 const detailDialogTitle = ref('审核详情')
 const currentReview = ref(null)
-const currentReviewFiles = ref([])
+
+// 投稿详情相关
+const submissionDetailTab = ref('plan')
+const submissionPlanDetail = ref(null)
+const submissionProcessDetail = ref(null)
 
 // 审核操作对话框
 const reviewDialogVisible = ref(false)
@@ -609,8 +863,32 @@ const showReviewDetail = async (review) => {
     const response = await getReview(review.id)
     currentReview.value = response.data
     
-    // 暂时不加载关联文件，因为API中没有提供相关接口
-    currentReviewFiles.value = []
+    // 重置投稿详情标签页
+    submissionDetailTab.value = 'plan'
+    submissionPlanDetail.value = null
+    submissionProcessDetail.value = null
+    
+    // 获取投稿计划详情
+    if (currentReview.value.planId) {
+      try {
+        const planResponse = await getSubmissionPlan(currentReview.value.planId)
+        submissionPlanDetail.value = planResponse.data || null
+      } catch (error) {
+        console.error('获取投稿计划详情失败:', error)
+        submissionPlanDetail.value = null
+      }
+    }
+    
+    // 获取投稿流程详情
+    if (currentReview.value.processId) {
+      try {
+        const processResponse = await getSubmissionProcessDetail(currentReview.value.processId)
+        submissionProcessDetail.value = processResponse.data || null
+      } catch (error) {
+        console.error('获取投稿流程详情失败:', error)
+        submissionProcessDetail.value = null
+      }
+    }
     
     detailDialogVisible.value = true
     detailDialogTitle.value = '审核详情'
@@ -672,7 +950,6 @@ const handleReviewDialogClose = () => {
 const handleDetailDialogClose = () => {
   detailDialogVisible.value = false
   currentReview.value = null
-  currentReviewFiles.value = []
 }
 
 // 格式化日期
@@ -732,6 +1009,45 @@ onMounted(async () => {
   padding: 10px 0;
 }
 
+.review-detail-container {
+  max-height: 600px;
+}
+
+.submission-detail-card {
+  margin-top: 20px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.submission-detail-card .card-header {
+  padding: 12px 20px;
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #ebeef5;
+  font-weight: 600;
+  color: #303133;
+}
+
+.submission-detail-tabs {
+  padding: 20px;
+}
+
+.submission-plan-detail,
+.submission-process-detail {
+  padding: 10px 0;
+}
+
+.submission-detail-empty {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-text {
+  text-align: center;
+  padding: 40px 0;
+  color: #909399;
+}
+
 .related-files {
   margin-top: 20px;
 }
@@ -740,5 +1056,34 @@ onMounted(async () => {
   margin-bottom: 10px;
   color: #303133;
   font-weight: 600;
+}
+
+.tag-file-group {
+  margin-bottom: 15px;
+}
+
+.tag-label {
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 8px;
+}
+
+.tag-file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-link {
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.no-files {
+  color: #909399;
+}
+
+.review-detail-dialog .el-dialog__body {
+  padding: 20px;
 }
 </style>
