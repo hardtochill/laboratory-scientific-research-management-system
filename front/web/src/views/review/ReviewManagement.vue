@@ -178,7 +178,7 @@
       <div v-if="currentReview" class="review-detail-container">
         <el-scrollbar max-height="600px">
           <div class="review-detail">
-            <el-descriptions :column="1" border>
+            <el-descriptions :column="1" border label-width="120px">
               <el-descriptions-item label="申请人">
                 {{ currentReview.reviewedUserNickName }}
               </el-descriptions-item>
@@ -215,39 +215,41 @@
               <el-tabs v-else v-model="submissionDetailTab" class="submission-detail-tabs">
                 <el-tab-pane label="投稿计划" name="plan" v-if="submissionPlanDetail">
                   <div class="submission-plan-detail">
-                    <el-descriptions :column="1" border>
-                      <el-descriptions-item label="投稿类型">
-                        {{ getSubmissionTypeText(submissionPlanDetail.type) }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="计划名称">
-                        {{ submissionPlanDetail.name }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="投稿期刊">
-                        {{ submissionPlanDetail.journal || '-' }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="计划状态">
-                        <el-tag :type="getPlanStatusType(submissionPlanDetail.status)">
-                          {{ getPlanStatusText(submissionPlanDetail.status) }}
-                        </el-tag>
-                      </el-descriptions-item>
-                      <el-descriptions-item label="创建人">
-                        {{ submissionPlanDetail.createUserNickName || '-' }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="创建时间">
-                        {{ parseTime(submissionPlanDetail.submissionCreateTime) }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="参与用户">
-                        {{ submissionPlanDetail.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-' }}
-                      </el-descriptions-item>
-                      <el-descriptions-item label="备注">
-                        {{ submissionPlanDetail.remark || '-' }}
-                      </el-descriptions-item>
-                    </el-descriptions>
+                    <el-scrollbar>
+                      <el-descriptions :column="1" border label-width="80px">
+                        <el-descriptions-item label="投稿类型">
+                          {{ getSubmissionTypeText(submissionPlanDetail.type) }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="计划名称">
+                          {{ submissionPlanDetail.name }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="投稿期刊">
+                          {{ submissionPlanDetail.journal || '-' }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="计划状态">
+                          <el-tag :type="getPlanStatusType(submissionPlanDetail.status)">
+                            {{ getPlanStatusText(submissionPlanDetail.status) }}
+                          </el-tag>
+                        </el-descriptions-item>
+                        <el-descriptions-item label="创建人">
+                          {{ submissionPlanDetail.createUserNickName || '-' }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="创建时间">
+                          {{ parseTime(submissionPlanDetail.submissionCreateTime) }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="参与用户">
+                          {{ submissionPlanDetail.participantUsers?.map(user => `${user.nickName}(${user.userName})`).join(', ') || '-' }}
+                        </el-descriptions-item>
+                        <el-descriptions-item label="备注">
+                          {{ submissionPlanDetail.remark || '-' }}
+                        </el-descriptions-item>
+                      </el-descriptions>
+                    </el-scrollbar>
                   </div>
                 </el-tab-pane>
                 <el-tab-pane label="投稿流程" name="process" v-if="submissionProcessDetail">
                   <div class="submission-process-detail">
-                    <el-descriptions :column="1" border :label-width="120">
+                    <el-descriptions :column="1" border label-width="100px">
                       <el-descriptions-item label="流程名称">
                         {{ submissionProcessDetail.name }}
                       </el-descriptions-item>
@@ -267,12 +269,14 @@
                       </el-descriptions-item>
                       <el-descriptions-item label="关联文件">
                         <div class="related-files">
-                          <div v-for="tag in PROCESS_TAG_CONFIG[submissionProcessDetail.name]" :key="tag" class="tag-file-group">
+                          <div v-for="tag in PROCESS_TAG_CONFIG[submissionProcessDetail.name]" :key="tag"
+                            class="tag-file-group">
                             <el-row>
                               <div class="tag-label">{{ FILE_TAG_TEXT[tag] }}：</div>
                               <div v-if="getFilesByTag(submissionProcessDetail, tag).length > 0" class="tag-file-list">
-                                <el-button v-for="file in getFilesByTag(submissionProcessDetail, tag)" :key="file.id" type="text"
-                                  class="file-link" @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
+                                <el-button v-for="file in getFilesByTag(submissionProcessDetail, tag)" :key="file.id"
+                                  type="text" class="file-link"
+                                  @click="downloadFile(file.id, file.fileName + '.' + file.fileType)">
                                   {{ file.fileName }}.{{ file.fileType }}
                                 </el-button>
                               </div>
@@ -1095,13 +1099,70 @@ onMounted(async () => {
   color: #303133;
 }
 
+.review-detail-dialog .el-dialog__body {
+  padding: 20px;
+}
+
+.review-detail-container {
+  width: 100%;
+}
+
+.review-detail {
+  width: 100%;
+}
+
+.review-detail .el-descriptions {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.review-detail .el-descriptions__label {
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.submission-detail-card {
+  margin-top: 20px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: #f5f7fa;
+  padding: 12px 20px;
+  border-bottom: 1px solid #e4e7ed;
+  font-weight: 500;
+  font-size: 14px;
+}
+
 .submission-detail-tabs {
   padding: 20px;
 }
 
-.submission-plan-detail,
-.submission-process-detail {
+.submission-plan-detail, .submission-process-detail {
   padding: 10px 0;
+  width: 100%;
+}
+
+.submission-plan-detail .el-scrollbar, .submission-process-detail .el-scrollbar {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.submission-plan-detail .el-scrollbar__wrap, .submission-process-detail .el-scrollbar__wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+}
+
+.submission-plan-detail .el-descriptions, .submission-process-detail .el-descriptions {
+  width: 100%;
+}
+
+.submission-plan-detail .el-descriptions__label, .submission-process-detail .el-descriptions__label {
+  white-space: nowrap;
+  min-width: 60px;
 }
 
 .submission-detail-empty {
@@ -1119,39 +1180,63 @@ onMounted(async () => {
   margin-top: 20px;
 }
 
-.related-files h4 {
-  margin-bottom: 10px;
-  color: #303133;
-  font-weight: 600;
+.tag-file-group {
+  margin-bottom: 16px;
 }
 
-.tag-file-group {
-  margin-bottom: 15px;
+.tag-file-group .el-row {
+  display: block;
 }
 
 .tag-label {
-  font-weight: 600;
+  font-size: 15px;
   color: #606266;
   margin-bottom: 8px;
+  font-weight: 500;
 }
 
 .tag-file-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 0;
 }
 
 .file-link {
-  padding: 4px 8px;
+  word-break: break-all;
+  white-space: normal;
+  text-align: left;
+  max-width: 100%;
+  display: block;
+  padding: 2px 0;
+  margin: 0;
   font-size: 14px;
+  height: auto;
+  line-height: 1.5;
+}
+
+/* 覆盖 Element Plus el-button 的默认样式，防止长文件名重叠 */
+.file-link:deep(.el-button) {
+  display: block;
+  width: 100%;
+  height: auto;
+  line-height: 1.5;
+  padding: 2px 0;
+  margin: 0;
+  white-space: normal;
+  word-break: break-all;
+  text-align: left;
+}
+
+.file-link:deep(.el-button > span) {
+  white-space: normal;
+  word-break: break-all;
 }
 
 .no-files {
+  text-align: center;
   color: #909399;
-}
-
-.review-detail-dialog .el-dialog__body {
-  padding: 20px;
+  font-style: italic;
 }
 
 .action-buttons {
