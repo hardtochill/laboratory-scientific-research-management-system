@@ -1793,6 +1793,26 @@ onMounted(async () => {
   padding: 2px 0;
   margin: 0;
   font-size: 14px;
+  height: auto;
+  line-height: 1.5;
+}
+
+/* 覆盖 Element Plus el-button 的默认样式，防止长文件名重叠 */
+.file-link:deep(.el-button) {
+  display: block;
+  width: 100%;
+  height: auto;
+  line-height: 1.5;
+  padding: 2px 0;
+  margin: 0;
+  white-space: normal;
+  word-break: break-all;
+  text-align: left;
+}
+
+.file-link:deep(.el-button > span) {
+  white-space: normal;
+  word-break: break-all;
 }
 
 .files-label {
@@ -1815,6 +1835,8 @@ onMounted(async () => {
 
 .process-detail {
   padding: 8px 0;
+  max-height: 50vh;
+  overflow-y: auto;
 }
 
 .related-files {
