@@ -116,5 +116,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </where>
         order by title asc
     </select>
+    
+    <!-- 删除文献 -->
+    <delete id="deleteLiterature">
+        delete from literature where id = #{id}
+    </delete>
 
 </mapper>

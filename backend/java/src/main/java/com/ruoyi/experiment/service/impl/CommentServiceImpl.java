@@ -5,7 +5,6 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.constant.CommentConstants;
 import com.ruoyi.experiment.enums.CommentVisibleTypeEnum;
-import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.mapper.CommentFileMapper;
 import com.ruoyi.experiment.mapper.CommentLikeMapper;
 import com.ruoyi.experiment.mapper.CommentMapper;
@@ -19,7 +18,6 @@ import com.ruoyi.experiment.pojo.vo.CommentVO;
 import com.ruoyi.experiment.service.CommentService;
 import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
-import com.ruoyi.project.system.domain.SysUser;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +71,7 @@ public class CommentServiceImpl implements CommentService {
         // 5.标记是否点赞
         List<Long> likedCommentIds = commentLikeMapper.selectCommentIdsByUserId(userId);
         for (CommentVO commentVO : commentVOList) {
-            commentVO.setCommentFiles(commentFileMapper.selectByCommentId(commentVO.getId()));
+            commentVO.setCommentFiles(commentFileMapper.selectVOByCommentId(commentVO.getId()));
             commentVO.setHasChildComments(commentMapper.hasChildComments(commentVO.getId())!=null);
             commentVO.setIsLiked(likedCommentIds.contains(commentVO.getId()));
         }
@@ -102,7 +100,7 @@ public class CommentServiceImpl implements CommentService {
         // 4.标记是否点赞
         List<Long> likedCommentIds = commentLikeMapper.selectCommentIdsByUserId(userId);
         for (CommentVO commentVO : commentVOList) {
-            commentVO.setCommentFiles(commentFileMapper.selectByCommentId(commentVO.getId()));
+            commentVO.setCommentFiles(commentFileMapper.selectVOByCommentId(commentVO.getId()));
             // 检查该评论是否有子评论
             commentVO.setHasChildComments(false);
             commentVO.setIsLiked(likedCommentIds.contains(commentVO.getId()));

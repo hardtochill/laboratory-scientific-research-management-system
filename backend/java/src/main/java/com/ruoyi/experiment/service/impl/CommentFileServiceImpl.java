@@ -3,15 +3,12 @@ package com.ruoyi.experiment.service.impl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
-import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.mapper.CommentFileMapper;
 import com.ruoyi.experiment.mapper.CommentMapper;
 import com.ruoyi.experiment.pojo.entity.Comment;
 import com.ruoyi.experiment.pojo.entity.CommentFile;
-import com.ruoyi.experiment.pojo.entity.TaskFile;
 import com.ruoyi.experiment.pojo.vo.CommentFileVO;
 import com.ruoyi.experiment.service.CommentFileService;
-import com.ruoyi.experiment.service.CommentService;
 import com.ruoyi.experiment.utils.FileUtils;
 import com.ruoyi.framework.config.ExperimentConfig;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +34,7 @@ public class CommentFileServiceImpl implements CommentFileService {
     @Override
     public List<CommentFileVO> getCommentFiles(Long commentId) {
         log.info("文献评论模块-查询评论文件：{}",commentId);
-        return commentFileMapper.selectByCommentId(commentId);
+        return commentFileMapper.selectVOByCommentId(commentId);
     }
 
     @Override

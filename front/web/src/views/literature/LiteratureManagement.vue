@@ -87,7 +87,7 @@
           <span>{{ scope.row.recentCommentUserNickName }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" align="center" width="200" class-name="small-padding fixed-width">
+      <el-table-column label="操作" fixed="right" align="center" width="250" class-name="small-padding fixed-width">
         <template #default="scope">
           <el-tooltip content="详情" placement="top">
             <el-button link type="primary" icon="Document" @click="handleDetail(scope.row)"></el-button>
@@ -100,6 +100,9 @@
           </el-tooltip>
           <el-tooltip content="下载" placement="top">
             <el-button link type="primary" icon="Download" @click="handleDownload(scope.row)"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top" v-if="isHasTeacherRole">
+            <el-button link type="danger" icon="Delete" @click="handleDelete(scope.row)"></el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -309,18 +312,30 @@
 </template>
 
 <script setup name="LiteratureManagement">
-import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail, changeLiteratureFile } from "@/api/literature/literature"
+import { listLiterature, addLiterature, scoreLiterature, updateLiterature, getLiteratureDetail, changeLiteratureFile, deleteLiterature } from "@/api/literature/literature"
 import { download } from "@/utils/request"
 import { parseTime } from "@/utils/ruoyi"
 import { useRouter } from "vue-router"
 import { ref, reactive, toRefs, onMounted } from "vue"
 import { getCurrentInstance } from "vue"
 import { listKeyword } from "@/api/keyword/keyword"
-import { UploadFilled } from "@element-plus/icons-vue"
+import { UploadFilled, Delete } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
+import useUserStore from '@/store/modules/user'
 
 const router = useRouter()
 const { proxy } = getCurrentInstance()
+const userStore = useUserStore()
+
+// 用户角色相关
+const userRoles = ref([])
+const isHasTeacherRole = ref(false)
+
+// 检查用户角色
+const checkUserRoles = () => {
+  userRoles.value = userStore.roles || []
+  isHasTeacherRole.value = userRoles.value.includes('teacher') || userRoles.value.includes('admin')
+}
 
 const literatureList = ref([])
   const uploadOpen = ref(false)
@@ -665,6 +680,26 @@ async function handleDownload(row) {
   }
 }
 
+/** 删除按钮操作 */
+async function handleDelete(row) {
+  try {
+    await proxy.$modal.confirm('确定要删除该文献吗？删除后将无法恢复。', '确认删除', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'danger'
+    })
+    
+    await deleteLiterature(row.id)
+    proxy.$modal.msgSuccess('删除成功')
+    getList() // 刷新列表
+  } catch (error) {
+    console.error('删除失败:', error)
+    if (error !== 'cancel') {
+      proxy.$modal.msgError(error.message || "删除失败")
+    }
+  }
+}
+
 /** 监听表格排序 */
 function handleSortChange({ column, prop, order }) {
   queryParams.value.sortField = prop
@@ -980,6 +1015,7 @@ function remoteMethod(query) {
 /** 初始化 */
 onMounted(() => {
   getList()
+  checkUserRoles()
 })
 </script>
 

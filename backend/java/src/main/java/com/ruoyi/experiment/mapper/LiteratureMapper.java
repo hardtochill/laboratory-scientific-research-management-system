@@ -86,4 +86,9 @@ public interface LiteratureMapper {
      * 查询可选择的文献列表（用于前端文献选择）
      */
     List<LiteratureVO> selectSelectableLiteratures(String literatureTitle);
+    
+    /**
+     * 删除文献
+     */
+    void deleteLiterature(@Param("id") Long id);
 }

@@ -4,12 +4,10 @@ import com.ruoyi.experiment.annotations.AutoFill;
 import com.ruoyi.experiment.enums.OperationTypeEnum;
 import com.ruoyi.experiment.pojo.entity.CommentFile;
 import com.ruoyi.experiment.pojo.vo.CommentFileVO;
-import com.ruoyi.experiment.service.CommentFileService;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +21,14 @@ public interface CommentFileMapper {
      * @return 文献评论文件列表
      */
     @Select("select * from comment_file where comment_id = #{commentId}")
-    List<CommentFileVO> selectByCommentId(Long commentId);
+    List<CommentFileVO> selectVOByCommentId(Long commentId);
+    /**
+     * 根据评论ID查询文献评论文件
+     * @param commentId 评论ID
+     * @return 文献评论文件列表
+     */
+    @Select("select * from comment_file where comment_id = #{commentId}")
+    List<CommentFile> selectByCommentId(Long commentId);
 
     /**
      * 新增文献评论文件

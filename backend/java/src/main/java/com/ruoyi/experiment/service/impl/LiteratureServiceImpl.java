@@ -7,7 +7,6 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanUtils;
 import com.ruoyi.common.utils.file.FileUploadUtils;
 import com.ruoyi.experiment.constant.CommentConstants;
-import com.ruoyi.experiment.enums.RoleEnums;
 import com.ruoyi.experiment.mapper.*;
 import com.ruoyi.experiment.pojo.dto.LiteratureDTO;
 import com.ruoyi.experiment.pojo.dto.LiteratureQueryDTO;
@@ -27,8 +26,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -282,7 +278,66 @@ public class LiteratureServiceImpl implements LiteratureService {
         // 3.上传新文件
         uploadLiterature(literatureId,originLiterature.getTitle(),file);
     }
-
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteLiterature(Long id) {
+        log.info("文献管理模块-删除文献：{}", id);
+        // 1. 校验文献是否存在
+        Literature literature = literatureMapper.selectLiteratureById(id);
+        if (literature == null) {
+            throw new ServiceException("文献不存在");
+        }
+        
+        // 2. 删除文献相关的评论文件
+        List<Comment> comments = commentMapper.selectByLiteratureId(id);
+        if (!CollectionUtils.isEmpty(comments)) {
+            for (Comment comment : comments) {
+                List<CommentFile> commentFiles = commentFileMapper.selectByCommentId(comment.getId());
+                if (!CollectionUtils.isEmpty(commentFiles)) {
+                    for (CommentFile commentFile : commentFiles) {
+                        // 删除物理文件
+                        try {
+                            Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getCommentBaseDir(), commentFile.getFilePath()));
+                            if (Files.exists(path)) {
+                                Files.delete(path);
+                            }
+                        } catch (Exception e) {
+                            log.error("文献管理模块-删除评论文件失败", e);
+                        }
+                    }
+                    // 删除评论文件记录
+                    commentFileMapper.deleteByCommentId(comment.getId());
+                }
+            }
+            // 删除评论记录
+            commentMapper.deleteByLiteratureId(id);
+        }
+        
+        // 3. 删除文献相关的评分
+        literatureScoreMapper.deleteByLiteratureId(id);
+        
+        // 4. 删除文献相关的关键词关联
+        removeKeywordsFromLiterature(id);
+        
+        // 5. 删除文献物理文件
+        String originFilePath = literatureFileMapper.selectFilePathByLiteratureId(id);
+        literatureFileMapper.deleteByLiteratureId(id);
+        try {
+            if (null != originFilePath) {
+                Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getLiteratureBaseDir(), originFilePath));
+                if (Files.exists(path)) {
+                    Files.delete(path);
+                }
+            }
+        } catch (Exception e) {
+            log.error("文献管理模块-删除文献文件失败", e);
+        }
+        
+        // 6. 删除文献记录
+        literatureMapper.deleteLiterature(id);
+    }
+    
     private void uploadLiterature(Long literatureId, String fileName,MultipartFile file){
         // 1.保存文件到本地
         String filePath;

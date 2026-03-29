@@ -48,4 +48,8 @@ public interface LiteratureScoreMapper {
      */
     Map<String, Object> selectStudentScoreStatistics(@Param("literatureId") Long literatureId);
     
+    /**
+     * 根据文献id删除评分记录
+     */
+    void deleteByLiteratureId(@Param("literatureId") Long literatureId);
 }

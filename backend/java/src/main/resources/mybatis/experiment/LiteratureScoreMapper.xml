@@ -36,5 +36,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         inner join sys_role r on ur.role_id = r.role_id
         where ls.literature_id = #{literatureId} and r.role_name != 'teacher'
     </select>
+    
+    <!-- 根据文献id删除评分记录 -->
+    <delete id="deleteByLiteratureId">
+        delete from literature_score where literature_id = #{literatureId}
+    </delete>
 
 </mapper>

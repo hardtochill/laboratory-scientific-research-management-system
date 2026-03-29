@@ -84,3 +84,11 @@ export function changeLiteratureFile(formData) {
     }
   })
 }
+
+// 删除文献
+export function deleteLiterature(id) {
+  return request({
+    url: `/literature/delete/${id}`,
+    method: 'delete'
+  })
+}

@@ -61,4 +61,10 @@ public interface LiteratureService {
      * @param file 新文件
      */
     void changeLiteratureFile(Long literatureId, MultipartFile file);
+    
+    /**
+     * 删除文献
+     * @param id 文献id
+     */
+    void deleteLiterature(Long id);
 }

@@ -87,4 +87,16 @@ public interface CommentMapper {
             "<foreach collection='literatureIds' item='id' open='(' separator=',' close=')'>#{id}</foreach> " +
             "GROUP BY literature_id</script>")
     List<Map<String, Object>> countByLiteratureIds(List<Long> literatureIds);
+    
+    /**
+     * 根据文献id查询评论列表
+     */
+    @Select("SELECT * FROM comment WHERE literature_id = #{literatureId}")
+    List<Comment> selectByLiteratureId(Long literatureId);
+    
+    /**
+     * 根据文献id删除评论
+     */
+    @Delete("DELETE FROM comment WHERE literature_id = #{literatureId}")
+    void deleteByLiteratureId(Long literatureId);
 }

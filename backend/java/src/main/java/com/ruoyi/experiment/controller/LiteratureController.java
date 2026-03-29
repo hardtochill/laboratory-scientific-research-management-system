@@ -127,4 +127,13 @@ public class LiteratureController extends BaseController {
         literatureService.changeLiteratureFile(literatureId, file);
         return AjaxResult.success();
     }
+    
+    /**
+     * 删除文献
+     */
+    @DeleteMapping("/delete/{id}")
+    public AjaxResult delete(@PathVariable("id") Long id) {
+        literatureService.deleteLiterature(id);
+        return AjaxResult.success("删除成功");
+    }
 }
