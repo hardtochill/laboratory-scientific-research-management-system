@@ -23,6 +23,10 @@ public class TaskVO {
      */
     private Integer percentage;
     /**
+     * 任务进度（数据库字段）
+     */
+    private Integer taskPercentage;
+    /**
      * 参与用户组
      */
     private List<SysUser> participantUsers;

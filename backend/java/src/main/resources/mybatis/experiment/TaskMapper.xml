@@ -4,7 +4,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.TaskMapper">
     <select id="select" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
-        select t.task_id,t.task_name,t.task_status,t.create_user_id as createUserId,te.user_id as executorUserId
+        select t.task_id,t.task_name,t.task_status,t.task_percentage as taskPercentage,t.create_user_id as createUserId,te.user_id as executorUserId
         from task t
             inner join task_user tu on t.task_id = tu.task_id
             left outer join task_executor te on t.task_id = te.task_id
@@ -16,20 +16,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createTimeStart!=null">and t.create_time &gt;= #{createTimeStart}</if>
             <if test="createTimeEnd!=null">and t.create_time &lt;= #{createTimeEnd}</if>
         </where>
-        group by t.task_id,t.task_name,t.task_status,t.create_user_id,te.user_id
+        group by t.task_id,t.task_name,t.task_status,t.task_percentage,t.create_user_id,te.user_id
         order by
         <if test="orderBy!=null and orderDirection!=null">t.${orderBy} ${orderDirection}</if>
         <if test="orderBy==null or orderDirection==null">t.create_time desc</if>
     </select>
     <select id="selectTasksForStatistics" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
-        select t.task_id,t.task_status
+        select t.task_id,t.task_status,t.task_percentage as taskPercentage
         from task t
         inner join task_user tu on t.task_id = tu.task_id
         <where>
             t.parent_task_id=#{parentTaskId}
             <if test="userId!=null">and tu.user_id=#{userId}</if>
         </where>
-        group by t.task_id,t.task_status
+        group by t.task_id,t.task_status,t.task_percentage
     </select>
 
     <select id="selectParentIdsHaveSubTasks" resultType="java.lang.Long">
@@ -58,10 +58,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             left outer join sys_user su on te.user_id = su.user_id
         where t.task_id=#{taskId}
     </select>
+    <select id="selectSubTasksByParentId" resultType="com.ruoyi.experiment.pojo.entity.Task">
+        select * from task where parent_task_id=#{parentTaskId}
+    </select>
     <insert id="insertTask" useGeneratedKeys="true" keyProperty="taskId">
-        insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, report_flag, report_frequency, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
+        insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, task_percentage, report_flag, report_frequency, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
         VALUES
-            (#{parentTaskId},#{taskName},#{taskDescription},#{taskRemark},#{taskOrder},#{taskDepth},#{taskStatus},#{reportFlag},#{reportFrequency},#{createUserId},#{createNickName},#{createTime},#{expectedFinishTime},#{actualFinishTime},#{updateTime})
+            (#{parentTaskId},#{taskName},#{taskDescription},#{taskRemark},#{taskOrder},#{taskDepth},#{taskStatus},#{taskPercentage},#{reportFlag},#{reportFrequency},#{createUserId},#{createNickName},#{createTime},#{expectedFinishTime},#{actualFinishTime},#{updateTime})
     </insert>
     <update id="updateTask">
         update task
@@ -70,6 +73,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="taskDescription!=null">task_description=#{taskDescription},</if>
             <if test="taskRemark!=null">task_remark=#{taskRemark},</if>
             <if test="taskStatus!=null">task_status=#{taskStatus},</if>
+            <if test="taskPercentage!=null">task_percentage=#{taskPercentage},</if>
             <if test="reportFlag!=null">report_flag=#{reportFlag},</if>
             <if test="reportFrequency!=null">report_frequency=#{reportFrequency},</if>
             <if test="expectedFinishTime!=null">expected_finish_time=#{expectedFinishTime},</if>

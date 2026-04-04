@@ -68,4 +68,8 @@ public class TaskDTO {
      * 执行人定时汇报频率（单位：天）
      */
     private Integer reportFrequency;
+    /**
+     * 任务进度
+     */
+    private Integer taskPercentage;
 }

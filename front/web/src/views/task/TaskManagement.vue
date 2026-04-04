@@ -211,6 +211,9 @@
                 {{ getStatusText(currentTask.taskStatus) }}
               </el-tag>
             </el-descriptions-item>
+            <el-descriptions-item label="任务进度">
+              <el-progress :percentage="currentTask.taskPercentage || 0" :color="getProgressColor(currentTask)" :status="getProgressStatus(currentTask)" :text-inside="true" :stroke-width="16" striped striped-flow :duration="200"></el-progress>
+            </el-descriptions-item>
 
             <el-descriptions-item label="创建人">
               {{ currentTask.createNickName }}
@@ -300,6 +303,15 @@
               <el-option label="已完成" :value="TASK_STATUS.FINISHED" />
               <el-option label="已跳过" :value="TASK_STATUS.SKIPPED" />
             </el-select>
+          </el-form-item>
+          
+          <!-- 任务进度 -->
+          <el-form-item label="任务进度" prop="taskPercentage">
+            <el-input-number v-model="formData.taskPercentage" :min="0" :max="100" :disabled="formData.hasSubTasks" style="width: 100%;" placeholder="请输入任务进度(0-100)" />
+            <div v-if="formData.hasSubTasks" style="color: #909399; font-size: 12px; margin-top: 4px;">
+              <el-icon><InfoFilled /></el-icon>
+              该任务有子任务，任务进度会自动计算，无需手动设置
+            </div>
           </el-form-item>
 
           <!-- 执行人 -->
@@ -598,8 +610,8 @@ const getProgressPercentage = (task) => {
   // 确保task对象有效
   if (!task) return 0
 
-  // 使用后端返回的percentage字段，如果不存在则默认为0%
-  return task.percentage !== undefined ? task.percentage : 0
+  // 使用后端返回的taskPercentage字段，如果不存在则默认为0%
+  return task.taskPercentage !== undefined ? task.taskPercentage : 0
 }
 
 // 任务进度颜色
@@ -757,6 +769,8 @@ const formData = reactive({
   taskName: '',
   taskDescription: '',
   taskStatus: TASK_STATUS.PENDING,
+  taskPercentage: 0,
+  hasSubTasks: false,
   executorUserId: undefined,
   participantUserIds: [],
   expectedFinishTime: null,
@@ -1113,6 +1127,9 @@ const handleEdit = (task) => {
   const isSubTask = task.parentTaskId && task.parentTaskId !== '0'
   isChildTask.value = isSubTask
 
+  // 判断任务是否有子任务
+  formData.hasSubTasks = task.hasSubTasks || false
+  
   // 填充表单数据
   Object.assign(formData, {
     taskId: task.taskId,
@@ -1120,6 +1137,7 @@ const handleEdit = (task) => {
     taskName: task.taskName,
     taskDescription: task.taskDescription,
     taskStatus: parseInt(task.taskStatus),
+    taskPercentage: task.taskPercentage || 0,
     executorUserId: task.executorUserId,
     expectedFinishTime: task.expectedFinishTime ? new Date(task.expectedFinishTime) : null,
     actualFinishTime: task.actualFinishTime ? new Date(task.actualFinishTime) : null,
@@ -1178,6 +1196,8 @@ const resetForm = () => {
     taskName: '',
     taskDescription: '',
     taskStatus: TASK_STATUS.PENDING,
+    taskPercentage: 0,
+    hasSubTasks: false,
     executorUserId: undefined,
     participantUserIds: [],
     expectedFinishTime: null,
@@ -1241,6 +1261,8 @@ const handleFormSubmit = async () => {
       parentTaskId: formData.parentTaskId === '0' ? 0 : formData.parentTaskId,
       // 确保taskStatus是整型数
       taskStatus: parseInt(formData.taskStatus),
+      // 任务进度
+      taskPercentage: formData.hasSubTasks ? undefined : formData.taskPercentage,
       // 更新参与用户组，确保包含创建人和执行人
       participantUserIds: participantUserIds
     }

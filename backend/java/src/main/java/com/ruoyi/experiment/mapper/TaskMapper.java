@@ -68,4 +68,9 @@ public interface TaskMapper {
      */
     @Select("select task_id from task where parent_task_id = #{parentTaskId}")
     List<Long> selectSubTaskIds(Long parentTaskId);
+
+    /**
+     * 获取所有直接子任务
+     */
+    List<Task> selectSubTasksByParentId(Long parentTaskId);
 }

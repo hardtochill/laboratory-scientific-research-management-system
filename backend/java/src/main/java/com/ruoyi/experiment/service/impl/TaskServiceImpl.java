@@ -135,8 +135,19 @@ public class TaskServiceImpl implements TaskService {
             taskQueryDTO.setUserId(SecurityUtils.getUserId());
         }
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
-        // 2.计算子任务状态
-        calculateTaskList(tasks);
+        // 2.计算子任务状态（注释掉旧方法，直接使用数据库中的taskPercentage）
+        // calculateTaskList(tasks);
+        
+        // 更新percentage字段，直接使用taskPercentage
+        for (TaskVO task : tasks) {
+            task.setPercentage(task.getTaskPercentage() != null ? task.getTaskPercentage() : 0);
+        }
+        
+        // 检查是否有子任务
+        List<Long> parentIdsHaveSubTasks = taskMapper.selectParentIdsHaveSubTasks(tasks.stream().map(TaskVO::getTaskId).collect(Collectors.toList()));
+        for (TaskVO task : tasks) {
+            task.setHasSubTasks(parentIdsHaveSubTasks.contains(task.getTaskId()));
+        }
         
         // 统计子任务状态数量和查询参与用户
         for (TaskVO task : tasks) {
@@ -163,7 +174,18 @@ public class TaskServiceImpl implements TaskService {
         taskQueryDTO.setOrderBy(TaskConstants.SUB_TASK_ORDER_BY);
         taskQueryDTO.setOrderDirection(TaskConstants.SUB_TASK_ORDER_DIRECTION);
         List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
-        calculateTaskList(tasks);
+        // calculateTaskList(tasks);
+        
+        // 更新percentage字段，直接使用taskPercentage
+        for (TaskVO task : tasks) {
+            task.setPercentage(task.getTaskPercentage() != null ? task.getTaskPercentage() : 0);
+        }
+        
+        // 检查是否有子任务
+        List<Long> parentIdsHaveSubTasks = taskMapper.selectParentIdsHaveSubTasks(tasks.stream().map(TaskVO::getTaskId).collect(Collectors.toList()));
+        for (TaskVO task : tasks) {
+            task.setHasSubTasks(parentIdsHaveSubTasks.contains(task.getTaskId()));
+        }
         
         // 统计子任务状态数量和查询参与用户
         for (TaskVO task : tasks) {
@@ -200,6 +222,14 @@ public class TaskServiceImpl implements TaskService {
             if(!isTeacher){
                 throw new ServiceException("只有教师有权添加任务");
             }
+        }
+
+        // 验证任务进度：新增任务是叶子节点，必须手动设置任务进度
+        if (taskDTO.getTaskPercentage() == null) {
+            throw new ServiceException("请手动设置任务进度");
+        }
+        if (taskDTO.getTaskPercentage() < 0 || taskDTO.getTaskPercentage() > 100) {
+            throw new ServiceException("任务进度范围必须在0到100之间");
         }
 
         Task task = new Task();
@@ -262,6 +292,9 @@ public class TaskServiceImpl implements TaskService {
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), participantUserIds);
         // 7.3.更新父任务的参与用户组
         updateParentTaskParticipantUserIds(task.getParentTaskId(),participantUserIds);
+
+        // 8.递归更新父任务进度
+        recalculateTaskPercentage(task.getParentTaskId());
     }
 
     @Override
@@ -287,6 +320,22 @@ public class TaskServiceImpl implements TaskService {
                 && !isCreator){
             throw new ServiceException("只有任务创建人可以将任务状态更改为已完成或者已跳过");
         }
+        
+        // 判断任务是否有子任务
+        boolean hasSubTasks = !isLeafTask(taskDTO.getTaskId());
+        
+        // 如果有子任务，不允许手动修改任务进度
+        if (hasSubTasks && taskDTO.getTaskPercentage() != null) {
+            throw new ServiceException("该任务有子任务，任务进度会自动计算，无需手动设置");
+        }
+        
+        // 验证任务进度范围
+        if (taskDTO.getTaskPercentage() != null) {
+            if (taskDTO.getTaskPercentage() < 0 || taskDTO.getTaskPercentage() > 100) {
+                throw new ServiceException("任务进度范围必须在0到100之间");
+            }
+        }
+
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
         
@@ -295,7 +344,16 @@ public class TaskServiceImpl implements TaskService {
         
         // 3.修改任务
         taskMapper.updateTask(task);
-        // 4.修改任务执行用户
+        
+        // 4.如果是叶子节点且修改了进度，递归更新父任务进度
+        boolean isLeaf = isLeafTask(taskDTO.getTaskId());
+        boolean percentageChanged = taskDTO.getTaskPercentage() != null && 
+                                   !Objects.equals(taskDTO.getTaskPercentage(), originTask.getTaskPercentage());
+        if (isLeaf && percentageChanged && taskDTO.getParentTaskId() > TaskConstants.FIRST_PARENT_TASK_ID) {
+            recalculateTaskPercentage(taskDTO.getParentTaskId());
+        }
+        
+        // 5.修改任务执行用户
         TaskExecutor taskExecutor = new TaskExecutor();
         taskExecutor.setTaskId(taskDTO.getTaskId());
         taskExecutor.setUserId(taskDTO.getExecutorUserId());
@@ -306,30 +364,30 @@ public class TaskServiceImpl implements TaskService {
                 taskExecutorMapper.updateByTaskId(taskExecutor);
             }
         }
-        // 5.修改任务的参与用户组
+        // 6.修改任务的参与用户组
         if(CollectionUtils.isEmpty(taskDTO.getParticipantUserIds())){
             taskDTO.setParticipantUserIds(new ArrayList<>());
         }
-        // 5.1参与用户组自动添加任务创建人
+        // 6.1参与用户组自动添加任务创建人
         if(!taskDTO.getParticipantUserIds().contains(originTask.getCreateUserId())){
             taskDTO.getParticipantUserIds().add(originTask.getCreateUserId());
         }
-        // 5.2参与用户组自动添加任务执行人
+        // 6.2参与用户组自动添加任务执行人
         if(!taskDTO.getParticipantUserIds().contains(taskDTO.getExecutorUserId())){
             taskDTO.getParticipantUserIds().add(taskDTO.getExecutorUserId());
         }
-        // 5.3比较任务的参与用户组是否更改
+        // 6.3比较任务的参与用户组是否更改
         Set<Long> originParticipantUserIds = new HashSet<>(taskUserMapper.selectUserIdsByTaskId(task.getTaskId()));
         Set<Long> newParticipantUserIds = new HashSet<>(taskDTO.getParticipantUserIds());
         if(SetUtils.isEqualSet(originParticipantUserIds,newParticipantUserIds)){
             // 参与用户组未改变，无需更新
             return;
         }
-        // 5.4 删除原参与用户组
+        // 6.4 删除原参与用户组
         taskUserMapper.deleteTaskUsersByTaskId(task.getTaskId());
-        // 5.5 插入新参与用户组
+        // 6.5 插入新参与用户组
         taskUserMapper.insertTaskUserBatch(task.getTaskId(), taskDTO.getParticipantUserIds());
-        // 5.6.修改父任务的参与用户组
+        // 6.6.修改父任务的参与用户组
         updateParentTaskParticipantUserIds(task.getParentTaskId(),taskDTO.getParticipantUserIds());
     }
 
@@ -404,6 +462,10 @@ public class TaskServiceImpl implements TaskService {
         if(!isTeacher && !isCreator && !isExecutor){
             throw new ServiceException("仅教师、任务创建人、任务执行人有权删除任务");
         }
+        
+        // 保存父任务ID，用于后续更新父任务进度
+        Long parentTaskId = task.getParentTaskId();
+        
         // 2.获取当前任务的所有子任务
         List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
         // 3.递归删除所有子任务
@@ -421,21 +483,23 @@ public class TaskServiceImpl implements TaskService {
         taskUserMapper.deleteTaskUsersByTaskId(taskId);
         // 7.删除任务关联文件
         List<String> filePaths = taskFileMapper.selectFilePathsByTaskId(taskId);
-        if(CollectionUtils.isEmpty(filePaths)){
-            return;
-        }
-        try{
-            for (String filePath : filePaths) {
-                Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getTaskBaseDir(),filePath));
-                if (Files.exists(path)) {
-                    Files.delete(path);
+        if(!CollectionUtils.isEmpty(filePaths)){
+            try{
+                for (String filePath : filePaths) {
+                    Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getTaskBaseDir(),filePath));
+                    if (Files.exists(path)) {
+                        Files.delete(path);
+                    }
                 }
+            }catch (Exception e){
+                log.error("删除任务关联文件失败", e);
+                throw new ServiceException("删除任务关联文件失败");
             }
-        }catch (Exception e){
-            log.error("删除任务关联文件失败", e);
-            throw new ServiceException("删除任务关联文件失败");
+            taskFileMapper.deleteByTaskId(taskId);
         }
-        taskFileMapper.deleteByTaskId(taskId);
+        
+        // 8.递归更新父任务进度
+        recalculateTaskPercentage(parentTaskId);
     }
 
     @Override
@@ -446,6 +510,9 @@ public class TaskServiceImpl implements TaskService {
         // 2.查询任务参与用户
         if(null!=taskDetailVO){
             taskDetailVO.setParticipantUsers(taskUserMapper.selectUsersByTaskId(taskId));
+            // 3.判断是否有子任务
+            List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+            taskDetailVO.setHasSubTasks(!CollectionUtils.isEmpty(subTaskIds));
         }
         return taskDetailVO;
     }
@@ -602,5 +669,53 @@ public class TaskServiceImpl implements TaskService {
         else {
             task.setActualFinishTime(originTask.getActualFinishTime());
         }
+    }
+
+    /**
+     * 递归计算并更新父任务的进度
+     * @param taskId 任务ID
+     */
+    private void recalculateTaskPercentage(Long taskId) {
+        if(null==taskId || taskId.equals(TaskConstants.FIRST_PARENT_TASK_ID)){
+            return;
+        }
+        Task task = taskMapper.selectTaskById(taskId);
+        if(null==task){
+            return;
+        }
+
+        List<Task> subTasks = taskMapper.selectSubTasksByParentId(taskId);
+
+        if (CollectionUtils.isEmpty(subTasks)) {
+            return;
+        }
+
+        int totalPercentage = 0;
+        int validCount = 0;
+        for (Task subTask : subTasks) {
+            if (subTask.getTaskPercentage() != null) {
+                totalPercentage += subTask.getTaskPercentage();
+                validCount++;
+            }
+        }
+
+        int newPercentage = validCount > 0 ? totalPercentage / validCount : 0;
+
+        Task taskForUpdate = new Task();
+        taskForUpdate.setTaskId(taskId);
+        taskForUpdate.setTaskPercentage(newPercentage);
+        taskMapper.updateTask(taskForUpdate);
+
+        recalculateTaskPercentage(task.getParentTaskId());
+    }
+
+    /**
+     * 判断任务是否为叶子节点任务（没有子任务）
+     * @param taskId 任务ID
+     * @return 是否为叶子节点
+     */
+    private boolean isLeafTask(Long taskId) {
+        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+        return CollectionUtils.isEmpty(subTaskIds);
     }
 }

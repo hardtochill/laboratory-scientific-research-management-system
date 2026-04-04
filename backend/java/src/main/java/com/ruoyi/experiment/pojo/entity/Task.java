@@ -53,6 +53,10 @@ public class Task extends BaseEntity {
      */
     private Integer taskStatus;
      /**
+     * 任务进度
+     */
+    private Integer taskPercentage;
+     /**
      * 创建用户id
      */
     private Long createUserId;

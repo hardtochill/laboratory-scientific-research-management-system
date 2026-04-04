@@ -214,8 +214,8 @@ const getProgressPercentage = (task) => {
   // 确保task对象有效
   if (!task) return 0
   
-  // 使用后端返回的percentage字段，如果不存在则默认为0%
-  return task.percentage !== undefined ? task.percentage : 0
+  // 使用后端返回的taskPercentage字段，如果不存在则默认为0%
+  return task.taskPercentage !== undefined ? task.taskPercentage : 0
 }
 
 // 任务进度颜色

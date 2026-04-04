@@ -38,6 +38,10 @@ public class TaskDetailVO extends BaseEntity {
      */
     private Integer taskStatus;
      /**
+     * 任务进度
+     */
+    private Integer taskPercentage;
+     /**
      * 创建用户id
      */
     private Long createUserId;
@@ -73,4 +77,8 @@ public class TaskDetailVO extends BaseEntity {
      * 执行人定时汇报频率（单位：天）
      */
     private Integer reportFrequency;
+    /**
+     * 是否有子任务
+     */
+    private Boolean hasSubTasks;
 }
