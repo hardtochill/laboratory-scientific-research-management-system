@@ -1,5 +1,5 @@
 <template>
-  <component :is="type" v-bind="linkProps()">
+  <component :is="type" v-bind="linkProps()" @click="handleClick">
     <slot />
   </component>
 </template>
@@ -13,6 +13,9 @@ const props = defineProps({
     required: true
   }
 })
+
+const route = useRoute()
+const router = useRouter()
 
 const isExt = computed(() => {
   return isExternal(props.to)
@@ -35,6 +38,21 @@ function linkProps() {
   }
   return {
     to: props.to
+  }
+}
+
+function handleClick(e) {
+  if (isExt.value) return
+
+  const targetPath = typeof props.to === 'string' ? props.to : props.to.path
+  const currentPath = route.path
+
+  if (targetPath === currentPath) {
+    e.preventDefault()
+    router.replace({
+      path: '/redirect' + currentPath,
+      query: route.query
+    })
   }
 }
 </script>
