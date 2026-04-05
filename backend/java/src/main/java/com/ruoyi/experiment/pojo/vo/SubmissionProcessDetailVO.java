@@ -24,16 +24,8 @@ public class SubmissionProcessDetailVO {
      */
      private String name;
     /**
-     * 审核人ID
+     * 审核状态：1待发起内部审核、2内部审核中、3内部审核通过、4内部审核不通过
      */
-     private Long reviewerUserId;
-     /**
-      * 审核人昵称
-      */
-     private String reviewerUserNickName;
-     /**
-      * 审核状态：1待发起内部审核、2内部审核中、3内部审核通过、4内部审核不通过
-      */
      private Integer status;
     /**
      * 流程备注
@@ -63,4 +55,12 @@ public class SubmissionProcessDetailVO {
      * 校稿-最终稿
      */
     private List<SubmissionProcessFileVO> finalDraftFiles;
+    /**
+     * 学生审核人信息
+     */
+    private ReviewVO studentReview;
+    /**
+     * 教师审核人信息
+     */
+    private ReviewVO teacherReview;
 }

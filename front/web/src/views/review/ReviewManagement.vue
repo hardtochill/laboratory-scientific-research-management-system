@@ -57,6 +57,13 @@
             <el-table-column prop="planName" label="投稿计划" min-width="200" align="center" />
             <el-table-column prop="processName" label="投稿流程" min-width="150" align="center" />
             <el-table-column prop="reviewedUserNickName" label="申请人" width="150" align="center" />
+            <el-table-column prop="type" label="审核类型" width="120" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.type === 1 ? 'info' : 'primary'">
+                  {{ row.type === 1 ? '学生审核' : '教师审核' }}
+                </el-tag>
+              </template>
+            </el-table-column>
             <el-table-column prop="reviewCreateTime" label="发起时间" sortable width="200" :formatter="formatDate" align="center" />
             <el-table-column prop="status" label="审核状态" width="150" align="center">
               <template #default="{ row }">
@@ -143,6 +150,13 @@
             <el-table-column prop="planName" label="投稿计划" min-width="200" align="center" />
             <el-table-column prop="processName" label="投稿流程" min-width="150" align="center" />
             <el-table-column prop="reviewedUserNickName" label="申请人" width="120" align="center" />
+            <el-table-column prop="type" label="审核类型" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.type === 1 ? 'info' : 'primary'">
+                  {{ row.type === 1 ? '学生' : '教师' }}
+                </el-tag>
+              </template>
+            </el-table-column>
             <el-table-column prop="reviewerUserNickName" label="审核人" width="120" align="center" />
             <el-table-column prop="reviewCreateTime" label="发起时间" width="160" :formatter="formatDate" align="center" />
             <el-table-column prop="reviewFinishTime" label="审核时间" width="160" :formatter="formatDate" align="center" />
@@ -181,6 +195,11 @@
             <el-descriptions :column="1" border label-width="120px">
               <el-descriptions-item label="申请人">
                 {{ currentReview.reviewedUserNickName }}
+              </el-descriptions-item>
+              <el-descriptions-item label="审核类型">
+                <el-tag :type="currentReview.type === 1 ? 'info' : 'primary'">
+                  {{ currentReview.type === 1 ? '学生审核' : '教师审核' }}
+                </el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="审核人">
                 {{ currentReview.reviewerUserNickName }}
@@ -258,9 +277,6 @@
                           {{ getProcessStatusText(submissionProcessDetail.status) }}
                         </el-tag>
                       </el-descriptions-item>
-                      <el-descriptions-item label="审核人">
-                        {{ submissionProcessDetail.reviewerUserNickName || '-' }}
-                      </el-descriptions-item>
                       <el-descriptions-item label="创建时间">
                         {{ parseTime(submissionProcessDetail.processCreateTime) }}
                       </el-descriptions-item>
@@ -286,6 +302,65 @@
                         </div>
                       </el-descriptions-item>
                     </el-descriptions>
+
+                    <!-- 审核进度时间线 -->
+                    <div v-if="submissionProcessDetail.studentReview || submissionProcessDetail.teacherReview" class="review-timeline-section">
+                      <h4>审核进度</h4>
+                      <el-timeline>
+                        <!-- 审核发起 -->
+                        <el-timeline-item
+                          :timestamp="submissionProcessDetail.studentReview?.reviewCreateTime ? parseTime(submissionProcessDetail.studentReview.reviewCreateTime) : ''"
+                          placement="top"
+                          type="primary"
+                          size="large">
+                          <div class="timeline-item-content">
+                            <div class="timeline-title">审核发起</div>
+                            <div class="timeline-info">
+                              <span>申请人：{{ submissionProcessDetail.studentReview?.reviewedUserNickName || '-' }}</span>
+                              <span v-if="submissionProcessDetail.studentReview?.reviewedRemark" class="timeline-remark">
+                                备注：{{ submissionProcessDetail.studentReview.reviewedRemark }}
+                              </span>
+                            </div>
+                          </div>
+                        </el-timeline-item>
+
+                        <!-- 学生审核 -->
+                        <el-timeline-item
+                          :timestamp="submissionProcessDetail.studentReview?.reviewFinishTime ? parseTime(submissionProcessDetail.studentReview.reviewFinishTime) : ''"
+                          placement="top"
+                          :type="submissionProcessDetail.studentReview?.status === 2 ? 'success' : submissionProcessDetail.studentReview?.status === 3 ? 'danger' : 'warning'"
+                          size="large">
+                          <div class="timeline-item-content">
+                            <div class="timeline-title">学生审核</div>
+                            <div class="timeline-info">
+                              <span>审核人：{{ submissionProcessDetail.studentReview?.reviewerUserNickName || '-' }}</span>
+                              <span>状态：{{ submissionProcessDetail.studentReview?.status === 1 ? '待审核' : submissionProcessDetail.studentReview?.status === 2 ? '审核通过' : '审核不通过' }}</span>
+                              <span v-if="submissionProcessDetail.studentReview?.reviewerRemark" class="timeline-remark">
+                                备注：{{ submissionProcessDetail.studentReview.reviewerRemark }}
+                              </span>
+                            </div>
+                          </div>
+                        </el-timeline-item>
+
+                        <!-- 教师审核 -->
+                        <el-timeline-item
+                          :timestamp="submissionProcessDetail.teacherReview?.reviewFinishTime ? parseTime(submissionProcessDetail.teacherReview.reviewFinishTime) : ''"
+                          placement="top"
+                          :type="submissionProcessDetail.teacherReview?.status === 2 ? 'success' : submissionProcessDetail.teacherReview?.status === 3 ? 'danger' : 'warning'"
+                          size="large">
+                          <div class="timeline-item-content">
+                            <div class="timeline-title">教师审核</div>
+                            <div class="timeline-info">
+                              <span>审核人：{{ submissionProcessDetail.teacherReview?.reviewerUserNickName || '-' }}</span>
+                              <span>状态：{{ submissionProcessDetail.teacherReview?.status === 1 ? '待审核' : submissionProcessDetail.teacherReview?.status === 2 ? '审核通过' : '审核不通过' }}</span>
+                              <span v-if="submissionProcessDetail.teacherReview?.reviewerRemark" class="timeline-remark">
+                                备注：{{ submissionProcessDetail.teacherReview.reviewerRemark }}
+                              </span>
+                            </div>
+                          </div>
+                        </el-timeline-item>
+                      </el-timeline>
+                    </div>
                   </div>
                 </el-tab-pane>
               </el-tabs>
@@ -320,7 +395,7 @@
 <script setup>
 import { ref, onMounted, reactive, toRefs, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listReviews, getReview, approveReview, rejectReview, getSelectableReviewedUsers, deleteReview } from '@/api/review/review'
+import { listReviews, getReview, doReview, getSelectableReviewedUsers, deleteReview } from '@/api/review/review'
 import { listSubmissionPlansForSelect, getSubmissionPlan } from '@/api/submission/submissionPlan'
 import { getSubmissionProcessDetail } from '@/api/submission/submissionProcess'
 import { downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
@@ -755,6 +830,7 @@ const submissionProcessDetail = ref(null)
 const reviewDialogVisible = ref(false)
 const reviewDialogTitle = ref('审核通过')
 const currentReviewForAction = ref(null)
+const currentReviewAction = ref(2)
 const reviewForm = reactive({
   reviewerRemark: ''
 })
@@ -911,6 +987,7 @@ const showReviewDetail = async (review) => {
 // 审核通过
 const handleApproveReview = (review) => {
   currentReviewForAction.value = review
+  currentReviewAction.value = 2
   reviewForm.reviewerRemark = ''
   reviewDialogVisible.value = true
   reviewDialogTitle.value = '审核通过'
@@ -919,6 +996,7 @@ const handleApproveReview = (review) => {
 // 审核拒绝
 const handleRejectReview = (review) => {
   currentReviewForAction.value = review
+  currentReviewAction.value = 3
   reviewForm.reviewerRemark = ''
   reviewDialogVisible.value = true
   reviewDialogTitle.value = '审核拒绝'
@@ -927,13 +1005,12 @@ const handleRejectReview = (review) => {
 // 确认审核操作
 const handleReviewConfirm = async () => {
   try {
-    if (reviewDialogTitle.value === '审核通过') {
-      await approveReview(currentReviewForAction.value.id, reviewForm.reviewerRemark)
-      ElMessage.success('审核通过成功')
-    } else {
-      await rejectReview(currentReviewForAction.value.id, reviewForm.reviewerRemark)
-      ElMessage.success('审核拒绝成功')
-    }
+    await doReview({
+      reviewId: currentReviewForAction.value.id,
+      status: currentReviewAction.value,
+      reviewerRemark: reviewForm.reviewerRemark
+    })
+    ElMessage.success(reviewDialogTitle.value + '成功')
     
     reviewDialogVisible.value = false
     
@@ -1220,12 +1297,63 @@ onMounted(async () => {
   display: block;
   width: 100%;
   height: auto;
-  line-height: 1.5;
-  padding: 2px 0;
-  margin: 0;
-  white-space: normal;
-  word-break: break-all;
-  text-align: left;
+}
+
+.review-timeline-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.review-timeline-section h4 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.timeline-item-content {
+  padding: 8px 0;
+}
+
+.timeline-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.timeline-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-remark {
+  color: #888;
+  font-size: 13px;
+}
+
+.review-timeline-section :deep(.el-timeline) {
+  padding-left: 32px;
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__wrapper) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__node) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__node-wrapper) {
+  overflow: visible;
 }
 
 .file-link:deep(.el-button > span) {

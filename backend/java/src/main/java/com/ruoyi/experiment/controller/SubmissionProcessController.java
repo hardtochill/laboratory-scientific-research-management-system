@@ -1,6 +1,7 @@
 package com.ruoyi.experiment.controller;
 
 import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
+import com.ruoyi.experiment.pojo.dto.SubmitReviewDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessDetailVO;
 import com.ruoyi.experiment.pojo.vo.SubmissionProcessVO;
@@ -67,9 +68,8 @@ public class SubmissionProcessController extends BaseController {
      * 发起内部审核
      */
     @PostMapping("/submitReview")
-    public AjaxResult submitForReview(@RequestParam("processId") Long processId, 
-                                     @RequestParam(value = "reviewedRemark", required = false) String reviewedRemark) {
-        submissionProcessService.submitForReview(processId, reviewedRemark);
+    public AjaxResult submitForReview(@RequestBody SubmitReviewDTO submitReviewDTO) {
+        submissionProcessService.submitForReview(submitReviewDTO);
         return success();
     }
     /**

@@ -35,6 +35,16 @@ public interface ReviewMapper {
     Review selectById(@Param("id") Long id);
 
     /**
+     * 查询投稿流程最新版本的审核记录（学生审核和教师审核）
+     */
+    List<Review> selectLatestReviewsByProcessId(@Param("processId") Long processId);
+
+    /**
+     * 查询投稿流程的最大版本号
+     */
+    Integer selectMaxVersionByProcessId(@Param("processId") Long processId);
+
+    /**
      * 新增审核
      * @param review 审核信息
      * @return 影响行数

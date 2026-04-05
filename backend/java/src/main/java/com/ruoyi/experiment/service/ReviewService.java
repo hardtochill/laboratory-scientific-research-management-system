@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.service;
 
+import com.ruoyi.experiment.pojo.dto.DoReviewDTO;
 import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
@@ -17,7 +18,7 @@ public interface ReviewService {
      * @return 审核列表
      */
     List<ReviewVO> listReviews(ReviewQueryDTO reviewQueryDTO);
-    
+
     /**
      * 查询审核详情
      * @param id 审核ID
@@ -26,18 +27,10 @@ public interface ReviewService {
     ReviewVO getReviewById(Long id);
 
     /**
-     * 审核通过
-     * @param id 审核ID
-     * @param reviewerRemark 审核人备注
+     * 执行审核
+     * @param doReviewDTO 审核信息
      */
-    void approveReview(Long id, String reviewerRemark);
-    
-    /**
-     * 审核不通过
-     * @param id 审核ID
-     * @param reviewerRemark 审核人备注
-     */
-    void rejectReview(Long id, String reviewerRemark);
+    void doReview(DoReviewDTO doReviewDTO);
 
     /**
      * 删除审核记录
@@ -45,8 +38,18 @@ public interface ReviewService {
      */
     void deleteReview(Long id);
 
-     /**
-      * 获取用户列表（用于前端用户选择）
-      */
+    /**
+     * 获取用户列表（用于前端用户选择）
+     */
     List<UserForSelectVO> listReviewedUsersForSelect(String nickName);
+
+    /**
+     * 获取学生用户列表（用于前端用户选择）
+     */
+    List<UserForSelectVO> listStudentReviewersForSelect(String nickName);
+
+    /**
+     * 获取教师用户列表（用于前端用户选择）
+     */
+    List<UserForSelectVO> listTeacherReviewersForSelect(String nickName);
 }

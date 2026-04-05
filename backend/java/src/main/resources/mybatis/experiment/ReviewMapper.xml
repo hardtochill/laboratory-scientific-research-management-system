@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.experiment.mapper.ReviewMapper">
     <select id="selectReviewVOList" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
-        select r.id, r.plan_id, r.process_id, r.reviewed_user_id, r.reviewed_user_nick_name, r.reviewer_user_id, r.reviewer_user_nick_name, r.status,r.review_create_time,r.review_finish_time,
+        select r.id, r.plan_id, r.process_id, r.reviewed_user_id, r.reviewed_user_nick_name, r.reviewer_user_id, r.reviewer_user_nick_name, r.status, r.type, r.version, r.review_create_time,r.review_finish_time, r.reviewed_remark, r.reviewer_remark,
                 plan.name as plan_name,
                 process.name as process_name
         from review r
@@ -26,24 +26,45 @@
         order by r.review_create_time desc
     </select>
     <select id="selectVOById" resultType="com.ruoyi.experiment.pojo.vo.ReviewVO">
-        select r.*,plan.name as plan_name,process.name as process_name
+        select r.id, r.plan_id, r.process_id, r.reviewed_user_id, r.reviewed_user_nick_name, r.reviewer_user_id, r.reviewer_user_nick_name, r.status, r.type, r.version, r.review_create_time, r.review_finish_time, r.reviewed_remark, r.reviewer_remark, plan.name as plan_name, process.name as process_name
         from review r
         left join submission_plan plan on r.plan_id = plan.id
         left join submission_process process on r.process_id = process.id
         where r.id = #{id}
     </select>
 
+    <select id="selectById" resultType="com.ruoyi.experiment.pojo.entity.Review">
+        select * from review where id = #{id}
+    </select>
+
+    <select id="selectLatestReviewsByProcessId" resultType="com.ruoyi.experiment.pojo.entity.Review">
+        select r1.*
+        from review r1
+        inner join (
+            select process_id, type, max(version) as max_version
+            from review
+            where process_id = #{processId}
+            group by process_id, type
+        ) r2 on r1.process_id = r2.process_id and r1.type = r2.type and r1.version = r2.max_version
+        where r1.process_id = #{processId}
+    </select>
+
+    <select id="selectMaxVersionByProcessId" resultType="java.lang.Integer">
+        select coalesce(max(version), 0) from review where process_id = #{processId}
+    </select>
+
     <insert id="insert" parameterType="com.ruoyi.experiment.pojo.entity.Review">
-        insert into review (plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status, reviewed_remark, reviewer_remark, review_create_time, review_finish_time, create_time, update_time)
-        values (#{planId}, #{processId}, #{reviewedUserId}, #{reviewedUserNickName}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{reviewedRemark}, #{reviewerRemark}, #{reviewCreateTime},#{reviewFinishTime}, #{createTime}, #{updateTime})
+        insert into review (plan_id, process_id, reviewed_user_id, reviewed_user_nick_name, reviewer_user_id, reviewer_user_nick_name, status, type, version, reviewed_remark, reviewer_remark, review_create_time, review_finish_time, create_time, update_time)
+        values (#{planId}, #{processId}, #{reviewedUserId}, #{reviewedUserNickName}, #{reviewerUserId}, #{reviewerUserNickName}, #{status}, #{type}, #{version}, #{reviewedRemark}, #{reviewerRemark}, #{reviewCreateTime},#{reviewFinishTime}, #{createTime}, #{updateTime})
     </insert>
 
     <update id="update" parameterType="com.ruoyi.experiment.pojo.entity.Review">
         update review
         <set>
             <if test="status != null">status = #{status},</if>
-            <if test="reviewerRemark != null and reviewerRemark != ''">reviewer_remark = #{reviewerRemark},</if>
+            <if test="reviewerRemark != null">reviewer_remark = #{reviewerRemark},</if>
             <if test="reviewFinishTime != null">review_finish_time = #{reviewFinishTime},</if>
+            <if test="reviewCreateTime != null">review_create_time = #{reviewCreateTime},</if>
             update_time = #{updateTime}
         </set>
         where id = #{id}

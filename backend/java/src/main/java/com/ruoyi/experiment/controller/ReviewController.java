@@ -1,5 +1,6 @@
 package com.ruoyi.experiment.controller;
 
+import com.ruoyi.experiment.pojo.dto.DoReviewDTO;
 import com.ruoyi.experiment.pojo.dto.ReviewQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Review;
 import com.ruoyi.experiment.pojo.vo.ReviewVO;
@@ -37,6 +38,22 @@ public class ReviewController extends BaseController {
     }
 
     /**
+     * 获取学生审核人列表（用于前端用户选择）
+     */
+    @GetMapping("/listStudentReviewersForSelect")
+    public AjaxResult listStudentReviewersForSelect(String nickName) {
+        return AjaxResult.success(reviewService.listStudentReviewersForSelect(nickName));
+    }
+
+    /**
+     * 获取教师审核人列表（用于前端用户选择）
+     */
+    @GetMapping("/listTeacherReviewersForSelect")
+    public AjaxResult listTeacherReviewersForSelect(String nickName) {
+        return AjaxResult.success(reviewService.listTeacherReviewersForSelect(nickName));
+    }
+
+    /**
      * 查询审核详情
      */
     @GetMapping("/{id}")
@@ -45,23 +62,14 @@ public class ReviewController extends BaseController {
     }
 
     /**
-     * 审核通过
+     * 执行审核
      */
-    @PostMapping("/approve/{id}")
-    public AjaxResult approveReview(@PathVariable("id") Long id, @RequestParam(value = "reviewerRemark", required = false) String reviewerRemark) {
-        reviewService.approveReview(id, reviewerRemark);
+    @PostMapping("/doReview")
+    public AjaxResult doReview(@RequestBody DoReviewDTO doReviewDTO) {
+        reviewService.doReview(doReviewDTO);
         return success();
     }
 
-    /**
-     * 审核不通过
-     */
-    @PostMapping("/reject/{id}")
-    public AjaxResult rejectReview(@PathVariable("id") Long id, @RequestParam(value = "reviewerRemark", required = false) String reviewerRemark) {
-        reviewService.rejectReview(id, reviewerRemark);
-        return success();
-    }
-    
     /**
      * 删除审核记录
      */

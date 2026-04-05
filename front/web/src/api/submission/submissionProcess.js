@@ -35,14 +35,11 @@ export function deleteSubmissionProcess(id) {
 }
 
 // 发起内部审核
-export function submitForReview(processId, reviewedRemark = '') {
+export function submitForReview(data) {
   return request({
     url: '/submissionProcess/submitReview',
     method: 'post',
-    params: {
-      processId: processId,
-      reviewedRemark: reviewedRemark
-    }
+    data: data
   })
 }
 

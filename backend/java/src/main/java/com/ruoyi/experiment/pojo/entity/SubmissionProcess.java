@@ -24,16 +24,8 @@ public class SubmissionProcess extends BaseEntity{
      */
      private String name;
     /**
-     * 审核人ID
+     * 审核状态：1待发起内部审核、2内部审核中、3内部审核通过、4内部审核不通过
      */
-     private Long reviewerUserId;
-     /**
-      * 审核人昵称
-      */
-     private String reviewerUserNickName;
-     /**
-      * 审核状态：1待发起内部审核、2内部审核中、3内部审核通过、4内部审核不通过
-      */
      private Integer status;
     /**
      * 流程备注
@@ -42,5 +34,5 @@ public class SubmissionProcess extends BaseEntity{
     /**
      * 流程创建时间
      */
-    private LocalDateTime processCreateTime;
+     private LocalDateTime processCreateTime;
 }

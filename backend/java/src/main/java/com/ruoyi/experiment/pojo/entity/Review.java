@@ -46,6 +46,14 @@ public class Review extends BaseEntity{
      */
      private Integer status;
     /**
+     * 审核类型：1学生审核，2教师审核
+     */
+     private Integer type;
+    /**
+     * 版本号
+     */
+     private Integer version;
+    /**
      * 被审核人备注
      */
      private String reviewedRemark;
@@ -56,7 +64,7 @@ public class Review extends BaseEntity{
     /**
      * 审核发起时间
      */
-    private LocalDateTime reviewCreateTime;
+     private LocalDateTime reviewCreateTime;
     /**
      * 审核结束时间
      */

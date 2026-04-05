@@ -17,25 +17,12 @@ export function getReview(id) {
   })
 }
 
-// 审核通过
-export function approveReview(id, reviewerRemark = '') {
+// 执行审核
+export function doReview(data) {
   return request({
-    url: `/review/approve/${id}`,
+    url: '/review/doReview',
     method: 'post',
-    params: {
-      reviewerRemark: reviewerRemark
-    }
-  })
-}
-
-// 审核不通过
-export function rejectReview(id, reviewerRemark = '') {
-  return request({
-    url: `/review/reject/${id}`,
-    method: 'post',
-    params: {
-      reviewerRemark: reviewerRemark
-    }
+    data: data
   })
 }
 
@@ -43,6 +30,24 @@ export function rejectReview(id, reviewerRemark = '') {
 export function getSelectableReviewedUsers(params) {
   return request({
     url: '/review/listReviewedUsersForSelect',
+    method: 'get',
+    params
+  })
+}
+
+// 获取学生审核人列表
+export function getStudentReviewersForSelect(params) {
+  return request({
+    url: '/review/listStudentReviewersForSelect',
+    method: 'get',
+    params
+  })
+}
+
+// 获取教师审核人列表
+export function getTeacherReviewersForSelect(params) {
+  return request({
+    url: '/review/listTeacherReviewersForSelect',
     method: 'get',
     params
   })

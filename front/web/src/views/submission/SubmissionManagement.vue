@@ -290,7 +290,7 @@
     </el-dialog>
 
     <!-- 投稿流程详情对话框 -->
-    <el-dialog v-model="processDialogVisible" :title="processDialogTitle" width="600px"
+    <el-dialog v-model="processDialogVisible" :title="processDialogTitle" width="700px"
       :before-close="handleProcessDialogClose">
       <div v-if="currentProcess" class="process-detail">
         <el-descriptions :column="1" border :label-width="120">
@@ -301,9 +301,6 @@
             <el-tag :type="getProcessStatusType(currentProcess.status)">
               {{ getProcessStatusText(currentProcess.status) }}
             </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="审核人">
-            {{ currentProcess.reviewerUserNickName || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="创建时间">
             {{ parseTime(currentProcess.processCreateTime) }}
@@ -328,6 +325,65 @@
             </div>
           </el-descriptions-item>
         </el-descriptions>
+
+        <!-- 审核进度时间线 -->
+        <div v-if="currentProcess.studentReview || currentProcess.teacherReview" class="review-timeline-section">
+          <h4>审核进度</h4>
+          <el-timeline>
+            <!-- 审核发起 -->
+            <el-timeline-item
+              :timestamp="currentProcess.studentReview?.reviewCreateTime ? parseTime(currentProcess.studentReview.reviewCreateTime) : ''"
+              placement="top"
+              type="primary"
+              size="large">
+              <div class="timeline-item-content">
+                <div class="timeline-title">审核发起</div>
+                <div class="timeline-info">
+                  <span>申请人：{{ currentProcess.studentReview?.reviewedUserNickName || '-' }}</span>
+                  <span v-if="currentProcess.studentReview?.reviewedRemark" class="timeline-remark">
+                    备注：{{ currentProcess.studentReview.reviewedRemark }}
+                  </span>
+                </div>
+              </div>
+            </el-timeline-item>
+
+            <!-- 学生审核 -->
+            <el-timeline-item
+              :timestamp="currentProcess.studentReview?.reviewFinishTime ? parseTime(currentProcess.studentReview.reviewFinishTime) : ''"
+              placement="top"
+              :type="currentProcess.studentReview?.status === 2 ? 'success' : currentProcess.studentReview?.status === 3 ? 'danger' : 'warning'"
+              size="large">
+              <div class="timeline-item-content">
+                <div class="timeline-title">学生审核</div>
+                <div class="timeline-info">
+                  <span>审核人：{{ currentProcess.studentReview?.reviewerUserNickName || '-' }}</span>
+                  <span>状态：{{ currentProcess.studentReview?.status === 1 ? '待审核' : currentProcess.studentReview?.status === 2 ? '审核通过' : '审核不通过' }}</span>
+                  <span v-if="currentProcess.studentReview?.reviewerRemark" class="timeline-remark">
+                    备注：{{ currentProcess.studentReview.reviewerRemark }}
+                  </span>
+                </div>
+              </div>
+            </el-timeline-item>
+
+            <!-- 教师审核 -->
+            <el-timeline-item
+              :timestamp="currentProcess.teacherReview?.reviewFinishTime ? parseTime(currentProcess.teacherReview.reviewFinishTime) : ''"
+              placement="top"
+              :type="currentProcess.teacherReview?.status === 2 ? 'success' : currentProcess.teacherReview?.status === 3 ? 'danger' : 'warning'"
+              size="large">
+              <div class="timeline-item-content">
+                <div class="timeline-title">教师审核</div>
+                <div class="timeline-info">
+                  <span>审核人：{{ currentProcess.teacherReview?.reviewerUserNickName || '-' }}</span>
+                  <span>状态：{{ currentProcess.teacherReview?.status === 1 ? '待审核' : currentProcess.teacherReview?.status === 2 ? '审核通过' : '审核不通过' }}</span>
+                  <span v-if="currentProcess.teacherReview?.reviewerRemark" class="timeline-remark">
+                    备注：{{ currentProcess.teacherReview.reviewerRemark }}
+                  </span>
+                </div>
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
@@ -359,15 +415,6 @@
           <el-select v-model="processFormData.name" placeholder="请选择流程名称" style="width: 100%;">
             <el-option v-for="process in PROCESS_NAME_ENUM" :key="process.value" :label="process.label"
               :value="process.value" />
-          </el-select>
-        </el-form-item>
-
-        <!-- 审核人 -->
-        <el-form-item label="审核人" prop="reviewerUserId">
-          <el-select v-model="processFormData.reviewerUserId" placeholder="请选择审核人" filterable remote reserve-keyword
-            style="width: 100%;" :remote-method="querySelectableReviewers" :loading="reviewerLoading">
-            <el-option v-for="user in selectableReviewers" :key="user.userId"
-              :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
           </el-select>
         </el-form-item>
 
@@ -480,9 +527,23 @@
     </el-dialog>
 
     <!-- 发起审核对话框 -->
-    <el-dialog v-model="submitReviewDialogVisible" title="发起内部审核" width="400px"
+    <el-dialog v-model="submitReviewDialogVisible" title="发起内部审核" width="500px"
       :before-close="handleSubmitReviewDialogClose">
-      <el-form :model="submitReviewForm" ref="submitReviewFormRef" label-width="100px">
+      <el-form :model="submitReviewForm" ref="submitReviewFormRef" label-width="100px" :rules="submitReviewRules">
+        <el-form-item label="学生审核人" prop="studentReviewerUserId">
+          <el-select v-model="submitReviewForm.studentReviewerUserId" placeholder="请选择学生审核人" filterable remote reserve-keyword
+            style="width: 100%;" :remote-method="querySelectableStudentReviewers" :loading="studentReviewerLoading">
+            <el-option v-for="user in selectableStudentReviewers" :key="user.userId"
+              :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="教师审核人" prop="teacherReviewerUserId">
+          <el-select v-model="submitReviewForm.teacherReviewerUserId" placeholder="请选择教师审核人" filterable remote reserve-keyword
+            style="width: 100%;" :remote-method="querySelectableTeacherReviewers" :loading="teacherReviewerLoading">
+            <el-option v-for="user in selectableTeacherReviewers" :key="user.userId"
+              :label="`${user.nickName}(${user.userName})`" :value="user.userId" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="审核备注" prop="reviewedRemark">
           <el-input v-model="submitReviewForm.reviewedRemark" type="textarea" placeholder="请输入审核备注（非必填）" :rows="4"
             maxlength="255" show-word-limit />
@@ -503,6 +564,7 @@ import { ref, onMounted, reactive, toRefs, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listSubmissionPlans, getSubmissionPlan, createSubmissionPlan, updateSubmissionPlan, deleteSubmissionPlan, listSubmissionPlansForSelect, getSelectableCreateUsers } from '@/api/submission/submissionPlan'
 import { listSubmissionProcessesByPlanId, createSubmissionProcess, updateSubmissionProcess, deleteSubmissionProcess, submitForReview, getSubmissionProcessDetail, getSelectableReviewerUsers } from '@/api/submission/submissionProcess'
+import { getStudentReviewersForSelect, getTeacherReviewersForSelect } from '@/api/review/review'
 import { uploadSubmissionProcessFile, deleteSubmissionProcessFile, getSubmissionProcessFiles, downloadSubmissionProcessFile } from '@/api/submission/submissionProcessFile'
 import { parseTime } from '@/utils/ruoyi'
 import { CaretRight, CaretBottom, Plus, Switch, Delete, Document, Files, Check, UploadFilled, Download } from '@element-plus/icons-vue'
@@ -753,16 +815,12 @@ const processFormData = reactive({
   id: undefined,
   planId: undefined,
   name: '',
-  reviewerUserId: undefined,
   remark: ''
 })
 
 const processFormRules = reactive({
   name: [
-    { required: true, message: '请选择流程名称', trigger: 'change' },
-  ],
-  reviewerUserId: [
-    { required: true, message: '请选择审核人', trigger: 'change' }
+    { required: true, message: '请选择流程名称', trigger: 'change' }
   ]
 })
 
@@ -784,13 +842,29 @@ const tempUploading = ref(false)
 // 发起审核对话框
 const submitReviewDialogVisible = ref(false)
 const currentProcessForReview = ref(null)
+const submitReviewFormRef = ref(null)
 const submitReviewForm = reactive({
+  processId: undefined,
+  studentReviewerUserId: undefined,
+  teacherReviewerUserId: undefined,
   reviewedRemark: ''
+})
+const submitReviewRules = reactive({
+  studentReviewerUserId: [
+    { required: true, message: '请选择学生审核人', trigger: 'change' }
+  ],
+  teacherReviewerUserId: [
+    { required: true, message: '请选择教师审核人', trigger: 'change' }
+  ]
 })
 
 // 可选审核人列表
 const selectableReviewers = ref([])
 const reviewerLoading = ref(false)
+const selectableStudentReviewers = ref([])
+const studentReviewerLoading = ref(false)
+const selectableTeacherReviewers = ref([])
+const teacherReviewerLoading = ref(false)
 
 // 投稿计划名称列表（用于下拉选择）
 const selectablePlans = ref([])
@@ -1154,37 +1228,8 @@ const handleProcessEdit = async () => {
     id: currentProcess.value.id,
     planId: currentProcess.value.planId,
     name: currentProcess.value.name,
-    reviewerUserId: currentProcess.value.reviewerUserId,
     remark: currentProcess.value.remark || ''
   })
-  
-  // 如果有审核人ID，获取当前审核人的完整信息，确保Select组件能正确显示label
-  if (currentProcess.value.reviewerUserId) {
-    reviewerLoading.value = true
-    try {
-      // 调用API获取审核人信息
-      const response = await getSelectableReviewerUsers({
-        planId: currentProcess.value.planId,
-        nickName: '' // 传递空字符串获取所有审核人，或者可以尝试获取特定用户
-      })
-      const reviewers = response.data || []
-      
-      // 过滤出当前审核人
-      const currentReviewer = reviewers.find(user => user.userId === currentProcess.value.reviewerUserId)
-      
-      // 如果找到当前审核人，将其添加到selectableReviewers数组中
-      if (currentReviewer) {
-        selectableReviewers.value = [currentReviewer]
-      } else if (reviewers.length > 0) {
-        // 如果没找到特定审核人但获取到了审核人列表，使用完整列表
-        selectableReviewers.value = reviewers
-      }
-    } catch (error) {
-      console.error('获取审核人信息失败:', error)
-    } finally {
-      reviewerLoading.value = false
-    }
-  }
   
   processFormVisible.value = true
 }
@@ -1198,7 +1243,6 @@ const resetProcessForm = () => {
     id: undefined,
     planId: undefined,
     name: '',
-    reviewerUserId: undefined,
     remark: ''
   })
 }
@@ -1208,22 +1252,17 @@ const handleProcessFormSubmit = async () => {
   if (!processFormRef.value) return
   try {
     await processFormRef.value.validate()
-    // 从用户列表中获取审核人的nickName
-    const selectedUser = selectableReviewers.value.find(user => user.userId === processFormData.reviewerUserId)
-    const submitData = {
-      ...processFormData,
-      reviewerUserNickName: selectedUser ? selectedUser.nickName : ''
-    }
     if (processFormData.id) {
-      await updateSubmissionProcess(submitData)
+      await updateSubmissionProcess({ ...processFormData })
     } else {
-      await createSubmissionProcess(submitData)
+      await createSubmissionProcess({ ...processFormData })
     }
     ElMessage.success('保存成功')
+    const planId = processFormData.planId
     processFormVisible.value = false
     resetProcessForm()
     // 重新加载当前计划的流程
-    const currentPlan = submissionPlans.value.find(p => p.id === submitData.planId)
+    const currentPlan = submissionPlans.value.find(p => p.id === planId)
     if (currentPlan) {
       await loadProcesses(currentPlan)
     }
@@ -1443,14 +1482,21 @@ const handleTempFileUpload = async () => {
 // 发起内部审核
 const handleSubmitReview = (process) => {
   currentProcessForReview.value = process
-  submitReviewForm.reviewedRemark = ''
+  Object.assign(submitReviewForm, {
+    processId: process.id,
+    studentReviewerUserId: undefined,
+    teacherReviewerUserId: undefined,
+    reviewedRemark: ''
+  })
   submitReviewDialogVisible.value = true
 }
 
 // 确认发起审核
 const handleSubmitReviewConfirm = async () => {
+  if (!submitReviewFormRef.value) return
   try {
-    await submitForReview(currentProcessForReview.value.id, submitReviewForm.reviewedRemark)
+    await submitReviewFormRef.value.validate()
+    await submitForReview({ ...submitReviewForm })
     ElMessage.success('发起审核成功')
     submitReviewDialogVisible.value = false
     // 重新加载当前计划的流程
@@ -1459,6 +1505,7 @@ const handleSubmitReviewConfirm = async () => {
       await loadProcesses(currentPlan)
     }
   } catch (error) {
+    if (error === false) return
     ElMessage.error('发起审核失败')
     console.error('发起审核失败:', error)
   }
@@ -1466,9 +1513,43 @@ const handleSubmitReviewConfirm = async () => {
 
 // 关闭发起审核对话框
 const handleSubmitReviewDialogClose = () => {
+  if (submitReviewFormRef.value) {
+    submitReviewFormRef.value.resetFields()
+  }
   submitReviewDialogVisible.value = false
   currentProcessForReview.value = null
-  submitReviewForm.reviewedRemark = ''
+  Object.assign(submitReviewForm, {
+    processId: undefined,
+    studentReviewerUserId: undefined,
+    teacherReviewerUserId: undefined,
+    reviewedRemark: ''
+  })
+}
+
+// 查询可选学生审核人
+const querySelectableStudentReviewers = async (query) => {
+  studentReviewerLoading.value = true
+  try {
+    const response = await getStudentReviewersForSelect({ nickName: query })
+    selectableStudentReviewers.value = response.data || []
+  } catch (error) {
+    console.error('获取学生审核人列表失败:', error)
+  } finally {
+    studentReviewerLoading.value = false
+  }
+}
+
+// 查询可选教师审核人
+const querySelectableTeacherReviewers = async (query) => {
+  teacherReviewerLoading.value = true
+  try {
+    const response = await getTeacherReviewersForSelect({ nickName: query })
+    selectableTeacherReviewers.value = response.data || []
+  } catch (error) {
+    console.error('获取教师审核人列表失败:', error)
+  } finally {
+    teacherReviewerLoading.value = false
+  }
 }
 
 // 查询可选审核人
@@ -1565,6 +1646,63 @@ onMounted(async () => {
 <style scoped>
 .submission-management {
   padding: 20px;
+}
+
+.review-timeline-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.review-timeline-section h4 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.timeline-item-content {
+  padding: 8px 0;
+}
+
+.timeline-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.timeline-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-remark {
+  color: #888;
+  font-size: 13px;
+}
+
+.review-timeline-section :deep(.el-timeline) {
+  padding-left: 32px;
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__wrapper) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__node) {
+  overflow: visible;
+}
+
+.review-timeline-section :deep(.el-timeline-item__node-wrapper) {
+  overflow: visible;
 }
 
 .card-header {

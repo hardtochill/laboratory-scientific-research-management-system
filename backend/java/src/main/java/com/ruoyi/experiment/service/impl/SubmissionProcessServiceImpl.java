@@ -9,6 +9,7 @@ import com.ruoyi.experiment.mapper.SubmissionProcessMapper;
 import com.ruoyi.experiment.mapper.ReviewMapper;
 import com.ruoyi.experiment.mapper.SubmissionProcessFileMapper;
 import com.ruoyi.experiment.pojo.dto.SubmissionProcessDTO;
+import com.ruoyi.experiment.pojo.dto.SubmitReviewDTO;
 import com.ruoyi.experiment.pojo.entity.SubmissionPlan;
 import com.ruoyi.experiment.pojo.entity.SubmissionProcess;
 import com.ruoyi.experiment.pojo.entity.Review;
@@ -25,7 +26,6 @@ import com.ruoyi.project.system.domain.vo.UserForSelectVO;
 import com.ruoyi.project.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,9 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -53,26 +50,22 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public List<SubmissionProcessVO> listSubmissionProcessesByPlanId(Long planId) {
-        log.info("投稿流程模块-查询投稿计划下的投稿流程列表：{}",planId);
+        log.info("投稿流程模块-查询投稿计划下的投稿流程列表：{}", planId);
         List<SubmissionProcessVO> submissionProcessVOs = submissionProcessMapper.selectByPlanId(planId);
-        
+
         if (submissionProcessVOs.isEmpty()) {
             return submissionProcessVOs;
         }
-        
-        // 提取所有流程ID
+
         List<Long> processIds = submissionProcessVOs.stream()
                 .map(SubmissionProcessVO::getId)
                 .collect(Collectors.toList());
-        
-        // 批量查询所有流程的文件，避免N+1查询
+
         List<SubmissionProcessFile> allFiles = submissionProcessFileMapper.selectByProcessIds(processIds);
-        
-        // 按流程ID分组文件
+
         Map<Long, List<SubmissionProcessFile>> filesByProcessId = allFiles.stream()
                 .collect(Collectors.groupingBy(SubmissionProcessFile::getProcessId));
-        
-        // 转换为VO列表的映射
+
         Map<Long, List<SubmissionProcessFileVO>> voFilesByProcessId = new HashMap<>();
         for (Map.Entry<Long, List<SubmissionProcessFile>> entry : filesByProcessId.entrySet()) {
             Long processId = entry.getKey();
@@ -86,43 +79,35 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
                     .collect(Collectors.toList());
             voFilesByProcessId.put(processId, voFiles);
         }
-        
-        // 处理每个流程的文件分类
+
         for (SubmissionProcessVO submissionProcessVO : submissionProcessVOs) {
             Long processId = submissionProcessVO.getId();
             List<SubmissionProcessFileVO> processFiles = voFilesByProcessId.getOrDefault(processId, Collections.emptyList());
-            
-            // 文件分类
-            if(SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcessVO.getName())){ // 一审
-                // 提交给期刊的文件
+
+            if (SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcessVO.getName())) {
                 List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
-                // 原始数据与程序
                 List<SubmissionProcessFileVO> rawDataAndProgramFiles = new ArrayList<>();
                 for (SubmissionProcessFileVO submissionProcessFile : processFiles) {
-                    if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                    if (SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())) {
                         journalSubmissionFiles.add(submissionProcessFile);
-                    }else if(SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())){
+                    } else if (SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())) {
                         rawDataAndProgramFiles.add(submissionProcessFile);
                     }
                 }
                 submissionProcessVO.setJournalSubmissionFiles(journalSubmissionFiles);
                 submissionProcessVO.setRawDataAndProgramFiles(rawDataAndProgramFiles);
-            }else if(SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcessVO.getName())){ // 校稿
-                // 最终稿
+            } else if (SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcessVO.getName())) {
                 submissionProcessVO.setFinalDraftFiles(processFiles);
-            }else{ // n审
-                // 审稿意见
+            } else {
                 List<SubmissionProcessFileVO> reviewCommentsFiles = new ArrayList<>();
-                // 提交给期刊的文件
                 List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
-                // 补充数据
                 List<SubmissionProcessFileVO> supplementaryDataFiles = new ArrayList<>();
                 for (SubmissionProcessFileVO submissionProcessFile : processFiles) {
-                    if(SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())){
+                    if (SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())) {
                         reviewCommentsFiles.add(submissionProcessFile);
-                    }else if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                    } else if (SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())) {
                         journalSubmissionFiles.add(submissionProcessFile);
-                    }else if(SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())){
+                    } else if (SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())) {
                         supplementaryDataFiles.add(submissionProcessFile);
                     }
                 }
@@ -136,43 +121,27 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     public void createSubmissionProcess(SubmissionProcessDTO submissionProcessDTO) {
-        log.info("投稿流程模块-创建投稿流程：{}",submissionProcessDTO);
-        // 1. 校验投稿计划是否存在
+        log.info("投稿流程模块-创建投稿流程：{}", submissionProcessDTO);
         SubmissionPlanDetailVO submissionPlan = submissionPlanMapper.selectById(submissionProcessDTO.getPlanId());
         if (submissionPlan == null) {
             throw new RuntimeException("投稿计划不存在");
         }
-        // 2.校验审核人是否存在
-        if(null==userMapper.selectUserById(submissionProcessDTO.getReviewerUserId())){
-            throw new RuntimeException("审核人不存在");
-        }
         SubmissionProcess submissionProcess = new SubmissionProcess();
         BeanUtils.copyProperties(submissionProcessDTO, submissionProcess);
-        // 3.初始状态必须为待发起内部审核
         submissionProcess.setStatus(SubmissionProcessStatusEnum.WAITING_SUBMIT_REVIEW.getValue());
-        // 4. 流程创建时间
         submissionProcess.setProcessCreateTime(LocalDateTime.now());
-        // 5.保存投稿流程
         submissionProcessMapper.insert(submissionProcess);
     }
 
     @Override
     public void updateSubmissionProcess(SubmissionProcessDTO submissionProcessDTO) {
-        log.info("投稿流程模块-更新投稿流程：{}",submissionProcessDTO);
-        // 1.查出原流程
+        log.info("投稿流程模块-更新投稿流程：{}", submissionProcessDTO);
         SubmissionProcess originProcess = submissionProcessMapper.selectByProcessId(submissionProcessDTO.getId());
-        if(null==originProcess){
+        if (null == originProcess) {
             throw new ServiceException("投稿流程不存在");
         }
-        // 2.投稿任务是否合法
-        if(null!=originProcess.getPlanId() && !originProcess.getPlanId().equals(submissionProcessDTO.getPlanId())){
+        if (null != originProcess.getPlanId() && !originProcess.getPlanId().equals(submissionProcessDTO.getPlanId())) {
             throw new ServiceException("投稿任务异常");
-        }
-        // 3.审核人是否合法
-        if(null!=originProcess.getReviewerUserId()
-                 && !originProcess.getReviewerUserId().equals(submissionProcessDTO.getReviewerUserId())
-                && null==userMapper.selectUserById(submissionProcessDTO.getReviewerUserId())){
-            throw new ServiceException("审核人异常");
         }
         SubmissionProcess submissionProcess = new SubmissionProcess();
         BeanUtils.copyProperties(submissionProcessDTO, submissionProcess);
@@ -182,16 +151,13 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteSubmissionProcess(Long id) {
-        log.info("投稿流程模块-删除投稿流程：{}",id);
+        log.info("投稿流程模块-删除投稿流程：{}", id);
         List<SubmissionProcessFile> submissionProcessFiles = submissionProcessFileMapper.selectByProcessId(id);
 
-        // 1.删除关联文件记录
         submissionProcessFileMapper.deleteByProcessId(id);
-
-        // 2.删除投稿流程记录
+        reviewMapper.deleteReviewByProcessId(id);
         submissionProcessMapper.deleteByProcessId(id);
 
-        // 3.删除物理文件
         for (SubmissionProcessFile submissionProcessFile : submissionProcessFiles) {
             Path filePath = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getSubmissionBaseDir(), submissionProcessFile.getFilePath()));
             try {
@@ -207,116 +173,140 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submitForReview(Long processId, String reviewedRemark) {
-        log.info("投稿流程模块-提交审核：{}",processId);
-        // 1. 查询投稿流程信息
+    public void submitForReview(SubmitReviewDTO submitReviewDTO) {
+        log.info("投稿流程模块-提交审核：{}", submitReviewDTO);
+        Long processId = submitReviewDTO.getProcessId();
+        Long studentReviewerUserId = submitReviewDTO.getStudentReviewerUserId();
+        Long teacherReviewerUserId = submitReviewDTO.getTeacherReviewerUserId();
+        String reviewedRemark = submitReviewDTO.getReviewedRemark();
+
         SubmissionProcess submissionProcess = submissionProcessMapper.selectByProcessId(processId);
-        if (null==submissionProcess) {
+        if (null == submissionProcess) {
             throw new RuntimeException("投稿流程不存在");
         }
-        // 2.校验审核人是否存在
-        if(null==submissionProcess.getReviewerUserId()){
-            throw new ServiceException("请先指定审核人");
+
+        if (!Arrays.asList(
+                SubmissionProcessStatusEnum.WAITING_SUBMIT_REVIEW.getValue(),
+                SubmissionProcessStatusEnum.REVIEW_FAILED.getValue()
+        ).contains(submissionProcess.getStatus())) {
+            throw new ServiceException("投稿流程状态异常，仅\"待发起内部审核\"和\"内部审核不通过\"状态下才能发起审核流程");
         }
-        // 3.只有“待发起内部审核”和“内部审核不通过”才能发起审核流程
-        if(!ArrayUtils.contains(
-                new int[]{SubmissionProcessStatusEnum.WAITING_SUBMIT_REVIEW.getValue(),SubmissionProcessStatusEnum.REVIEW_FAILED.getValue()}
-                ,submissionProcess.getStatus())){
-                throw new ServiceException("投稿流程状态异常，仅“待发起内部审核”和“内部审核不通过”状态下才能发起审核流程");
-        }
-        // 4.流程关联的tag文件列表为必填
-        if (SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcess.getName())) { // 一审
-            // 校验是否上传了提交给期刊的文件
+
+        if (SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(submissionProcess.getName())) {
             SubmissionProcessFile journalSubmissionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag());
             if (null == journalSubmissionFile) {
                 throw new ServiceException("请上传提交给期刊的文件");
             }
-            // 校验是否上传了原始数据与程序文件
             SubmissionProcessFile rawDataAndProgramFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag());
             if (null == rawDataAndProgramFile) {
                 throw new ServiceException("请上传原始数据与程序文件");
             }
-        } else if (SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcess.getName())) { // 校稿
-            // 校验是否上传最终稿
+        } else if (SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(submissionProcess.getName())) {
             SubmissionProcessFile finalDraftFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.FINAL_DRAFT.getTag());
             if (null == finalDraftFile) {
                 throw new ServiceException("请上传最终稿");
             }
-        } else { // n审
-            // 校验是否上传审稿意见
+        } else {
             SubmissionProcessFile reviewOpinionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag());
             if (null == reviewOpinionFile) {
                 throw new ServiceException("请上传审稿意见");
             }
-            // 校验是否上传提交给期刊的文件
             SubmissionProcessFile journalSubmissionFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag());
             if (null == journalSubmissionFile) {
                 throw new ServiceException("请上传提交给期刊的文件");
             }
-            // 校验是否上传补充数据
             SubmissionProcessFile supplementaryDataFile = submissionProcessFileMapper.existByProcessIdAndTag(processId, SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag());
             if (null == supplementaryDataFile) {
                 throw new ServiceException("请上传补充数据");
             }
         }
-        // 5. 更新投稿流程状态为"内部审核中"
-        submissionProcessMapper.updateStatus(processId,SubmissionProcessStatusEnum.REVIEWING.getValue());
-        // 6. 创建审核记录
-        Review review = new Review();
-        review.setPlanId(submissionProcess.getPlanId());
-        review.setProcessId(processId);
-        review.setReviewedUserId(SecurityUtils.getUserId());
-        review.setReviewedUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
-        review.setReviewerUserId(submissionProcess.getReviewerUserId());
-        review.setReviewerUserNickName(submissionProcess.getReviewerUserNickName());
-        review.setStatus(ReviewStatusEnum.PENDING.getValue());
-        review.setReviewedRemark(reviewedRemark);
-        review.setReviewerRemark(null);
-        review.setReviewCreateTime(LocalDateTime.now());
-        review.setReviewFinishTime(null);
-        reviewMapper.insert(review);
+
+        com.ruoyi.project.system.domain.SysUser studentReviewerSysUser = userMapper.selectUserById(studentReviewerUserId);
+        if (studentReviewerSysUser == null) {
+            throw new ServiceException("学生审核人不存在");
+        }
+        UserForSelectVO studentReviewer = new UserForSelectVO(
+            studentReviewerSysUser.getUserId(),
+            studentReviewerSysUser.getUserName(),
+            studentReviewerSysUser.getNickName()
+        );
+
+        com.ruoyi.project.system.domain.SysUser teacherReviewerSysUser = userMapper.selectUserById(teacherReviewerUserId);
+        if (teacherReviewerSysUser == null) {
+            throw new ServiceException("教师审核人不存在");
+        }
+        UserForSelectVO teacherReviewer = new UserForSelectVO(
+            teacherReviewerSysUser.getUserId(),
+            teacherReviewerSysUser.getUserName(),
+            teacherReviewerSysUser.getNickName()
+        );
+
+        submissionProcessMapper.updateStatus(processId, SubmissionProcessStatusEnum.REVIEWING.getValue());
+
+        Integer maxVersion = reviewMapper.selectMaxVersionByProcessId(processId);
+        Integer newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+        LocalDateTime now = LocalDateTime.now();
+
+        Review studentReview = new Review();
+        studentReview.setPlanId(submissionProcess.getPlanId());
+        studentReview.setProcessId(processId);
+        studentReview.setReviewedUserId(SecurityUtils.getUserId());
+        studentReview.setReviewedUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        studentReview.setReviewerUserId(studentReviewerUserId);
+        studentReview.setReviewerUserNickName(studentReviewer.getNickName());
+        studentReview.setStatus(ReviewStatusEnum.PENDING.getValue());
+        studentReview.setType(ReviewTypeEnum.STUDENT.getValue());
+        studentReview.setVersion(newVersion);
+        studentReview.setReviewedRemark(reviewedRemark);
+        studentReview.setReviewCreateTime(now);
+        reviewMapper.insert(studentReview);
+
+        Review teacherReview = new Review();
+        teacherReview.setPlanId(submissionProcess.getPlanId());
+        teacherReview.setProcessId(processId);
+        teacherReview.setReviewedUserId(SecurityUtils.getUserId());
+        teacherReview.setReviewedUserNickName(SecurityUtils.getLoginUser().getUser().getNickName());
+        teacherReview.setReviewerUserId(teacherReviewerUserId);
+        teacherReview.setReviewerUserNickName(teacherReviewer.getNickName());
+        teacherReview.setStatus(ReviewStatusEnum.PENDING.getValue());
+        teacherReview.setType(ReviewTypeEnum.TEACHER.getValue());
+        teacherReview.setVersion(newVersion);
+        teacherReview.setReviewedRemark(reviewedRemark);
+        reviewMapper.insert(teacherReview);
     }
 
     @Override
     public SubmissionProcessDetailVO getSubmissionProcessDetail(Long id) {
-        log.info("投稿流程模块-查询投稿流程详情：{}",id);
+        log.info("投稿流程模块-查询投稿流程详情：{}", id);
         SubmissionProcessDetailVO vo = submissionProcessMapper.selectDetailByProcessId(id);
         if (vo == null) {
             return null;
         }
-        // 关联文件列表
         List<SubmissionProcessFileVO> submissionProcessFiles = submissionProcessFileMapper.selectVOListByProcessId(id);
-        // 文件分类
-        if(SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(vo.getName())){ // 一审
-            // 提交给期刊的文件
+        if (SubmissionProcessNameEnum.FIRST_REVIEW.getName().equals(vo.getName())) {
             List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
-            // 原始数据与程序
             List<SubmissionProcessFileVO> rawDataAndProgramFiles = new ArrayList<>();
             for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
-                if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                if (SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())) {
                     journalSubmissionFiles.add(submissionProcessFile);
-                }else if(SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())){
+                } else if (SubmissionProcessFileTagEnum.RAW_DATA_AND_PROGRAM.getTag().equals(submissionProcessFile.getTag())) {
                     rawDataAndProgramFiles.add(submissionProcessFile);
                 }
             }
             vo.setJournalSubmissionFiles(journalSubmissionFiles);
             vo.setRawDataAndProgramFiles(rawDataAndProgramFiles);
-        }else if(SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(vo.getName())){ // 校稿
-            // 最终稿
+        } else if (SubmissionProcessNameEnum.JOURNAL_EDITOR_REVIEW.getName().equals(vo.getName())) {
             vo.setFinalDraftFiles(submissionProcessFiles);
-        }else{ // n审
-            // 审稿意见
+        } else {
             List<SubmissionProcessFileVO> reviewCommentsFiles = new ArrayList<>();
-            // 提交给期刊的文件
             List<SubmissionProcessFileVO> journalSubmissionFiles = new ArrayList<>();
-            // 补充数据
             List<SubmissionProcessFileVO> supplementaryDataFiles = new ArrayList<>();
             for (SubmissionProcessFileVO submissionProcessFile : submissionProcessFiles) {
-                if(SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())){
+                if (SubmissionProcessFileTagEnum.REVIEW_COMMENTS.getTag().equals(submissionProcessFile.getTag())) {
                     reviewCommentsFiles.add(submissionProcessFile);
-                }else if(SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())){
+                } else if (SubmissionProcessFileTagEnum.JOURNAL_SUBMISSION.getTag().equals(submissionProcessFile.getTag())) {
                     journalSubmissionFiles.add(submissionProcessFile);
-                }else if(SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())){
+                } else if (SubmissionProcessFileTagEnum.SUPPLEMENTARY_DATA.getTag().equals(submissionProcessFile.getTag())) {
                     supplementaryDataFiles.add(submissionProcessFile);
                 }
             }
@@ -324,11 +314,25 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
             vo.setJournalSubmissionFiles(journalSubmissionFiles);
             vo.setSupplementaryDataFiles(supplementaryDataFiles);
         }
+
+        List<Review> latestReviews = reviewMapper.selectLatestReviewsByProcessId(id);
+        for (Review review : latestReviews) {
+            if (ReviewTypeEnum.STUDENT.getValue().equals(review.getType())) {
+                com.ruoyi.experiment.pojo.vo.ReviewVO studentReviewVO = new com.ruoyi.experiment.pojo.vo.ReviewVO();
+                BeanUtils.copyProperties(review, studentReviewVO);
+                vo.setStudentReview(studentReviewVO);
+            } else if (ReviewTypeEnum.TEACHER.getValue().equals(review.getType())) {
+                com.ruoyi.experiment.pojo.vo.ReviewVO teacherReviewVO = new com.ruoyi.experiment.pojo.vo.ReviewVO();
+                BeanUtils.copyProperties(review, teacherReviewVO);
+                vo.setTeacherReview(teacherReviewVO);
+            }
+        }
+
         return vo;
     }
 
     @Override
-    public List<UserForSelectVO> listReviewerUsersForSelect(Long planId,String nickName) {
-        return submissionPlanMapper.selectUserVOForSelect(planId,nickName);
+    public List<UserForSelectVO> listReviewerUsersForSelect(Long planId, String nickName) {
+        return submissionPlanMapper.selectUserVOForSelect(planId, nickName);
     }
 }
