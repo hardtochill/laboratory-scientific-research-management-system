@@ -73,4 +73,14 @@ public interface TaskMapper {
      * 获取所有直接子任务
      */
     List<Task> selectSubTasksByParentId(Long parentTaskId);
+
+    /**
+     * 根据用户ID查询用户作为执行人的所有任务
+     */
+    List<TaskVO> selectTasksByExecutorUserId(Long userId);
+
+    /**
+     * 根据用户ID查询用户作为创建人的所有任务
+     */
+    List<TaskVO> selectTasksByCreateUserId(Long userId);
 }

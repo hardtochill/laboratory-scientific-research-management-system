@@ -61,6 +61,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectSubTasksByParentId" resultType="com.ruoyi.experiment.pojo.entity.Task">
         select * from task where parent_task_id=#{parentTaskId}
     </select>
+
+    <select id="selectTasksByExecutorUserId" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
+        select t.task_id,t.task_name,t.task_status,t.task_percentage as taskPercentage,t.create_user_id as createUserId,te.user_id as executorUserId
+        from task t
+        inner join task_executor te on t.task_id = te.task_id
+        where te.user_id=#{userId}
+    </select>
+
+    <select id="selectTasksByCreateUserId" resultType="com.ruoyi.experiment.pojo.vo.TaskVO">
+        select t.task_id,t.task_name,t.task_status,t.task_percentage as taskPercentage,t.create_user_id as createUserId,te.user_id as executorUserId
+        from task t
+        left outer join task_executor te on t.task_id = te.task_id
+        where t.create_user_id=#{userId}
+    </select>
     <insert id="insertTask" useGeneratedKeys="true" keyProperty="taskId">
         insert into task(parent_task_id, task_name, task_description, task_remark, task_order, task_depth, task_status, task_percentage, report_flag, report_frequency, create_user_id, create_nick_name, create_time, expected_finish_time, actual_finish_time, update_time)
         VALUES

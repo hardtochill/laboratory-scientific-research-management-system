@@ -39,4 +39,9 @@ public class TaskStatisticsVO {
      * 总记录数
      */
     private Long total;
+    
+    /**
+     * 需要自动展开的任务ID列表
+     */
+    private List<Long> expandTaskIds;
 }

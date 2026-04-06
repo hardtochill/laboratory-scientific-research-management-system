@@ -9,6 +9,13 @@
             <el-radio-button label="all">全部任务</el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="任务类型" v-if="!isHasTeacherRole">
+          <el-radio-group v-model="studentTaskType" @change="handleStudentTaskTypeChange">
+            <el-radio-button label="participant">我参与的</el-radio-button>
+            <el-radio-button label="executor">我执行的</el-radio-button>
+            <el-radio-button label="creator">我创建的</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="学生姓名" v-if="isHasTeacherRole">
           <el-select v-model="displayUserId" :placeholder="taskType === 'my' ? '' : '请输入学生姓名'" clearable
             style="width: 240px" filterable remote reverse-keyword :remote-method="querySelectableStudents"
@@ -90,6 +97,14 @@
 
                   <!-- 任务名称 -->
                   <span class="task-name">{{ task.taskName }}</span>
+                  
+                  <!-- 目标任务标识 -->
+                  <el-tag v-if="task.isCurrentUserExecutor" type="warning" size="small" class="target-task-tag">
+                    我执行的
+                  </el-tag>
+                  <el-tag v-if="task.isCurrentUserCreator" type="success" size="small" class="target-task-tag">
+                    我创建的
+                  </el-tag>
 
                   <!-- 任务状态 -->
                   <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
@@ -756,11 +771,13 @@ const selectableStudents = ref([])
 const userLoading = ref(false)
 // 任务类型：my-我的任务，all-全部任务
 const taskType = ref('my')
+// 学生任务类型：participant-我参与的，executor-我执行的，creator-我创建的
+const studentTaskType = ref('participant')
 
 // 学生姓名选择器的显示值
 const displayUserId = ref(undefined)
 
-// 任务类型切换处理
+// 任务类型切换处理（教师端）
 const handleTaskTypeChange = () => {
   if (taskType.value === 'my') {
     // 我的任务：userId设置为当前用户ID（用于后台逻辑）
@@ -770,6 +787,12 @@ const handleTaskTypeChange = () => {
     // 全部任务：userId跟随学生姓名查询字段
     queryParams.value.userId = displayUserId.value
   }
+  handleQuery()
+}
+
+// 学生任务类型切换处理（学生端）
+const handleStudentTaskTypeChange = () => {
+  queryParams.value.studentTaskType = studentTaskType.value
   handleQuery()
 }
 
@@ -882,7 +905,8 @@ const data = reactive({
     pageSize: 10,
     userId: userStore.id,
     taskName: undefined,
-    taskStatus: 2
+    taskStatus: 2,
+    studentTaskType: 'participant'
   },
   total: 0
 })
@@ -934,8 +958,14 @@ const restoreExpandedStatus = async (tasks) => {
 const loadParentTasks = async () => {
   loading.value = true
   try {
-    // 在重新加载前保存当前所有展开任务的ID
-    expandedTaskIds.value = collectExpandedTaskIds(parentTasks.value)
+    // 如果是学生端且任务类型是我执行的或我创建的，不保存之前的展开状态，而是等待后端返回
+    const shouldSaveExpandedState = isHasTeacherRole.value || 
+      (studentTaskType.value !== 'executor' && studentTaskType.value !== 'creator')
+    
+    if (shouldSaveExpandedState) {
+      // 在重新加载前保存当前所有展开任务的ID
+      expandedTaskIds.value = collectExpandedTaskIds(parentTasks.value)
+    }
 
     // 手动添加日期范围参数，使用后端期望的参数名
     const params = { ...queryParams.value };
@@ -976,13 +1006,36 @@ const loadParentTasks = async () => {
     // 更新总条数
     total.value = statisticsData.total || 0
 
-    // 恢复之前展开的任务状态
-    await restoreExpandedStatus(parentTasks.value)
+    // 如果有后端返回的展开任务ID，使用后端返回的
+    if (statisticsData.expandTaskIds && statisticsData.expandTaskIds.length > 0) {
+      expandedTaskIds.value = new Set(statisticsData.expandTaskIds)
+    } else if (shouldSaveExpandedState) {
+      // 否则恢复之前展开的任务状态
+      await restoreExpandedStatus(parentTasks.value)
+    }
+
+    // 自动展开后端指定的任务
+    if (statisticsData.expandTaskIds && statisticsData.expandTaskIds.length > 0) {
+      await autoExpandTasks(parentTasks.value, new Set(statisticsData.expandTaskIds))
+    }
   } catch (error) {
     ElMessage.error('加载任务列表失败')
     console.error('加载任务列表失败:', error)
   } finally {
     loading.value = false
+  }
+}
+
+// 自动展开指定的任务
+const autoExpandTasks = async (tasks, expandIds) => {
+  for (const task of tasks) {
+    if (expandIds.has(task.taskId)) {
+      task.expanded = true
+      await loadSubTasks(task)
+      if (task.subTasks && task.subTasks.length > 0) {
+        await autoExpandTasks(task.subTasks, expandIds)
+      }
+    }
   }
 }
 

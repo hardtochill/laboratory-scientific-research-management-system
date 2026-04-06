@@ -17,6 +17,7 @@ import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
 import com.ruoyi.experiment.pojo.entity.Task;
 import com.ruoyi.experiment.pojo.entity.TaskExecutor;
 import com.ruoyi.experiment.pojo.vo.TaskDetailVO;
+import com.ruoyi.experiment.pojo.vo.TaskListWithExpandVO;
 import com.ruoyi.experiment.pojo.vo.TaskStatusStats;
 import com.ruoyi.experiment.pojo.vo.TaskStatisticsVO;
 import com.ruoyi.experiment.pojo.vo.TaskVO;
@@ -57,49 +58,15 @@ public class TaskServiceImpl implements TaskService {
     public TaskStatisticsVO selectParentTaskListWithStatistics(TaskQueryDTO taskQueryDTO) {
         log.info("任务管理模块-查询父任务列表：{}",taskQueryDTO);
         // 1.获取分页的任务列表
-        List<TaskVO> tasks = selectParentTaskList(taskQueryDTO);
+        TaskListWithExpandVO listWithExpand = selectParentTaskListWithExpand(taskQueryDTO);
+        List<TaskVO> tasks = listWithExpand.getTasks();
+        List<Long> expandTaskIds = listWithExpand.getExpandTaskIds();
         
         // 2.为每个任务加载参与用户信息
         for (TaskVO task : tasks) {
             List<SysUser> participantUsers = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participantUsers);
         }
-
-        // 3.统计各状态任务个数——任务统计只依赖查询条件的用户id
-        /*Long pendingCount = 0L;
-        Long processingCount = 0L;
-        Long finishedCount = 0L;
-        Long skippedCount = 0L;
-        TaskQueryDTO taskQueryDTO1 = new TaskQueryDTO();
-        taskQueryDTO1.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
-        taskQueryDTO1.setUserId(taskQueryDTO.getUserId());
-        if(SecurityUtils.isStudent()){
-            taskQueryDTO.setUserId(SecurityUtils.getUserId());
-        }
-        List<TaskVO> taskVOS = taskMapper.selectTasksForStatistics(taskQueryDTO1);
-
-        for (TaskVO task : taskVOS) {
-            if(TaskStatusEnum.PENDING.getStatus().equals(task.getTaskStatus())){
-                pendingCount++;
-            }else if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
-                processingCount++;
-            }else if(TaskStatusEnum.FINISHED.getStatus().equals(task.getTaskStatus())){
-                finishedCount++;
-            }else if(TaskStatusEnum.SKIPPED.getStatus().equals(task.getTaskStatus())){
-                skippedCount++;
-            }
-        }
-
-        // 4.创建返回结果
-        TaskStatisticsVO result = new TaskStatisticsVO();
-        result.setList(tasks);
-        result.setPendingCount(pendingCount);
-        result.setProcessingCount(processingCount);
-        result.setFinishedCount(finishedCount);
-        result.setSkippedCount(skippedCount);
-        result.setTotal((long) taskVOS.size());
-
-        return result;*/
 
         // 3.统计各状态任务个数——依赖所有查询条件
         Long pendingCount = 0L;
@@ -126,17 +93,48 @@ public class TaskServiceImpl implements TaskService {
         result.setFinishedCount(finishedCount);
         result.setSkippedCount(skippedCount);
         result.setTotal((long) tasks.size());
+        result.setExpandTaskIds(expandTaskIds);
         
         return result;
     }
     
-    private List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
-        taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
-        // 学生用户只能查自己参与的任务；教师用户可以查所有任务
-        if(SecurityUtils.isStudent()){
-            taskQueryDTO.setUserId(SecurityUtils.getUserId());
+    private TaskListWithExpandVO selectParentTaskListWithExpand(TaskQueryDTO taskQueryDTO) {
+        List<Long> expandTaskIds = new ArrayList<>();
+        Set<Long> targetExecutorTaskIds = new HashSet<>();
+        Set<Long> targetCreatorTaskIds = new HashSet<>();
+        List<TaskVO> tasks;
+        
+        // 检查是否是学生用户且有指定的任务类型
+        if (SecurityUtils.isStudent() && taskQueryDTO.getStudentTaskType() != null) {
+            Long userId = SecurityUtils.getUserId();
+            switch (taskQueryDTO.getStudentTaskType()) {
+                case "executor":
+                    // 我执行的任务
+                    tasks = getTasksForExecutor(userId, expandTaskIds, targetExecutorTaskIds);
+                    break;
+                case "creator":
+                    // 我创建的任务
+                    tasks = getTasksForCreator(userId, expandTaskIds, targetCreatorTaskIds);
+                    break;
+                case "participant":
+                default:
+                    // 我参与的任务（默认逻辑）
+                    taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+                    taskQueryDTO.setUserId(userId);
+                    tasks = taskMapper.select(taskQueryDTO);
+                    // 清空展开列表，不展开任何任务
+                    expandTaskIds.clear();
+                    break;
+            }
+        } else {
+            // 原有的逻辑
+            taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+            if(SecurityUtils.isStudent()){
+                taskQueryDTO.setUserId(SecurityUtils.getUserId());
+            }
+            tasks = taskMapper.select(taskQueryDTO);
         }
-        List<TaskVO> tasks = taskMapper.select(taskQueryDTO);
+        
         // 2.计算子任务状态（注释掉旧方法，直接使用数据库中的taskPercentage）
         // calculateTaskList(tasks);
         
@@ -152,6 +150,7 @@ public class TaskServiceImpl implements TaskService {
         }
         
         // 统计子任务状态数量和查询参与用户
+        Long currentUserId = SecurityUtils.isStudent() ? SecurityUtils.getUserId() : null;
         for (TaskVO task : tasks) {
             TaskStatusStats stats = calculateSubTaskStatusStats(task.getTaskId());
             task.setSubTaskStatusStats(stats);
@@ -159,6 +158,16 @@ public class TaskServiceImpl implements TaskService {
             // 查询参与用户
             List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participants);
+            
+            // 为学生用户检查任务是否是当前用户执行的或创建的
+            if (currentUserId != null) {
+                if (task.getExecutorUserId() != null && task.getExecutorUserId().equals(currentUserId)) {
+                    task.setIsCurrentUserExecutor(true);
+                }
+                if (task.getCreateUserId() != null && task.getCreateUserId().equals(currentUserId)) {
+                    task.setIsCurrentUserCreator(true);
+                }
+            }
         }
         
         // 按任务状态自定义排序：进行中 -> 未开始 -> 已完成 -> 已跳过
@@ -173,7 +182,127 @@ public class TaskServiceImpl implements TaskService {
             return Integer.compare(priority1, priority2);
         });
         
-        return tasks;
+        return new TaskListWithExpandVO(tasks, expandTaskIds);
+    }
+
+    /**
+     * 获取用户作为执行人的任务（需要查找顶级父任务）
+     */
+    private List<TaskVO> getTasksForExecutor(Long userId, List<Long> expandTaskIds, Set<Long> targetExecutorTaskIds) {
+        List<TaskVO> executorTasks = taskMapper.selectTasksByExecutorUserId(userId);
+        Set<Long> topParentIds = new HashSet<>();
+        
+        // 找出所有顶级父任务
+        for (TaskVO task : executorTasks) {
+            Long topParentId = findTopParentId(task.getTaskId());
+            topParentIds.add(topParentId);
+            targetExecutorTaskIds.add(task.getTaskId());
+            // 记录从顶级父任务到当前任务的路径上的所有任务ID，用于展开
+            collectExpandPath(task.getTaskId(), expandTaskIds);
+        }
+        
+        // 查询顶级父任务
+        TaskQueryDTO queryDTO = new TaskQueryDTO();
+        queryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+        List<TaskVO> allTopTasks = taskMapper.select(queryDTO);
+        
+        // 只保留我们需要的顶级父任务
+        List<TaskVO> result = allTopTasks.stream()
+                .filter(task -> topParentIds.contains(task.getTaskId()))
+                .collect(Collectors.toList());
+        
+        // 为所有任务添加标识
+        markTargetTasks(result, targetExecutorTaskIds, "executor");
+        
+        return result;
+    }
+
+    /**
+     * 获取用户作为创建人的任务（需要查找顶级父任务）
+     */
+    private List<TaskVO> getTasksForCreator(Long userId, List<Long> expandTaskIds, Set<Long> targetCreatorTaskIds) {
+        List<TaskVO> creatorTasks = taskMapper.selectTasksByCreateUserId(userId);
+        Set<Long> topParentIds = new HashSet<>();
+        
+        // 找出所有顶级父任务
+        for (TaskVO task : creatorTasks) {
+            Long topParentId = findTopParentId(task.getTaskId());
+            topParentIds.add(topParentId);
+            targetCreatorTaskIds.add(task.getTaskId());
+            // 记录从顶级父任务到当前任务的路径上的所有任务ID，用于展开
+            collectExpandPath(task.getTaskId(), expandTaskIds);
+        }
+        
+        // 查询顶级父任务
+        TaskQueryDTO queryDTO = new TaskQueryDTO();
+        queryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+        List<TaskVO> allTopTasks = taskMapper.select(queryDTO);
+        
+        // 只保留我们需要的顶级父任务
+        List<TaskVO> result = allTopTasks.stream()
+                .filter(task -> topParentIds.contains(task.getTaskId()))
+                .collect(Collectors.toList());
+        
+        // 为所有任务添加标识
+        markTargetTasks(result, targetCreatorTaskIds, "creator");
+        
+        return result;
+    }
+
+    /**
+     * 为任务列表中的目标任务添加标识
+     */
+    private void markTargetTasks(List<TaskVO> tasks, Set<Long> targetTaskIds, String type) {
+        for (TaskVO task : tasks) {
+            if (targetTaskIds.contains(task.getTaskId())) {
+                if ("executor".equals(type)) {
+                    task.setIsCurrentUserExecutor(true);
+                } else if ("creator".equals(type)) {
+                    task.setIsCurrentUserCreator(true);
+                }
+            }
+        }
+    }
+
+    /**
+     * 查找任务的顶级父任务ID
+     */
+    private Long findTopParentId(Long taskId) {
+        Long currentId = taskId;
+        Task task;
+        while (true) {
+            task = taskMapper.selectTaskById(currentId);
+            if (task == null || task.getParentTaskId() == null || 
+                task.getParentTaskId().equals(TaskConstants.FIRST_PARENT_TASK_ID)) {
+                return currentId;
+            }
+            currentId = task.getParentTaskId();
+        }
+    }
+
+    /**
+     * 收集从指定任务到顶级父任务路径上的所有任务ID，用于展开
+     */
+    private void collectExpandPath(Long taskId, List<Long> expandTaskIds) {
+        Long currentId = taskId;
+        Task task;
+        while (true) {
+            task = taskMapper.selectTaskById(currentId);
+            if (task == null) {
+                break;
+            }
+            expandTaskIds.add(currentId);
+            if (task.getParentTaskId() == null || 
+                task.getParentTaskId().equals(TaskConstants.FIRST_PARENT_TASK_ID)) {
+                break;
+            }
+            currentId = task.getParentTaskId();
+        }
+    }
+
+    private List<TaskVO> selectParentTaskList(TaskQueryDTO taskQueryDTO) {
+        TaskListWithExpandVO result = selectParentTaskListWithExpand(taskQueryDTO);
+        return result.getTasks();
     }
     
     /**
@@ -205,8 +334,10 @@ public class TaskServiceImpl implements TaskService {
         TaskQueryDTO taskQueryDTO = new TaskQueryDTO();
         taskQueryDTO.setParentTaskId(parentTaskId);
         // 学生用户只能查自己参与的任务；教师用户可以查所有任务
+        Long currentUserId = null;
         if(SecurityUtils.isStudent()){
-            taskQueryDTO.setUserId(SecurityUtils.getUserId());
+            currentUserId = SecurityUtils.getUserId();
+            taskQueryDTO.setUserId(currentUserId);
         }
         taskQueryDTO.setOrderBy(TaskConstants.SUB_TASK_ORDER_BY);
         taskQueryDTO.setOrderDirection(TaskConstants.SUB_TASK_ORDER_DIRECTION);
@@ -232,6 +363,16 @@ public class TaskServiceImpl implements TaskService {
             // 查询参与用户
             List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participants);
+            
+            // 为学生用户检查任务是否是当前用户执行的或创建的
+            if (currentUserId != null) {
+                if (task.getExecutorUserId() != null && task.getExecutorUserId().equals(currentUserId)) {
+                    task.setIsCurrentUserExecutor(true);
+                }
+                if (task.getCreateUserId() != null && task.getCreateUserId().equals(currentUserId)) {
+                    task.setIsCurrentUserCreator(true);
+                }
+            }
         }
         
         return tasks;

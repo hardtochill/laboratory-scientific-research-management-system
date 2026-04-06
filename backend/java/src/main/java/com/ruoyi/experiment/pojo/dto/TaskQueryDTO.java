@@ -44,4 +44,8 @@ public class TaskQueryDTO {
       * 排序方向
       */
      private String orderDirection;
+     /**
+      * 学生任务类型：participant-我参与的，executor-我执行的，creator-我创建的
+      */
+     private String studentTaskType;
 }

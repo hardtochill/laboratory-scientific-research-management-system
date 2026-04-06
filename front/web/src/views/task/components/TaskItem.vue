@@ -15,6 +15,14 @@
         
         <!-- 任务名称 -->
         <span class="task-name">{{ task.taskName }}</span>
+        
+        <!-- 目标任务标识 -->
+        <el-tag v-if="task.isCurrentUserExecutor" type="warning" size="small" class="target-task-tag">
+          我执行的
+        </el-tag>
+        <el-tag v-if="task.isCurrentUserCreator" type="success" size="small" class="target-task-tag">
+          我创建的
+        </el-tag>
 
       <!-- 任务状态 -->
       <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">

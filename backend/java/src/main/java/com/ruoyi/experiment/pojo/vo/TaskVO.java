@@ -43,4 +43,14 @@ public class TaskVO {
      * 子任务状态统计
      */
     private TaskStatusStats subTaskStatusStats;
+    
+    /**
+     * 是否为当前用户执行的任务
+     */
+    private Boolean isCurrentUserExecutor;
+    
+    /**
+     * 是否为当前用户创建的任务
+     */
+    private Boolean isCurrentUserCreator;
 }
