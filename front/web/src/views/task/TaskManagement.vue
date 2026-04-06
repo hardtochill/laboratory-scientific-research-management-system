@@ -473,13 +473,26 @@
       <!-- 任务汇报对话框 -->
       <el-dialog v-model="reportDialogVisible" title="任务汇报" width="700px" :before-close="handleReportDialogClose">
         <div class="report-dialog-content">
+          <!-- 任务信息 -->
+          <div class="task-info-section">
+            <h4 class="section-title">任务信息</h4>
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="任务名称">{{ currentTaskForReport?.taskName }}</el-descriptions-item>
+              <el-descriptions-item label="任务状态">
+                <el-tag :type="getStatusType(currentTaskForReport?.taskStatus)">
+                  {{ getStatusText(currentTaskForReport?.taskStatus) }}
+                </el-tag>
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
+
           <!-- 时间范围查询 -->
           <div class="report-query-section">
             <div class="query-row">
               <span class="query-label">时间范围：</span>
-              <el-date-picker v-model="reportQuery.dateRange" type="datetimerange" range-separator="至"
-                start-placeholder="开始时间" end-placeholder="结束时间" value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 360px;" />
+              <el-date-picker v-model="reportQuery.dateRange" type="daterange" range-separator="至"
+                start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD HH:mm:ss"
+                :default-time="['00:00:00', '23:59:59']" />
               <el-button type="primary" @click="loadTaskReports" style="margin-left: 10px;">查询</el-button>
             </div>
             <div class="quick-query-row">
@@ -489,8 +502,8 @@
             </div>
           </div>
 
-          <!-- 添加汇报按钮 - 只有有权限的用户才能添加汇报 -->
-          <div class="add-report-section" v-if="hasTaskPermission(currentTaskForReport)">
+          <!-- 添加汇报按钮 -->
+          <div class="add-report-section">
             <el-button type="primary" @click="showAddReportInput" :icon="Plus">添加汇报</el-button>
           </div>
 
@@ -498,6 +511,29 @@
           <div v-if="showAddReportForm" class="add-report-form">
             <el-input v-model="newReportContent" type="textarea" :rows="4" placeholder="请输入汇报内容..." maxlength="500"
               show-word-limit />
+            <!-- 文件上传 -->
+            <div class="file-upload-section">
+              <el-upload
+                v-model:file-list="reportFileList"
+                class="upload-demo"
+                drag
+                multiple
+                action="#"
+                :auto-upload="false"
+                :on-change="handleReportFileChange"
+                :on-remove="handleReportFileRemove"
+              >
+                <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+                <div class="el-upload__text">
+                  将文件拖到此处，或<em>点击上传</em>
+                </div>
+                <template #tip>
+                  <div class="el-upload__tip">
+                    支持上传图片、文档、压缩包等文件，文件大小不超过10MB
+                  </div>
+                </template>
+              </el-upload>
+            </div>
             <div class="add-report-actions">
               <el-button @click="cancelAddReport">取消</el-button>
               <el-button type="primary" @click="submitReport" :loading="submittingReport">提交</el-button>
@@ -520,7 +556,7 @@
                   <el-card class="report-card" shadow="hover">
                     <div class="report-header">
                       <span class="report-user">{{ report.userNickName }}</span>
-                      <el-button v-if="hasTaskPermission(currentTaskForReport)" link type="danger" size="small"
+                      <el-button link type="danger" size="small"
                         :icon="Delete" @click="handleDeleteReport(report)">删除</el-button>
                     </div>
                     <div class="report-content-wrapper">
@@ -532,6 +568,23 @@
                         :underline="false" @click="toggleReportExpand(report)" class="expand-link">
                         {{ report.expanded ? '收起' : '展开' }}
                       </el-link>
+                    </div>
+                    <!-- 关联文件列表 -->
+                    <div v-if="report.taskReportFiles && report.taskReportFiles.length > 0" class="report-files-section">
+                      <div class="files-title">关联文件：</div>
+                      <div class="files-list">
+                        <el-link 
+                          v-for="file in report.taskReportFiles" 
+                          :key="file.id" 
+                          type="primary" 
+                          :underline="false"
+                          @click="handleDownloadTaskReportFile(file.id, file.fileName, file.fileType)"
+                          class="file-item"
+                        >
+                          <el-icon><Document /></el-icon>
+                          {{ file.fileName }}.{{ file.fileType }}
+                        </el-link>
+                      </div>
                     </div>
                   </el-card>
                 </el-timeline-item>
@@ -555,6 +608,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers,getSelectableStudents } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
 import { getTaskReportList, addTaskReport, deleteTaskReport } from '@/api/task/taskReport'
+import { downloadTaskReportFile } from '@/api/task/taskReportFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
 import { CaretRight, CaretBottom, Plus, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files, Clock } from '@element-plus/icons-vue'
@@ -748,6 +802,7 @@ const reportLoading = ref(false)
 const showAddReportForm = ref(false)
 const newReportContent = ref('')
 const submittingReport = ref(false)
+const reportFileList = ref([])
 const reportQuery = reactive({
   dateRange: []
 })
@@ -1633,6 +1688,7 @@ const handleReportDialogClose = () => {
   reportList.value = []
   showAddReportForm.value = false
   newReportContent.value = ''
+  reportFileList.value = []
   reportQuery.dateRange = []
 }
 
@@ -1640,12 +1696,24 @@ const handleReportDialogClose = () => {
 const showAddReportInput = () => {
   showAddReportForm.value = true
   newReportContent.value = ''
+  reportFileList.value = []
 }
 
 // 取消添加汇报
 const cancelAddReport = () => {
   showAddReportForm.value = false
   newReportContent.value = ''
+  reportFileList.value = []
+}
+
+// 处理文件变更
+const handleReportFileChange = (file, fileListState) => {
+  reportFileList.value = fileListState
+}
+
+// 处理文件移除
+const handleReportFileRemove = (file, fileListState) => {
+  reportFileList.value = fileListState
 }
 
 // 提交汇报
@@ -1662,14 +1730,15 @@ const submitReport = async () => {
   
   submittingReport.value = true
   try {
-    await addTaskReport({
-      taskId: currentTaskForReport.value.taskId,
-      reportContent: newReportContent.value.trim()
-    })
+    await addTaskReport(
+      currentTaskForReport.value.taskId, 
+      newReportContent.value.trim(), 
+      reportFileList.value
+    )
     ElMessage.success('汇报提交成功')
     showAddReportForm.value = false
     newReportContent.value = ''
-    // 新增汇报后，自动切换到"今天"时间范围以显示最新汇报
+    reportFileList.value = []
     selectedDateRange.value = 'today'
     await nextTick()
     handleDateSegmentChange('today')
@@ -1678,6 +1747,24 @@ const submitReport = async () => {
     console.error('汇报提交失败:', error)
   } finally {
     submittingReport.value = false
+  }
+}
+
+// 下载任务汇报文件
+const handleDownloadTaskReportFile = async (fileId, fileName, fileType) => {
+  try {
+    const response = await downloadTaskReportFile(fileId)
+    const url = window.URL.createObjectURL(new Blob([response]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${fileName}.${fileType}`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    ElMessage.error('文件下载失败')
+    console.error('文件下载失败:', error)
   }
 }
 
@@ -2308,6 +2395,17 @@ onUnmounted(() => {
   padding: 10px 0;
 }
 
+.task-info-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  margin-bottom: 12px;
+  color: #303133;
+  font-weight: 600;
+  font-size: 14px;
+}
+
 .report-query-section {
   margin-bottom: 20px;
   padding: 16px;
@@ -2357,6 +2455,10 @@ onUnmounted(() => {
   border: 1px solid #d9ecff;
 }
 
+.file-upload-section {
+  margin-top: 12px;
+}
+
 .add-report-actions {
   margin-top: 12px;
   display: flex;
@@ -2393,15 +2495,6 @@ onUnmounted(() => {
 
 .report-timeline-container::-webkit-scrollbar-thumb:hover {
   background: #909399;
-}
-
-.section-title {
-  margin-bottom: 16px;
-  color: #303133;
-  font-weight: 600;
-  font-size: 16px;
-  border-left: 4px solid #409eff;
-  padding-left: 12px;
 }
 
 .report-loading {
@@ -2465,6 +2558,39 @@ onUnmounted(() => {
 .expand-link {
   font-size: 12px;
   align-self: flex-start;
+}
+
+.report-files-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ebeef5;
+}
+
+.files-title {
+  font-size: 13px;
+  color: #909399;
+  margin-bottom: 8px;
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f5f7fa;
+  width: fit-content;
+  transition: background-color 0.2s;
+}
+
+.file-item:hover {
+  background-color: #ecf5ff;
 }
 
 :deep(.el-timeline-item__timestamp) {

@@ -46,6 +46,16 @@ public class FileUtils {
             "pdf",
             // 代码文件
             "java", "py", "cpp", "c", "h", "js", "html", "css"};
+    // 任务汇报文件允许的扩展名
+    public static final String[] TASK_REPORT_ALLOWED_EXTENSION = {
+            // 图片
+            "gif", "jpg", "jpeg", "png",
+            // word excel powerpoint
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
+            // 压缩文件
+            "rar", "zip", ".gz", ".bz2",
+            // pdf
+            "pdf"};
     /**
      * 上传任务文件
      */
@@ -70,6 +80,13 @@ public class FileUtils {
      */
     public static String uploadSubmissionFile(String submissionBaseDir, MultipartFile file) throws Exception{
         return uploadFile(submissionBaseDir,file,SUBMISSION_ALLOWED_EXTENSION);
+    }
+    
+    /**
+     * 上传任务汇报文件
+     */
+    public static String uploadTaskReportFile(String taskReportBaseDir, MultipartFile file) throws Exception{
+        return uploadFile(taskReportBaseDir,file,TASK_REPORT_ALLOWED_EXTENSION);
     }
     public static String uploadFile(String baseDir, MultipartFile file,String[] allowedExtension) throws Exception{
         // 文件名称长度校验

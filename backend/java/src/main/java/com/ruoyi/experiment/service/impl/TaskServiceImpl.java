@@ -10,6 +10,7 @@ import com.ruoyi.experiment.enums.UserGraduateFlagEnum;
 import com.ruoyi.experiment.mapper.TaskExecutorMapper;
 import com.ruoyi.experiment.mapper.TaskFileMapper;
 import com.ruoyi.experiment.mapper.TaskMapper;
+import com.ruoyi.experiment.mapper.TaskReportFileMapper;
 import com.ruoyi.experiment.mapper.TaskUserMapper;
 import com.ruoyi.experiment.pojo.dto.TaskDTO;
 import com.ruoyi.experiment.pojo.dto.TaskQueryDTO;
@@ -49,6 +50,7 @@ public class TaskServiceImpl implements TaskService {
     private final SysUserMapper userMapper;
     private final TaskUserMapper taskUserMapper;
     private final TaskFileMapper taskFileMapper;
+    private final TaskReportFileMapper taskReportFileMapper;
     private final ExperimentConfig experimentConfig;
     private final TaskExecutorMapper taskExecutorMapper;
     @Override
@@ -498,7 +500,23 @@ public class TaskServiceImpl implements TaskService {
             taskFileMapper.deleteByTaskId(taskId);
         }
         
-        // 8.递归更新父任务进度
+        // 8.删除任务汇报关联文件
+        List<String> taskReportFilePaths = taskReportFileMapper.selectFilePathsByTaskId(Collections.singletonList(taskId));
+        if(!CollectionUtils.isEmpty(taskReportFilePaths)){
+            try{
+                for (String filePath : taskReportFilePaths) {
+                    Path path = Paths.get(FileUtils.getFileAbsolutePath(experimentConfig.getTaskReportBaseDir(),filePath));
+                    if (Files.exists(path)) {
+                        Files.delete(path);
+                    }
+                }
+            }catch (Exception e){
+                log.error("删除任务汇报关联文件失败", e);
+            }
+            taskReportFileMapper.deleteByTaskIds(Collections.singletonList(taskId));
+        }
+        
+        // 9.递归更新父任务进度
         recalculateTaskPercentage(parentTaskId);
     }
 

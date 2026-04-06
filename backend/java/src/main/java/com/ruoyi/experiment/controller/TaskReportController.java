@@ -11,6 +11,7 @@ import com.ruoyi.framework.web.page.TableDataInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,11 +47,20 @@ public class TaskReportController extends BaseController {
     /**
      * 新增任务汇报
      *
-     * @param taskReportDto 任务汇报DTO
+     * @param taskId       任务id
+     * @param reportContent 汇报内容
+     * @param fileList     文件列表
      * @return 结果
      */
     @PostMapping
-    public AjaxResult add(@RequestBody TaskReportDto taskReportDto) {
+    public AjaxResult add(
+            @RequestParam("taskId") Long taskId,
+            @RequestParam("reportContent") String reportContent,
+            @RequestParam(value = "fileList", required = false) List<MultipartFile> fileList) {
+        TaskReportDto taskReportDto = new TaskReportDto();
+        taskReportDto.setTaskId(taskId);
+        taskReportDto.setReportContent(reportContent);
+        taskReportDto.setFileList(fileList);
         return toAjax(taskReportService.addTaskReport(taskReportDto));
     }
 

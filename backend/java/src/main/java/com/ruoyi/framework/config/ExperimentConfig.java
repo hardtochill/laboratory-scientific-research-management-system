@@ -29,4 +29,9 @@ public class ExperimentConfig {
      */
     @Value("${experiment.submission.baseDir}")
     private String submissionBaseDir;
+    /**
+     * 任务汇报文件存储路径
+     */
+    @Value("${experiment.taskReport.baseDir}")
+    private String taskReportBaseDir;
 }

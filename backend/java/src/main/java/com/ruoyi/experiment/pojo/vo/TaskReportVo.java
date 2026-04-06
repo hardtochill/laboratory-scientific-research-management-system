@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 任务汇报VO
@@ -58,4 +59,9 @@ public class TaskReportVo implements Serializable {
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
+
+    /**
+     * 关联文件列表
+     */
+    private List<TaskReportFileVO> taskReportFiles;
 }

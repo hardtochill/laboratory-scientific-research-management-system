@@ -10,11 +10,28 @@ export function getTaskReportList(taskId, query) {
 }
 
 // 新增任务汇报
-export function addTaskReport(data) {
+export function addTaskReport(taskId, reportContent, fileList) {
+  const formData = new FormData()
+  formData.append('taskId', taskId)
+  formData.append('reportContent', reportContent)
+  
+  if (fileList && fileList.length > 0) {
+    fileList.forEach(file => {
+      if (file.raw) {
+        formData.append('fileList', file.raw)
+      } else {
+        formData.append('fileList', file)
+      }
+    })
+  }
+  
   return request({
     url: '/taskReport',
     method: 'post',
-    data: data
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
   })
 }
 

@@ -1,10 +1,12 @@
 package com.ruoyi.experiment.pojo.dto;
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 任务汇报DTO
@@ -27,4 +29,9 @@ public class TaskReportDto implements Serializable {
      */
     @NotBlank(message = "汇报内容不能为空")
     private String reportContent;
+
+    /**
+     * 文件列表
+     */
+    private List<MultipartFile> fileList;
 }

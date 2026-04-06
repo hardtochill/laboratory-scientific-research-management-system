@@ -26,6 +26,9 @@ experiment:
   # 投稿文件存储路径
   submission:
     baseDir: ${experiment.submission.baseDir}
+  # 任务汇报文件存储路径
+  taskReport:
+    baseDir: ${experiment.taskReport.baseDir}
 
 # 开发环境配置
 server:

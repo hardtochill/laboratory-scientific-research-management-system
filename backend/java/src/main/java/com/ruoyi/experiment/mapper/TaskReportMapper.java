@@ -6,6 +6,7 @@ import com.ruoyi.experiment.pojo.entity.TaskReport;
 import com.ruoyi.experiment.pojo.vo.TaskReportVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,15 @@ import java.util.List;
  */
 @Mapper
 public interface TaskReportMapper {
+
+    /**
+     * 根据ID查询任务汇报
+     *
+     * @param id 汇报id
+     * @return 任务汇报
+     */
+    @Select("SELECT * FROM task_report WHERE id = #{id}")
+    TaskReport selectById(@Param("id") Long id);
 
     /**
      * 查询任务汇报列表
