@@ -161,7 +161,42 @@ public class TaskServiceImpl implements TaskService {
             task.setParticipantUsers(participants);
         }
         
+        // 按任务状态自定义排序：进行中 -> 未开始 -> 已完成 -> 已跳过
+        tasks.sort((task1, task2) -> {
+            Integer status1 = task1.getTaskStatus();
+            Integer status2 = task2.getTaskStatus();
+            
+            // 定义状态优先级：进行中(2)最高，未开始(1)次之，已完成(3)第三，已跳过(4)最低
+            int priority1 = getStatusPriority(status1);
+            int priority2 = getStatusPriority(status2);
+            
+            return Integer.compare(priority1, priority2);
+        });
+        
         return tasks;
+    }
+    
+    /**
+     * 获取任务状态的排序优先级
+     * @param status 任务状态
+     * @return 优先级数值，数值越小优先级越高
+     */
+    private int getStatusPriority(Integer status) {
+        if (status == null) {
+            return 999; // 空状态放最后
+        }
+        switch (status) {
+            case 2: // 进行中
+                return 1;
+            case 1: // 未开始
+                return 2;
+            case 3: // 已完成
+                return 3;
+            case 4: // 已跳过
+                return 4;
+            default:
+                return 999; // 其他状态放最后
+        }
     }
 
     @Override
