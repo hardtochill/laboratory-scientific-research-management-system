@@ -130,6 +130,18 @@
                     </el-tag>
                   </div>
 
+                  <!-- 审核人展示 -->
+                  <div class="reviewers-info">
+                    <div class="reviewer-item">
+                      <span class="reviewer-label">学生审核人：</span>
+                      <span class="reviewer-name">{{ process.studentReview?.reviewerUserNickName || '-' }}</span>
+                    </div>
+                    <div class="reviewer-item">
+                      <span class="reviewer-label">教师审核人：</span>
+                      <span class="reviewer-name">{{ process.teacherReview?.reviewerUserNickName || '-' }}</span>
+                    </div>
+                  </div>
+
                   <!-- 关联文件展示（按tag分类） -->
                   <div class="related-files">
                     <div v-for="tag in PROCESS_TAG_CONFIG[process.name]" :key="tag" class="tag-file-group">
@@ -307,6 +319,12 @@
           </el-descriptions-item>
           <el-descriptions-item label="备注">
             {{ currentProcess.remark || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="学生审核人">
+            {{ currentProcess.studentReview?.reviewerUserNickName || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="教师审核人">
+            {{ currentProcess.teacherReview?.reviewerUserNickName || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="关联文件">
             <div class="related-files">
@@ -1815,6 +1833,33 @@ onMounted(async () => {
   font-weight: 500;
   font-size: 15px;
   color: #303133;
+}
+
+.reviewers-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #fff;
+  border-radius: 4px;
+}
+
+.reviewer-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reviewer-label {
+  color: #909399;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.reviewer-name {
+  color: #606266;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .process-actions {

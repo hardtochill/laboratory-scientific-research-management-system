@@ -115,6 +115,19 @@ public class SubmissionProcessServiceImpl implements SubmissionProcessService {
                 submissionProcessVO.setJournalSubmissionFiles(journalSubmissionFiles);
                 submissionProcessVO.setSupplementaryDataFiles(supplementaryDataFiles);
             }
+
+            List<Review> latestReviews = reviewMapper.selectLatestReviewsByProcessId(processId);
+            for (Review review : latestReviews) {
+                if (ReviewTypeEnum.STUDENT.getValue().equals(review.getType())) {
+                    com.ruoyi.experiment.pojo.vo.ReviewVO studentReviewVO = new com.ruoyi.experiment.pojo.vo.ReviewVO();
+                    BeanUtils.copyProperties(review, studentReviewVO);
+                    submissionProcessVO.setStudentReview(studentReviewVO);
+                } else if (ReviewTypeEnum.TEACHER.getValue().equals(review.getType())) {
+                    com.ruoyi.experiment.pojo.vo.ReviewVO teacherReviewVO = new com.ruoyi.experiment.pojo.vo.ReviewVO();
+                    BeanUtils.copyProperties(review, teacherReviewVO);
+                    submissionProcessVO.setTeacherReview(teacherReviewVO);
+                }
+            }
         }
         return submissionProcessVOs;
     }

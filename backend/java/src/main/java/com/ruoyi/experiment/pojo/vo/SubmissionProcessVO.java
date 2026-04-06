@@ -52,4 +52,12 @@ public class SubmissionProcessVO{
      * 校稿-最终稿
      */
      private List<SubmissionProcessFileVO> finalDraftFiles;
+    /**
+     * 学生审核人信息
+     */
+    private ReviewVO studentReview;
+    /**
+     * 教师审核人信息
+     */
+    private ReviewVO teacherReview;
 }
