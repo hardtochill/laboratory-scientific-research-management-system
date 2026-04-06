@@ -28,16 +28,19 @@ public class UnreportedTaskController extends BaseController {
      *
      * @param timeoutFlag 1-已汇报/未超时，2-超时未汇报
      * @param executorUserId 任务执行用户ID（教师角色查询时使用）
+     * @param taskType 任务类型（学生角色使用：1-我的待汇报任务，2-我的待接收汇报任务）
      * @return 任务列表
      */
     @GetMapping("/list/{timeoutFlag}")
     public AjaxResult listUnreportedTasks(
             @PathVariable Integer timeoutFlag,
-            @RequestParam(required = false) Long executorUserId) {
+            @RequestParam(required = false) Long executorUserId,
+            @RequestParam(required = false) Integer taskType) {
         UnreportedTaskQueryDTO queryDTO = new UnreportedTaskQueryDTO();
         queryDTO.setTimeoutFlag(timeoutFlag);
         queryDTO.setCurrentUserId(SecurityUtils.getUserId());
         queryDTO.setExecutorUserId(executorUserId);
+        queryDTO.setTaskType(taskType);
         
         // 判断用户角色
         if (SecurityUtils.isTeacher()) {

@@ -57,8 +57,21 @@
                     </if>
                 </when>
                 <otherwise>
-                    <!-- 学生角色：查询执行者为当前用户的任务 -->
-                    AND te.user_id = #{currentUserId}
+                    <!-- 学生角色 -->
+                    <choose>
+                        <when test="taskType == 1">
+                            <!-- 我的待汇报任务：查询执行者为当前用户的任务 -->
+                            AND te.user_id = #{currentUserId}
+                        </when>
+                        <when test="taskType == 2">
+                            <!-- 我的待接收汇报任务：查询创建人为当前用户的任务 -->
+                            AND t.create_user_id = #{currentUserId}
+                        </when>
+                        <otherwise>
+                            <!-- 默认：查询执行者为当前用户的任务（保持兼容性） -->
+                            AND te.user_id = #{currentUserId}
+                        </otherwise>
+                    </choose>
                 </otherwise>
             </choose>
             <choose>

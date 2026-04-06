@@ -16,8 +16,107 @@
       </el-form-item>
     </el-form>
 
-    <!-- Tabs切换 -->
-    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+    <!-- 学生角色：第一层Tabs - 任务类型 -->
+    <el-tabs v-if="!isHasTeacherRole" v-model="activeTaskTypeTab" @tab-change="handleTaskTypeTabChange">
+      <el-tab-pane label="我的待汇报任务" name="to-report">
+        <template #label>
+          <span class="tab-label">
+            我的待汇报任务
+          </span>
+        </template>
+        <!-- 第二层Tabs - 汇报状态 -->
+        <el-tabs v-model="activeSubTabForToReport" @tab-change="handleSubTabChangeForToReport">
+          <el-tab-pane label="已汇报任务" name="reported">
+            <template #label>
+              <span class="tab-label">
+                已汇报任务
+                <span class="task-count">{{ toReportedCount }}</span>
+              </span>
+            </template>
+            <div v-if="toReportedTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无已汇报任务" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in toReportedTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="超时未汇报任务" name="timeout">
+            <template #label>
+              <span class="tab-label warning">
+                超时未汇报任务
+                <span class="task-count warning">{{ toTimeoutCount }}</span>
+              </span>
+            </template>
+            <div v-if="toTimeoutTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无超时未汇报任务" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in toTimeoutTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </el-tab-pane>
+
+      <el-tab-pane label="我的待接收汇报任务" name="to-receive">
+        <template #label>
+          <span class="tab-label">
+            我的待接收汇报任务
+          </span>
+        </template>
+        <!-- 第二层Tabs - 汇报状态 -->
+        <el-tabs v-model="activeSubTabForToReceive" @tab-change="handleSubTabChangeForToReceive">
+          <el-tab-pane label="已汇报任务" name="reported">
+            <template #label>
+              <span class="tab-label">
+                已汇报任务
+                <span class="task-count">{{ receiveReportedCount }}</span>
+              </span>
+            </template>
+            <div v-if="receiveReportedTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无已汇报任务" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in receiveReportedTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <el-tab-pane label="超时未汇报任务" name="timeout">
+            <template #label>
+              <span class="tab-label warning">
+                超时未汇报任务
+                <span class="task-count warning">{{ receiveTimeoutCount }}</span>
+              </span>
+            </template>
+            <div v-if="receiveTimeoutTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无超时未汇报任务" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in receiveTimeoutTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </el-tab-pane>
+    </el-tabs>
+
+    <!-- 教师角色：保持原有Tabs -->
+    <el-tabs v-if="isHasTeacherRole" v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="已汇报任务" name="reported">
         <template #label>
           <span class="tab-label">
@@ -77,7 +176,7 @@
           </el-descriptions-item>
 
           <el-descriptions-item label="创建人">
-            {{ currentDetailTask.createNickName || '-' }}
+            {{ currentDetailTask.createUserNickName || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="执行人">
             {{ currentDetailTask.executorNickName || '-' }}
@@ -137,8 +236,17 @@ const userStore = useUserStore()
 // 角色权限
 const isHasTeacherRole = ref(false)
 
-// Tabs
+// 教师角色Tabs
 const activeTab = ref('reported')
+
+// 学生角色：第一层Tabs - 任务类型
+const activeTaskTypeTab = ref('to-report')
+
+// 学生角色：第二层Tabs - 我的待汇报任务
+const activeSubTabForToReport = ref('reported')
+
+// 学生角色：第二层Tabs - 我的待接收汇报任务
+const activeSubTabForToReceive = ref('reported')
 
 // 查询参数
 const queryParams = reactive({
@@ -149,11 +257,24 @@ const queryParams = reactive({
 const selectableStudents = ref([])
 const userLoading = ref(false)
 
-// 任务列表
+// 教师角色任务列表
 const reportedTaskList = ref([])
 const timeoutTaskList = ref([])
 const reportedCount = ref(0)
 const timeoutCount = ref(0)
+
+// 学生角色：我的待汇报任务列表
+const toReportedTaskList = ref([])
+const toTimeoutTaskList = ref([])
+const toReportedCount = ref(0)
+const toTimeoutCount = ref(0)
+
+// 学生角色：我的待接收汇报任务列表
+const receiveReportedTaskList = ref([])
+const receiveTimeoutTaskList = ref([])
+const receiveReportedCount = ref(0)
+const receiveTimeoutCount = ref(0)
+
 const loading = ref(false)
 
 // 层级展示相关
@@ -211,8 +332,8 @@ const querySelectableStudents = async (nickName) => {
   }
 }
 
-// 加载所有任务数量和列表
-const loadTasks = async () => {
+// 加载教师角色所有任务
+const loadTeacherTasks = async () => {
   loading.value = true
   try {
     const [reportedResponse, timeoutResponse] = await Promise.all([
@@ -239,9 +360,91 @@ const loadTasks = async () => {
   }
 }
 
-// Tab切换
+// 加载学生角色任务
+const loadStudentTasks = async () => {
+  loading.value = true
+  try {
+    const [toReportedResponse, toTimeoutResponse, receiveReportedResponse, receiveTimeoutResponse] = await Promise.all([
+      getUnreportedTaskList(1, null, 1),
+      getUnreportedTaskList(2, null, 1),
+      getUnreportedTaskList(1, null, 2),
+      getUnreportedTaskList(2, null, 2)
+    ])
+    
+    // 我的待汇报任务
+    const toReportedList = toReportedResponse.data || []
+    const toTimeoutList = toTimeoutResponse.data || []
+    toReportedCount.value = toReportedList.length
+    toTimeoutCount.value = toTimeoutList.length
+    
+    if (activeSubTabForToReport.value === 'reported') {
+      toReportedTaskList.value = toReportedList
+    } else {
+      toTimeoutTaskList.value = toTimeoutList
+    }
+    
+    // 我的待接收汇报任务
+    const receiveReportedList = receiveReportedResponse.data || []
+    const receiveTimeoutList = receiveTimeoutResponse.data || []
+    receiveReportedCount.value = receiveReportedList.length
+    receiveTimeoutCount.value = receiveTimeoutList.length
+    
+    if (activeSubTabForToReceive.value === 'reported') {
+      receiveReportedTaskList.value = receiveReportedList
+    } else {
+      receiveTimeoutTaskList.value = receiveTimeoutList
+    }
+  } catch (error) {
+    ElMessage.error('加载任务失败')
+    console.error('加载任务失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载所有任务
+const loadTasks = async () => {
+  if (isHasTeacherRole.value) {
+    await loadTeacherTasks()
+  } else {
+    await loadStudentTasks()
+  }
+}
+
+// 教师角色Tab切换
 const handleTabChange = () => {
   loadTasks()
+}
+
+// 学生角色：任务类型Tab切换
+const handleTaskTypeTabChange = () => {
+  loadTasks()
+}
+
+// 学生角色：我的待汇报任务子Tab切换
+const handleSubTabChangeForToReport = () => {
+  if (activeSubTabForToReport.value === 'reported') {
+    getUnreportedTaskList(1, null, 1).then(response => {
+      toReportedTaskList.value = response.data || []
+    })
+  } else {
+    getUnreportedTaskList(2, null, 1).then(response => {
+      toTimeoutTaskList.value = response.data || []
+    })
+  }
+}
+
+// 学生角色：我的待接收汇报任务子Tab切换
+const handleSubTabChangeForToReceive = () => {
+  if (activeSubTabForToReceive.value === 'reported') {
+    getUnreportedTaskList(1, null, 2).then(response => {
+      receiveReportedTaskList.value = response.data || []
+    })
+  } else {
+    getUnreportedTaskList(2, null, 2).then(response => {
+      receiveTimeoutTaskList.value = response.data || []
+    })
+  }
 }
 
 // 查询
@@ -423,6 +626,14 @@ onMounted(() => {
 :deep(.el-tabs__active-bar) {
   height: 2px;
   background-color: #409eff;
+}
+
+/* 双层tabs的第二层样式 */
+:deep(.el-tabs .el-tabs) {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* 加载动画 */
