@@ -17,12 +17,14 @@
         <span class="task-name">{{ task.taskName }}</span>
         
         <!-- 目标任务标识 -->
-        <el-tag v-if="task.isCurrentUserExecutor" type="warning" size="small" class="target-task-tag">
-          我执行的
-        </el-tag>
-        <el-tag v-if="task.isCurrentUserCreator" type="success" size="small" class="target-task-tag">
-          我创建的
-        </el-tag>
+        <div v-if="task.isCurrentUserExecutor" class="target-badge executor-badge">
+          <el-icon><Tools /></el-icon>
+          <span>我执行的</span>
+        </div>
+        <div v-if="task.isCurrentUserCreator" class="target-badge creator-badge">
+          <el-icon><Edit /></el-icon>
+          <span>我创建的</span>
+        </div>
 
       <!-- 任务状态 -->
       <el-tag :type="getStatusType(task.taskStatus)" size="small" class="task-status">
@@ -125,7 +127,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getSubTasks } from '@/api/task/task'
-import {CaretRight,CaretBottom,Plus, Files, Switch, Delete, Document, Clock } from '@element-plus/icons-vue'
+import {CaretRight,CaretBottom,Plus, Files, Switch, Delete, Document, Clock, Tools, Edit } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
 
 // 用户角色信息
@@ -555,6 +557,71 @@ const loadSubTasks = async () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 目标任务标识样式 */
+.target-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  animation: badgePulse 2s ease-in-out infinite;
+  position: relative;
+  z-index: 10;
+}
+
+.target-badge::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 24px;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: badgeShine 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes badgeShine {
+  0% {
+    transform: translateX(-100%);
+  }
+  50%, 100% {
+    transform: translateX(100%);
+  }
+}
+
+.executor-badge {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: white;
+  border: 2px solid #ff6b6b;
+}
+
+.creator-badge {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+  color: white;
+  border: 2px solid #4ecdc4;
+}
+
+.executor-badge:hover,
+.creator-badge:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 
