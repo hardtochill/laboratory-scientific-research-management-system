@@ -74,12 +74,30 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
-        // 3.统计各状态任务个数——依赖所有查询条件
+        // 3.统计各状态任务个数——依赖除任务状态外的查询条件
         Long pendingCount = 0L;
         Long processingCount = 0L;
         Long finishedCount = 0L;
         Long skippedCount = 0L;
-        for (TaskVO task : tasks) {
+        
+        List<TaskVO> tasksForStatistics;
+        
+        // 如果提交的查询条件有任务状态，则先把任务状态置为null再依赖查询条件的结果进行统计
+        if (taskQueryDTO.getTaskStatus() != null) {
+            // 创建新的查询DTO，保留除任务状态外的其他所有条件
+            TaskQueryDTO statisticsQueryDTO = new TaskQueryDTO();
+            BeanUtils.copyProperties(taskQueryDTO, statisticsQueryDTO);
+            statisticsQueryDTO.setTaskStatus(null);
+            
+            // 查询符合条件（除任务状态外）的所有任务用于统计
+            tasksForStatistics = selectParentTaskListForStatistics(statisticsQueryDTO);
+        } else {
+            // 如果没有选择任务状态，则直接使用当前查询结果进行统计
+            tasksForStatistics = tasks;
+        }
+        
+        // 统计各状态任务个数
+        for (TaskVO task : tasksForStatistics) {
             if(TaskStatusEnum.PENDING.getStatus().equals(task.getTaskStatus())){
                 pendingCount++;
             }else if(TaskStatusEnum.PROCESSING.getStatus().equals(task.getTaskStatus())){
@@ -141,7 +159,7 @@ public class TaskServiceImpl implements TaskService {
             tasks = taskMapper.select(taskQueryDTO);
         }
         
-        // 2.计算子任务状态（注释掉旧方法，直接使用数据库中的taskPercentage）
+        // 2.计算子任务状态
         // calculateTaskList(tasks);
         
         // 更新percentage字段，直接使用taskPercentage
@@ -182,12 +200,12 @@ public class TaskServiceImpl implements TaskService {
             }
         }
         
-        // 按任务状态自定义排序：进行中 -> 未开始 -> 已完成 -> 已跳过
+        // 按任务状态自定义排序：进行中、未开始、已完成、已跳过
         tasks.sort((task1, task2) -> {
             Integer status1 = task1.getTaskStatus();
             Integer status2 = task2.getTaskStatus();
             
-            // 定义状态优先级：进行中(2)最高，未开始(1)次之，已完成(3)第三，已跳过(4)最低
+            // 定义状态优先级
             int priority1 = getStatusPriority(status1);
             int priority2 = getStatusPriority(status2);
             
@@ -196,9 +214,95 @@ public class TaskServiceImpl implements TaskService {
         
         return new TaskListWithExpandVO(tasks, expandTaskIds);
     }
+    
+    /**
+     * 查询父任务列表（用于统计，只获取基础数据）
+     */
+    private List<TaskVO> selectParentTaskListForStatistics(TaskQueryDTO taskQueryDTO) {
+        List<TaskVO> tasks;
+        
+        // 检查是否是学生用户且有指定的任务类型
+        if (SecurityUtils.isStudent() && taskQueryDTO.getStudentTaskType() != null) {
+            Long userId = SecurityUtils.getUserId();
+            switch (taskQueryDTO.getStudentTaskType()) {
+                case "executor":
+                    // 我执行的任务（只获取顶级父任务，不展开，不添加标识）
+                    tasks = getTasksForExecutorForStatistics(userId);
+                    break;
+                case "creator":
+                    // 我创建的任务（只获取顶级父任务，不展开，不添加标识）
+                    tasks = getTasksForCreatorForStatistics(userId);
+                    break;
+                case "participant":
+                default:
+                    // 我参与的任务（默认逻辑）
+                    taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+                    taskQueryDTO.setUserId(userId);
+                    tasks = taskMapper.select(taskQueryDTO);
+                    break;
+            }
+        } else {
+            // 原有的逻辑
+            taskQueryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+            if(SecurityUtils.isStudent()){
+                taskQueryDTO.setUserId(SecurityUtils.getUserId());
+            }
+            tasks = taskMapper.select(taskQueryDTO);
+        }
+        
+        return tasks;
+    }
+    
+    /**
+     * 获取用户作为执行人的任务（用于统计）
+     */
+    private List<TaskVO> getTasksForExecutorForStatistics(Long userId) {
+        List<TaskVO> executorTasks = taskMapper.selectTasksByExecutorUserId(userId);
+        Set<Long> topParentIds = new HashSet<>();
+        
+        // 找出所有顶级父任务
+        for (TaskVO task : executorTasks) {
+            Long topParentId = findTopParentId(task.getTaskId());
+            topParentIds.add(topParentId);
+        }
+        
+        // 查询顶级父任务
+        TaskQueryDTO queryDTO = new TaskQueryDTO();
+        queryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+        List<TaskVO> allTopTasks = taskMapper.select(queryDTO);
+        
+        // 只保留我们需要的顶级父任务
+        return allTopTasks.stream()
+                .filter(task -> topParentIds.contains(task.getTaskId()))
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * 获取用户作为创建人的任务（用于统计）
+     */
+    private List<TaskVO> getTasksForCreatorForStatistics(Long userId) {
+        List<TaskVO> creatorTasks = taskMapper.selectTasksByCreateUserId(userId);
+        Set<Long> topParentIds = new HashSet<>();
+        
+        // 找出所有顶级父任务
+        for (TaskVO task : creatorTasks) {
+            Long topParentId = findTopParentId(task.getTaskId());
+            topParentIds.add(topParentId);
+        }
+        
+        // 查询顶级父任务
+        TaskQueryDTO queryDTO = new TaskQueryDTO();
+        queryDTO.setParentTaskId(TaskConstants.FIRST_PARENT_TASK_ID);
+        List<TaskVO> allTopTasks = taskMapper.select(queryDTO);
+        
+        // 只保留我们需要的顶级父任务
+        return allTopTasks.stream()
+                .filter(task -> topParentIds.contains(task.getTaskId()))
+                .collect(Collectors.toList());
+    }
 
     /**
-     * 获取用户作为执行人的任务（需要查找顶级父任务）
+     * 获取用户作为执行人的任务
      */
     private List<TaskVO> getTasksForExecutor(Long userId, List<Long> expandTaskIds, Set<Long> targetExecutorTaskIds) {
         List<TaskVO> executorTasks = taskMapper.selectTasksByExecutorUserId(userId);
@@ -230,7 +334,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     /**
-     * 获取用户作为创建人的任务（需要查找顶级父任务）
+     * 获取用户作为创建人的任务
      */
     private List<TaskVO> getTasksForCreator(Long userId, List<Long> expandTaskIds, Set<Long> targetCreatorTaskIds) {
         List<TaskVO> creatorTasks = taskMapper.selectTasksByCreateUserId(userId);
