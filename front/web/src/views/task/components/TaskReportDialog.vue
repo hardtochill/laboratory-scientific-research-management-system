@@ -106,7 +106,7 @@
                       :key="file.id" 
                       type="primary" 
                       :underline="false"
-                      @click="downloadFile(file.id, file.fileName)"
+                      @click="downloadFile(file.id, file.fileName + '.' + file.fileType)"
                       class="file-item"
                     >
                       <el-icon><Document /></el-icon>
