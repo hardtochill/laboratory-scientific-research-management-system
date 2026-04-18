@@ -62,10 +62,16 @@ public class TaskServiceImpl implements TaskService {
         List<TaskVO> tasks = listWithExpand.getTasks();
         List<Long> expandTaskIds = listWithExpand.getExpandTaskIds();
         
-        // 2.为每个任务加载参与用户信息
+        // 2.为每个任务加载参与用户信息和执行人信息
         for (TaskVO task : tasks) {
             List<SysUser> participantUsers = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participantUsers);
+            
+            // 加载执行人信息
+            if (task.getExecutorUserId() != null) {
+                SysUser executorUser = userMapper.selectUserById(task.getExecutorUserId());
+                task.setExecutorUser(executorUser);
+            }
         }
 
         // 3.统计各状态任务个数——依赖所有查询条件
@@ -158,6 +164,12 @@ public class TaskServiceImpl implements TaskService {
             // 查询参与用户
             List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participants);
+            
+            // 加载执行人信息
+            if (task.getExecutorUserId() != null) {
+                SysUser executorUser = userMapper.selectUserById(task.getExecutorUserId());
+                task.setExecutorUser(executorUser);
+            }
             
             // 为学生用户检查任务是否是当前用户执行的或创建的
             if (currentUserId != null) {
@@ -363,6 +375,12 @@ public class TaskServiceImpl implements TaskService {
             // 查询参与用户
             List<SysUser> participants = taskUserMapper.selectUsersByTaskId(task.getTaskId());
             task.setParticipantUsers(participants);
+            
+            // 加载执行人信息
+            if (task.getExecutorUserId() != null) {
+                SysUser executorUser = userMapper.selectUserById(task.getExecutorUserId());
+                task.setExecutorUser(executorUser);
+            }
             
             // 为学生用户检查任务是否是当前用户执行的或创建的
             if (currentUserId != null) {

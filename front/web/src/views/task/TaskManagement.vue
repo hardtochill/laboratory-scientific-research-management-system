@@ -179,7 +179,12 @@
                 </span>
               </div>
 
-              <!-- 第三行：参与用户 -->
+              <!-- 第三行：执行用户 -->
+              <div class="executor-user-row" v-if="task.executorUser">
+                <span class="executor-user">执行人：{{ task.executorUser.nickName }}</span>
+              </div>
+
+              <!-- 第四行：参与用户 -->
               <div class="participant-users-row" v-if="task.participantUsers && task.participantUsers.length > 0">
                 <span class="participant-users">参与用户：{{task.participantUsers.map(user => user.nickName).join(', ')
                   }}</span>
@@ -1977,6 +1982,23 @@ onUnmounted(() => {
 
 .status-stat {
   white-space: nowrap;
+}
+
+.executor-user-row {
+  margin-top: 12px;
+  padding-left: 32px;
+  padding-right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.executor-user {
+  font-size: 13px;
+  color: #4a5568;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
 }
 
 .participant-users-row {

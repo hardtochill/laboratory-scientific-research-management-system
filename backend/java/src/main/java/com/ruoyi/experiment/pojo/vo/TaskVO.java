@@ -40,6 +40,11 @@ public class TaskVO {
     private Long executorUserId;
     
     /**
+     * 任务执行人信息
+     */
+    private SysUser executorUser;
+    
+    /**
      * 子任务状态统计
      */
     private TaskStatusStats subTaskStatusStats;
