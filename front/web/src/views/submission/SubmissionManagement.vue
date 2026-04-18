@@ -789,34 +789,9 @@ const planFormRules = reactive({
     { required: true, message: '请选择投稿类型', trigger: 'change' }
   ],
   journal: [
-    { 
-      validator: (rule, value, callback) => {
-        if (planFormData.type !== SUBMISSION_TYPE.JOURNAL_PAPER && 
-            planFormData.type !== SUBMISSION_TYPE.CONFERENCE_PAPER) {
-          if (value && value.length > 100) {
-            callback(new Error('长度不超过 100 个字符'))
-          } else {
-            callback()
-          }
-        } else {
-          if (!value) {
-            callback(new Error('请输入投稿期刊'))
-          } else if (value.length > 100) {
-            callback(new Error('长度不超过 100 个字符'))
-          } else {
-            callback()
-          }
-        }
-      }, 
-      trigger: 'blur' 
-    }
+    { required: true, message: '请输入投稿期刊', trigger: 'blur' },
+    { max: 100, message: '长度不超过 100 个字符', trigger: 'blur' }
   ]
-})
-
-watch(() => planFormData.type, () => {
-  if (planFormRef.value) {
-    planFormRef.value.validateField('journal')
-  }
 })
 
 // 投稿流程详情对话框
