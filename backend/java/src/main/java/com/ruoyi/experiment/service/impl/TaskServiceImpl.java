@@ -531,6 +531,22 @@ public class TaskServiceImpl implements TaskService {
         if (taskDTO.getTaskPercentage() < 0 || taskDTO.getTaskPercentage() > 100) {
             throw new ServiceException("任务进度范围必须在0到100之间");
         }
+        
+        // 2.5 校验子任务的汇报频率和预期完成时间
+        if (parentTask != null) {
+            // 校验汇报频率：只有父任务和子任务都开启汇报且设置了频率时才校验
+            boolean parentHasReport = parentTask.getReportFlag() != null && parentTask.getReportFlag() == 1 && parentTask.getReportFrequency() != null;
+            boolean childHasReport = taskDTO.getReportFlag() != null && taskDTO.getReportFlag() == 1 && taskDTO.getReportFrequency() != null;
+            if (parentHasReport && childHasReport && taskDTO.getReportFrequency() > parentTask.getReportFrequency()) {
+                throw new ServiceException("子任务的汇报频率不能大于父任务的汇报频率");
+            }
+
+            // 校验预期完成时间：只有父任务和子任务都设置了预期完成时间时才校验
+            if (parentTask.getExpectedFinishTime() != null && taskDTO.getExpectedFinishTime() != null
+                    && taskDTO.getExpectedFinishTime().isAfter(parentTask.getExpectedFinishTime())) {
+                throw new ServiceException("子任务的预期完成时间不能晚于父任务的预期完成时间");
+            }
+        }
 
         Task task = new Task();
         BeanUtils.copyProperties(taskDTO,task);
@@ -633,6 +649,43 @@ public class TaskServiceImpl implements TaskService {
         if (taskDTO.getTaskPercentage() != null) {
             if (taskDTO.getTaskPercentage() < 0 || taskDTO.getTaskPercentage() > 100) {
                 throw new ServiceException("任务进度范围必须在0到100之间");
+            }
+        }
+        
+        // 2.5 校验父任务的约束：父任务修改时，需要检查是否违反父任务的约束
+        Task parentTask = taskMapper.selectTaskById(originTask.getParentTaskId());
+        if (parentTask != null) {
+            // 校验汇报频率：只有父任务和当前任务都开启汇报且设置了频率时才校验
+            boolean parentHasReport = parentTask.getReportFlag() != null && parentTask.getReportFlag() == 1 && parentTask.getReportFrequency() != null;
+            boolean currentHasReport = taskDTO.getReportFlag() != null && taskDTO.getReportFlag() == 1 && taskDTO.getReportFrequency() != null;
+            if (parentHasReport && currentHasReport && taskDTO.getReportFrequency() > parentTask.getReportFrequency()) {
+                throw new ServiceException("当前任务的汇报频率不能大于父任务的汇报频率");
+            }
+            
+            // 校验预期完成时间：只有父任务和当前任务都设置了预期完成时间时才校验
+            if (parentTask.getExpectedFinishTime() != null && taskDTO.getExpectedFinishTime() != null 
+                    && taskDTO.getExpectedFinishTime().isAfter(parentTask.getExpectedFinishTime())) {
+                throw new ServiceException("当前任务的预期完成时间不能晚于父任务的预期完成时间");
+            }
+        }
+
+        // 2.6 校验子任务的约束：如果任务有子任务，需要检查修改后是否违反子任务的约束
+        if (hasSubTasks) {
+            List<Task> subTasks = taskMapper.selectSubTasksByParentId(taskDTO.getTaskId());
+            
+            for (Task subTask : subTasks) {
+                // 校验汇报频率：只有当前任务和子任务都开启汇报且设置了频率时才校验
+                boolean currentHasReport = taskDTO.getReportFlag() != null && taskDTO.getReportFlag() == 1 && taskDTO.getReportFrequency() != null;
+                boolean subTaskHasReport = subTask.getReportFlag() != null && subTask.getReportFlag() == 1 && subTask.getReportFrequency() != null;
+                if (currentHasReport && subTaskHasReport && subTask.getReportFrequency() > taskDTO.getReportFrequency()) {
+                    throw new ServiceException(String.format("子任务[%s]的汇报频率不能大于当前任务的汇报频率", subTask.getTaskName()));
+                }
+                
+                // 校验预期完成时间：只有当前任务和子任务都设置了预期完成时间时才校验
+                if (taskDTO.getExpectedFinishTime() != null && subTask.getExpectedFinishTime() != null 
+                        && subTask.getExpectedFinishTime().isAfter(taskDTO.getExpectedFinishTime())) {
+                    throw new ServiceException(String.format("子任务[%s]的预期完成时间不能晚于当前任务的预期完成时间", subTask.getTaskName()));
+                }
             }
         }
 
