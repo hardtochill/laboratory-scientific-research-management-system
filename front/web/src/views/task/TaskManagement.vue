@@ -359,7 +359,7 @@
 
           <!-- 定时汇报频率 -->
           <el-form-item label="定时汇报频率(天)" prop="reportFrequency" v-if="formData.reportFlag === 1">
-            <el-input-number v-model="formData.reportFrequency" :min="0" :max="30" :precision="0" :step="1"
+            <el-input-number v-model="formData.reportFrequency" :min="1" :max="30" :precision="0" :step="1"
               placeholder="请输入汇报频率" style="width: 100%;" />
           </el-form-item>
 
