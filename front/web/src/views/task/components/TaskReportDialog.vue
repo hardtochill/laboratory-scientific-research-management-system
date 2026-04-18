@@ -57,7 +57,7 @@
             </div>
             <template #tip>
               <div class="el-upload__tip">
-                支持上传图片、文档、压缩包等文件，文件大小不超过10MB
+                支持任意格式文件，文件大小不超过10MB
               </div>
             </template>
           </el-upload>

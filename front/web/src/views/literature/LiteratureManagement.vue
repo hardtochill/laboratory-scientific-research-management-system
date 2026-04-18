@@ -266,8 +266,8 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="论文原文" prop="file">
-              <el-tooltip content="仅支持PDF格式，文件大小不超过50MB" placement="top-start">
-                <el-upload style="width: 100%;" ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :on-remove="onRemove" :auto-upload="false" accept=".pdf">
+              <el-tooltip content="文件大小不超过50MB" placement="top-start">
+                <el-upload style="width: 100%;" ref="fileUpload" :file-list="fileList" :limit="1" :on-exceed="onExceed" :on-change="onChange" :on-remove="onRemove" :auto-upload="false">
                   <el-button type="primary">选择文件</el-button>
                 </el-upload>
               </el-tooltip>
@@ -294,7 +294,7 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="评论关联文件" prop="commentFiles">
-              <el-upload style="width: 100%;" ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList" :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple accept=".gif,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx,txt,.rar,.zip,.gz,.bz2,.pdf">
+              <el-upload style="width: 100%;" ref="commentUploadRef" action="#" :auto-upload="false" v-model:file-list="commentFileList" :on-change="handleCommentFileChange" :on-remove="handleCommentFileRemove" multiple>
                 <el-button type="primary">选择文件</el-button>
               </el-upload>
             </el-form-item>

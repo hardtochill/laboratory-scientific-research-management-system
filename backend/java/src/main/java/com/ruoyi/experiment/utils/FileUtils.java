@@ -10,52 +10,18 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 public class FileUtils {
-    // 任务文件允许的扩展名
-    public static final String[] TASK_ALLOWED_EXTENSION = {
-            // 图片
-            "gif", "jpg", "jpeg", "png",
-            // word excel powerpoint
-            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
-            // 压缩文件
-            "rar", "zip", ".gz", ".bz2",
-            // pdf
-            "pdf"};
+    // 任务文件允许的扩展名 - null表示不限制
+    public static final String[] TASK_ALLOWED_EXTENSION = null;
 
-    // 文献文件允许的扩展名
-    public static final String[] LITERATURE_ALLOWED_EXTENSION = {"pdf"};
-    //评论文件允许的扩展名
-    public static final String[] Comment_ALLOWED_EXTENSION = {
-            // 图片
-            "gif", "jpg", "jpeg", "png",
-            // word excel powerpoint
-            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
-            // 压缩文件
-            "rar", "zip", ".gz", ".bz2",
-            // pdf
-            "pdf"};
+    // 文献文件允许的扩展名 - null表示不限制
+    public static final String[] LITERATURE_ALLOWED_EXTENSION = null;
+    //评论文件允许的扩展名 - null表示不限制
+    public static final String[] Comment_ALLOWED_EXTENSION = null;
     
-    // 投稿文件允许的扩展名
-    public static final String[] SUBMISSION_ALLOWED_EXTENSION = {
-            // 图片
-            "gif", "jpg", "jpeg", "png",
-            // word excel powerpoint
-            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
-            // 压缩文件
-            "rar", "zip", ".gz", ".bz2",
-            // pdf
-            "pdf",
-            // 代码文件
-            "java", "py", "cpp", "c", "h", "js", "html", "css"};
-    // 任务汇报文件允许的扩展名
-    public static final String[] TASK_REPORT_ALLOWED_EXTENSION = {
-            // 图片
-            "gif", "jpg", "jpeg", "png",
-            // word excel powerpoint
-            "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
-            // 压缩文件
-            "rar", "zip", ".gz", ".bz2",
-            // pdf
-            "pdf"};
+    // 投稿文件允许的扩展名 - null表示不限制
+    public static final String[] SUBMISSION_ALLOWED_EXTENSION = null;
+    // 任务汇报文件允许的扩展名 - null表示不限制
+    public static final String[] TASK_REPORT_ALLOWED_EXTENSION = null;
     /**
      * 上传任务文件
      */

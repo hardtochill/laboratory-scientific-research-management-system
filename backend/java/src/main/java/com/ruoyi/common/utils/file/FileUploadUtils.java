@@ -59,7 +59,7 @@ public class FileUploadUtils
     {
         try
         {
-            return upload(getDefaultBaseDir(), file, MimeTypeUtils.DEFAULT_ALLOWED_EXTENSION);
+            return upload(getDefaultBaseDir(), file, null);
         }
         catch (Exception e)
         {
@@ -79,7 +79,7 @@ public class FileUploadUtils
     {
         try
         {
-            return upload(baseDir, file, MimeTypeUtils.DEFAULT_ALLOWED_EXTENSION);
+            return upload(baseDir, file, null);
         }
         catch (Exception e)
         {
@@ -192,33 +192,37 @@ public class FileUploadUtils
             throw new FileSizeLimitExceededException(DEFAULT_MAX_SIZE / 1024 / 1024);
         }
 
-        String fileName = file.getOriginalFilename();
-        String extension = getExtension(file);
-        if (allowedExtension != null && !isAllowedExtension(extension, allowedExtension))
+        // allowedExtension为null时不进行文件类型限制
+        if (allowedExtension != null && allowedExtension.length > 0)
         {
-            if (allowedExtension == MimeTypeUtils.IMAGE_EXTENSION)
+            String fileName = file.getOriginalFilename();
+            String extension = getExtension(file);
+            if (!isAllowedExtension(extension, allowedExtension))
             {
-                throw new InvalidExtensionException.InvalidImageExtensionException(allowedExtension, extension,
-                        fileName);
-            }
-            else if (allowedExtension == MimeTypeUtils.FLASH_EXTENSION)
-            {
-                throw new InvalidExtensionException.InvalidFlashExtensionException(allowedExtension, extension,
-                        fileName);
-            }
-            else if (allowedExtension == MimeTypeUtils.MEDIA_EXTENSION)
-            {
-                throw new InvalidExtensionException.InvalidMediaExtensionException(allowedExtension, extension,
-                        fileName);
-            }
-            else if (allowedExtension == MimeTypeUtils.VIDEO_EXTENSION)
-            {
-                throw new InvalidExtensionException.InvalidVideoExtensionException(allowedExtension, extension,
-                        fileName);
-            }
-            else
-            {
-                throw new InvalidExtensionException(allowedExtension, extension, fileName);
+                if (allowedExtension == MimeTypeUtils.IMAGE_EXTENSION)
+                {
+                    throw new InvalidExtensionException.InvalidImageExtensionException(allowedExtension, extension,
+                            fileName);
+                }
+                else if (allowedExtension == MimeTypeUtils.FLASH_EXTENSION)
+                {
+                    throw new InvalidExtensionException.InvalidFlashExtensionException(allowedExtension, extension,
+                            fileName);
+                }
+                else if (allowedExtension == MimeTypeUtils.MEDIA_EXTENSION)
+                {
+                    throw new InvalidExtensionException.InvalidMediaExtensionException(allowedExtension, extension,
+                            fileName);
+                }
+                else if (allowedExtension == MimeTypeUtils.VIDEO_EXTENSION)
+                {
+                    throw new InvalidExtensionException.InvalidVideoExtensionException(allowedExtension, extension,
+                            fileName);
+                }
+                else
+                {
+                    throw new InvalidExtensionException(allowedExtension, extension, fileName);
+                }
             }
         }
     }

@@ -519,8 +519,7 @@
       :before-close="handleUploadDialogClose">
       <div class="upload-dialog-content">
         <el-upload ref="uploadRef" :file-list="tempFileList" :auto-upload="false" :on-change="handleTempFileChange"
-          :on-remove="handleTempFileRemove" :before-upload="beforeUpload" drag multiple
-          accept=".java,.py,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+          :on-remove="handleTempFileRemove" :before-upload="beforeUpload" drag multiple>
           <el-icon class="el-icon--upload">
             <UploadFilled />
           </el-icon>
@@ -529,7 +528,7 @@
           </div>
           <template #tip>
             <div class="el-upload__tip">
-              支持java、py、pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过5GB
+              支持任意格式文件，单个文件不超过5GB
             </div>
           </template>
         </el-upload>

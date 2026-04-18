@@ -158,14 +158,8 @@ public class FileUtils
             return false;
         }
 
-        // 检查允许下载的文件规则
-        if (ArrayUtils.contains(MimeTypeUtils.DEFAULT_ALLOWED_EXTENSION, FileTypeUtils.getFileType(resource)))
-        {
-            return true;
-        }
-
-        // 不在允许下载的文件规则
-        return false;
+        // 允许所有文件类型下载
+        return true;
     }
 
     /**

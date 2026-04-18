@@ -410,8 +410,7 @@
           <!-- 文件上传区域 -->
           <div class="upload-section" v-if="hasTaskPermission(currentTaskForFile)">
             <el-upload ref="uploadRef" :file-list="fileList" :auto-upload="false" :on-change="handleFileChange"
-              :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.rar,.zip,.gz,.bz2">
+              :on-remove="handleFileRemove" :before-upload="beforeUpload" drag multiple>
               <el-icon class="el-icon--upload">
                 <UploadFilled />
               </el-icon>
@@ -420,7 +419,7 @@
               </div>
               <template #tip>
                 <div class="el-upload__tip">
-                  支持pdf、doc、docx、xls、xlsx、ppt、pptx、txt、jpg、jpeg、png、gif、rar、zip、gz、bz2格式文件，单个文件不超过5GB
+                  支持任意格式文件，单个文件不超过5GB
                 </div>
               </template>
             </el-upload>
@@ -551,7 +550,7 @@
                 </div>
                 <template #tip>
                   <div class="el-upload__tip">
-                    支持上传图片、文档、压缩包等文件，文件大小不超过10MB
+                    支持任意格式文件，文件大小不超过10MB
                   </div>
                 </template>
               </el-upload>
