@@ -5,6 +5,9 @@
       <div class="task-header">
         <div class="header-left">
           <span class="task-name">{{ task.taskName }}</span>
+          <el-tag v-if="isOverdue(task)" type="warning" size="small" class="overdue-tag">
+            超时 {{ getOverdueDays(task) }} 天
+          </el-tag>
         </div>
         <div class="header-right">
           <el-button type="primary" size="small" @click.stop="handleReport" class="report-btn">
@@ -53,16 +56,6 @@
             <div class="detail-value">{{ formatCreator(task.executorNickName, task.executorUserName) }}</div>
           </div>
         </div>
-        
-        <!-- 汇报状态提示 -->
-        <div class="report-status" v-if="isOverdue(task)">
-          <el-alert
-            title="⚠️  该任务已超时未汇报"
-            type="warning"
-            :closable="false"
-            show-icon
-          />
-        </div>
       </div>
     </div>
   </div>
@@ -104,15 +97,20 @@ const formatCreator = (nickName, userName) => {
   return nickName || userName
 }
 
-// 检查是否超时
-const isOverdue = (task) => {
-  if (!task.lastReportTime || !task.reportFrequency) return false
+// 计算超时天数
+const getOverdueDays = (task) => {
+  if (!task.lastReportTime || !task.reportFrequency) return 0
   
   const lastReportDate = new Date(task.lastReportTime)
   const now = new Date()
   const daysDiff = Math.floor((now - lastReportDate) / (1000 * 60 * 60 * 24))
   
-  return daysDiff > (task.reportFrequency || 0)
+  return Math.max(0, daysDiff - (task.reportFrequency || 0))
+}
+
+// 检查是否超时
+const isOverdue = (task) => {
+  return getOverdueDays(task) > 0
 }
 
 // 汇报任务
@@ -228,6 +226,21 @@ const handleShowSingle = () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.overdue-tag {
+  margin-left: 10px;
+  font-weight: 600;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .parent-task-header .task-name {
