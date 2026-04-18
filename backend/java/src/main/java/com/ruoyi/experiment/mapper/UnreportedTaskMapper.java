@@ -22,6 +22,14 @@ public interface UnreportedTaskMapper {
     List<UnreportedTaskVO> selectUnreportedTaskList(UnreportedTaskQueryDTO queryDTO);
 
     /**
+     * 根据任务ID查询单个任务详情
+     *
+     * @param taskId 任务ID
+     * @return 任务详情
+     */
+    UnreportedTaskVO selectTaskById(@Param("taskId") Long taskId);
+
+    /**
      * 根据任务ID查询任务的所有父任务（从顶级父任务到当前任务的父任务）
      *
      * @param taskId 任务ID

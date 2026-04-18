@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -31,6 +33,22 @@ public class UnreportedTaskServiceImpl implements UnreportedTaskService {
     @Override
     public List<UnreportedTaskVO> selectParentTasksByTaskId(Long taskId) {
         log.info("查询任务的父任务列表：taskId={}", taskId);
-        return unreportedTaskMapper.selectParentTasksByTaskId(taskId);
+        List<UnreportedTaskVO> result = new ArrayList<>();
+        Long currentTaskId = taskId;
+        int level = 0;
+        
+        while (currentTaskId != null && currentTaskId > 0) {
+            UnreportedTaskVO task = unreportedTaskMapper.selectTaskById(currentTaskId);
+            if (task != null) {
+                result.add(task);
+                currentTaskId = task.getParentTaskId();
+                level++;
+            } else {
+                break;
+            }
+        }
+        
+        Collections.reverse(result);
+        return result;
     }
 }
