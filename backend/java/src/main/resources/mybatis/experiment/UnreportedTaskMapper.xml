@@ -47,11 +47,7 @@
             AND t.report_flag = 1
             <choose>
                 <when test="userRole == 'teacher'">
-                    <!-- 教师角色：查询参与用户包含当前用户的任务 -->
-                    AND EXISTS (
-                        SELECT 1 FROM task_user tu
-                        WHERE tu.task_id = t.task_id AND tu.user_id = #{currentUserId}
-                    )
+                    <!-- 教师角色：可查看所有待汇报任务 -->
                     <if test="executorUserId != null">
                         AND te.user_id = #{executorUserId}
                     </if>
