@@ -2,6 +2,10 @@
   <div class="unreported-task-management">
     <!-- 教师角色查询表单 -->
     <el-form v-if="isHasTeacherRole" :model="queryParams" :inline="true" class="query-form">
+      <el-form-item label="任务名称">
+        <el-input v-model="queryParams.taskName" placeholder="请输入任务名称" clearable style="width: 240px"
+          @keyup.enter="handleQuery" />
+      </el-form-item>
       <el-form-item label="任务执行用户">
         <el-select v-model="queryParams.executorUserId" placeholder="请输入任务执行用户" clearable style="width: 240px"
           filterable remote :remote-method="querySelectableStudents" :loading="userLoading"
@@ -250,6 +254,7 @@ const activeSubTabForToReceive = ref('reported')
 
 // 查询参数
 const queryParams = reactive({
+  taskName: null,
   executorUserId: null
 })
 
@@ -337,8 +342,8 @@ const loadTeacherTasks = async () => {
   loading.value = true
   try {
     const [reportedResponse, timeoutResponse] = await Promise.all([
-      getUnreportedTaskList(1, queryParams.executorUserId),
-      getUnreportedTaskList(2, queryParams.executorUserId)
+      getUnreportedTaskList(1, queryParams.executorUserId, null, queryParams.taskName),
+      getUnreportedTaskList(2, queryParams.executorUserId, null, queryParams.taskName)
     ])
     
     const reportedList = reportedResponse.data || []
@@ -454,6 +459,7 @@ const handleQuery = () => {
 
 // 重置查询
 const resetQuery = () => {
+  queryParams.taskName = null
   queryParams.executorUserId = null
   loadTasks()
 }

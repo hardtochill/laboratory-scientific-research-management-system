@@ -35,4 +35,9 @@ public class UnreportedTaskQueryDTO {
      * 任务类型（学生角色使用：1-我的待汇报任务，2-我的待接收汇报任务）
      */
     private Integer taskType;
+    
+    /**
+     * 任务名称（模糊查询）
+     */
+    private String taskName;
 }

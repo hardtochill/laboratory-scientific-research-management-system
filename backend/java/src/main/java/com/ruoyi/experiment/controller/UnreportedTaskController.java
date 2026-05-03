@@ -35,12 +35,14 @@ public class UnreportedTaskController extends BaseController {
     public AjaxResult listUnreportedTasks(
             @PathVariable Integer timeoutFlag,
             @RequestParam(required = false) Long executorUserId,
-            @RequestParam(required = false) Integer taskType) {
+            @RequestParam(required = false) Integer taskType,
+            @RequestParam(required = false) String taskName) {
         UnreportedTaskQueryDTO queryDTO = new UnreportedTaskQueryDTO();
         queryDTO.setTimeoutFlag(timeoutFlag);
         queryDTO.setCurrentUserId(SecurityUtils.getUserId());
         queryDTO.setExecutorUserId(executorUserId);
         queryDTO.setTaskType(taskType);
+        queryDTO.setTaskName(taskName);
         
         // 判断用户角色
         if (SecurityUtils.isTeacher()) {

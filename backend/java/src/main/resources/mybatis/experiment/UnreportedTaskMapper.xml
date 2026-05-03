@@ -45,6 +45,9 @@
         <where>
             t.task_status = 2
             AND t.report_flag = 1
+            <if test="taskName != null and taskName != ''">
+                AND t.task_name LIKE CONCAT('%', #{taskName}, '%')
+            </if>
             <choose>
                 <when test="userRole == 'teacher'">
                     <!-- 教师角色：可查看所有待汇报任务 -->
