@@ -44,7 +44,6 @@
         ) sub_task_counts ON t.task_id = sub_task_counts.parent_task_id
         <where>
             t.task_status = 2
-            AND t.report_flag = 1
             <if test="taskName != null and taskName != ''">
                 AND t.task_name LIKE CONCAT('%', #{taskName}, '%')
             </if>
@@ -75,15 +74,24 @@
             </choose>
             <choose>
                 <when test="timeoutFlag == 1">
-                    <!-- 已汇报/未超时：最后汇报时间不为空且距离当前时间不超过reportFrequency天 -->
+                    <!-- 已汇报/未超时：需要开启汇报的任务 -->
+                    AND t.report_flag = 1
                     AND tr.last_report_time IS NOT NULL
                     AND DATEDIFF(NOW(), tr.last_report_time) &lt;= t.report_frequency
                 </when>
                 <when test="timeoutFlag == 2">
-                    <!-- 超时未汇报：最后汇报时间为空，或距离当前时间超过reportFrequency天 -->
+                    <!-- 超时未汇报：需要开启汇报的任务 -->
+                    AND t.report_flag = 1
                     AND (
                         tr.last_report_time IS NULL
                         OR DATEDIFF(NOW(), tr.last_report_time) > t.report_frequency
+                    )
+                </when>
+                <when test="timeoutFlag == 3">
+                    <!-- 全部汇报记录：开启了汇报的任务 + 关闭了汇报但曾产生过汇报记录的任务 -->
+                    AND (
+                        t.report_flag = 1
+                        OR tr.last_report_time IS NOT NULL
                     )
                 </when>
             </choose>

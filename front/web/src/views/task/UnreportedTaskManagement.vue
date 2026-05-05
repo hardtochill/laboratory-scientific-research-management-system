@@ -67,6 +67,25 @@
               </div>
             </div>
           </el-tab-pane>
+
+          <el-tab-pane label="全部汇报记录" name="all-reports">
+            <template #label>
+              <span class="tab-label">
+                全部汇报记录
+                <span class="task-count">{{ toAllReportsCount }}</span>
+              </span>
+            </template>
+            <div v-if="toAllReportsTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无汇报记录" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in toAllReportsTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </el-tab-pane>
 
@@ -115,6 +134,25 @@
               </div>
             </div>
           </el-tab-pane>
+
+          <el-tab-pane label="全部汇报记录" name="all-reports">
+            <template #label>
+              <span class="tab-label">
+                全部汇报记录
+                <span class="task-count">{{ receiveAllReportsCount }}</span>
+              </span>
+            </template>
+            <div v-if="receiveAllReportsTaskList.length === 0 && !loading" class="empty-tip">
+              <el-empty description="暂无汇报记录" />
+            </div>
+            <div v-else class="task-list">
+              <div v-for="task in receiveAllReportsTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+                <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+                  :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+                  @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+              </div>
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </el-tab-pane>
     </el-tabs>
@@ -152,6 +190,25 @@
         </div>
         <div v-else class="task-list">
           <div v-for="task in timeoutTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
+            <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
+              :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
+              @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
+          </div>
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="全部汇报记录" name="all-reports">
+        <template #label>
+          <span class="tab-label">
+            全部汇报记录
+            <span class="task-count">{{ allReportsCount }}</span>
+          </span>
+        </template>
+        <div v-if="allReportsTaskList.length === 0 && !loading" class="empty-tip">
+          <el-empty description="暂无汇报记录" />
+        </div>
+        <div v-else class="task-list">
+          <div v-for="task in allReportsTaskList" :key="task.taskId" class="task-item" @click="handleTaskClick(task)">
             <TaskItemCard :task="task" :is-hierarchical="hierarchicalTaskIds.has(task.taskId)"
               :parent-chain="taskParentChainMap.get(task.taskId) || []" @report="handleReportTask"
               @show-hierarchical="handleShowHierarchical" @show-single="handleShowSingle" />
@@ -265,20 +322,26 @@ const userLoading = ref(false)
 // 教师角色任务列表
 const reportedTaskList = ref([])
 const timeoutTaskList = ref([])
+const allReportsTaskList = ref([])
 const reportedCount = ref(0)
 const timeoutCount = ref(0)
+const allReportsCount = ref(0)
 
 // 学生角色：我的待汇报任务列表
 const toReportedTaskList = ref([])
 const toTimeoutTaskList = ref([])
+const toAllReportsTaskList = ref([])
 const toReportedCount = ref(0)
 const toTimeoutCount = ref(0)
+const toAllReportsCount = ref(0)
 
 // 学生角色：我的待接收汇报任务列表
 const receiveReportedTaskList = ref([])
 const receiveTimeoutTaskList = ref([])
+const receiveAllReportsTaskList = ref([])
 const receiveReportedCount = ref(0)
 const receiveTimeoutCount = ref(0)
+const receiveAllReportsCount = ref(0)
 
 const loading = ref(false)
 
@@ -341,22 +404,23 @@ const querySelectableStudents = async (nickName) => {
 const loadTeacherTasks = async () => {
   loading.value = true
   try {
-    const [reportedResponse, timeoutResponse] = await Promise.all([
+    const [reportedResponse, timeoutResponse, allReportsResponse] = await Promise.all([
       getUnreportedTaskList(1, queryParams.executorUserId, null, queryParams.taskName),
-      getUnreportedTaskList(2, queryParams.executorUserId, null, queryParams.taskName)
+      getUnreportedTaskList(2, queryParams.executorUserId, null, queryParams.taskName),
+      getUnreportedTaskList(3, queryParams.executorUserId, null, queryParams.taskName)
     ])
     
     const reportedList = reportedResponse.data || []
     const timeoutList = timeoutResponse.data || []
+    const allReportsList = allReportsResponse.data || []
     
     reportedCount.value = reportedList.length
     timeoutCount.value = timeoutList.length
+    allReportsCount.value = allReportsList.length
     
-    if (activeTab.value === 'reported') {
-      reportedTaskList.value = reportedList
-    } else {
-      timeoutTaskList.value = timeoutList
-    }
+    reportedTaskList.value = reportedList
+    timeoutTaskList.value = timeoutList
+    allReportsTaskList.value = allReportsList
   } catch (error) {
     ElMessage.error('加载任务失败')
     console.error('加载任务失败:', error)
@@ -369,36 +433,39 @@ const loadTeacherTasks = async () => {
 const loadStudentTasks = async () => {
   loading.value = true
   try {
-    const [toReportedResponse, toTimeoutResponse, receiveReportedResponse, receiveTimeoutResponse] = await Promise.all([
+    const [toReportedResponse, toTimeoutResponse, toAllReportsResponse,
+           receiveReportedResponse, receiveTimeoutResponse, receiveAllReportsResponse] = await Promise.all([
       getUnreportedTaskList(1, null, 1),
       getUnreportedTaskList(2, null, 1),
+      getUnreportedTaskList(3, null, 1),
       getUnreportedTaskList(1, null, 2),
-      getUnreportedTaskList(2, null, 2)
+      getUnreportedTaskList(2, null, 2),
+      getUnreportedTaskList(3, null, 2)
     ])
     
     // 我的待汇报任务
     const toReportedList = toReportedResponse.data || []
     const toTimeoutList = toTimeoutResponse.data || []
+    const toAllReportsList = toAllReportsResponse.data || []
     toReportedCount.value = toReportedList.length
     toTimeoutCount.value = toTimeoutList.length
+    toAllReportsCount.value = toAllReportsList.length
     
-    if (activeSubTabForToReport.value === 'reported') {
-      toReportedTaskList.value = toReportedList
-    } else {
-      toTimeoutTaskList.value = toTimeoutList
-    }
+    toReportedTaskList.value = toReportedList
+    toTimeoutTaskList.value = toTimeoutList
+    toAllReportsTaskList.value = toAllReportsList
     
     // 我的待接收汇报任务
     const receiveReportedList = receiveReportedResponse.data || []
     const receiveTimeoutList = receiveTimeoutResponse.data || []
+    const receiveAllReportsList = receiveAllReportsResponse.data || []
     receiveReportedCount.value = receiveReportedList.length
     receiveTimeoutCount.value = receiveTimeoutList.length
+    receiveAllReportsCount.value = receiveAllReportsList.length
     
-    if (activeSubTabForToReceive.value === 'reported') {
-      receiveReportedTaskList.value = receiveReportedList
-    } else {
-      receiveTimeoutTaskList.value = receiveTimeoutList
-    }
+    receiveReportedTaskList.value = receiveReportedList
+    receiveTimeoutTaskList.value = receiveTimeoutList
+    receiveAllReportsTaskList.value = receiveAllReportsList
   } catch (error) {
     ElMessage.error('加载任务失败')
     console.error('加载任务失败:', error)
@@ -432,9 +499,13 @@ const handleSubTabChangeForToReport = () => {
     getUnreportedTaskList(1, null, 1).then(response => {
       toReportedTaskList.value = response.data || []
     })
-  } else {
+  } else if (activeSubTabForToReport.value === 'timeout') {
     getUnreportedTaskList(2, null, 1).then(response => {
       toTimeoutTaskList.value = response.data || []
+    })
+  } else if (activeSubTabForToReport.value === 'all-reports') {
+    getUnreportedTaskList(3, null, 1).then(response => {
+      toAllReportsTaskList.value = response.data || []
     })
   }
 }
@@ -445,9 +516,13 @@ const handleSubTabChangeForToReceive = () => {
     getUnreportedTaskList(1, null, 2).then(response => {
       receiveReportedTaskList.value = response.data || []
     })
-  } else {
+  } else if (activeSubTabForToReceive.value === 'timeout') {
     getUnreportedTaskList(2, null, 2).then(response => {
       receiveTimeoutTaskList.value = response.data || []
+    })
+  } else if (activeSubTabForToReceive.value === 'all-reports') {
+    getUnreportedTaskList(3, null, 2).then(response => {
+      receiveAllReportsTaskList.value = response.data || []
     })
   }
 }
