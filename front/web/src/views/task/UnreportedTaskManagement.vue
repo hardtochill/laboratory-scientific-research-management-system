@@ -237,7 +237,7 @@
           </el-descriptions-item>
 
           <el-descriptions-item label="创建人">
-            {{ currentDetailTask.createUserNickName || '-' }}
+            {{ currentDetailTask.createNickName || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="执行人">
             {{ currentDetailTask.executorNickName || '-' }}
