@@ -1,6 +1,7 @@
 package com.ruoyi.experiment.service.impl;
 
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.experiment.mapper.TaskMapper;
 import com.ruoyi.experiment.mapper.TaskReportFileMapper;
 import com.ruoyi.experiment.mapper.TaskReportMapper;
 import com.ruoyi.experiment.pojo.dto.TaskReportDto;
@@ -39,25 +40,54 @@ public class TaskReportServiceImpl implements TaskReportService {
     private final TaskReportMapper taskReportMapper;
     private final TaskReportFileMapper taskReportFileMapper;
     private final TaskReportFileService taskReportFileService;
+    private final TaskMapper taskMapper;
     private final ExperimentConfig experimentConfig;
 
     /**
      * 查询任务汇报列表
-     *
-     * @param taskId    任务id
-     * @param startTime 开始时间
-     * @param endTime   结束时间
-     * @return 任务汇报列表
      */
     @Override
     public List<TaskReportVo> getTaskReportList(Long taskId, LocalDateTime startTime, LocalDateTime endTime) {
         log.info("查询任务汇报列表, taskId: {}, startTime: {}, endTime: {}", taskId, startTime, endTime);
         List<TaskReportVo> taskReportVoList = taskReportMapper.selectTaskReportList(taskId, startTime, endTime);
-        // 查询每个汇报关联的文件列表
         for (TaskReportVo taskReportVo : taskReportVoList) {
             taskReportVo.setTaskReportFiles(taskReportFileMapper.selectVOByTaskReportId(taskReportVo.getId()));
         }
         return taskReportVoList;
+    }
+
+    /**
+     * 查询根任务及其所有子任务的汇报列表
+     */
+    @Override
+    public List<TaskReportVo> getTaskReportListByRootTask(Long rootTaskId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("查询根任务下所有汇报, rootTaskId: {}, startTime: {}, endTime: {}", rootTaskId, startTime, endTime);
+        // 递归收集根任务及所有后代任务ID
+        List<Long> allTaskIds = new ArrayList<>();
+        collectAllTaskIds(rootTaskId, allTaskIds);
+        
+        if (allTaskIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<TaskReportVo> taskReportVoList = taskReportMapper.selectTaskReportListByTaskIds(allTaskIds, startTime, endTime);
+        for (TaskReportVo taskReportVo : taskReportVoList) {
+            taskReportVo.setTaskReportFiles(taskReportFileMapper.selectVOByTaskReportId(taskReportVo.getId()));
+        }
+        return taskReportVoList;
+    }
+
+    /**
+     * 递归收集任务ID（包含自身及所有后代）
+     */
+    private void collectAllTaskIds(Long taskId, List<Long> result) {
+        result.add(taskId);
+        List<Long> subTaskIds = taskMapper.selectSubTaskIds(taskId);
+        if (!CollectionUtils.isEmpty(subTaskIds)) {
+            for (Long subTaskId : subTaskIds) {
+                collectAllTaskIds(subTaskId, result);
+            }
+        }
     }
 
     /**

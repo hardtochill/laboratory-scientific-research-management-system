@@ -32,6 +32,25 @@
         order by report_time desc
     </select>
 
+    <select id="selectTaskReportListByTaskIds" resultType="com.ruoyi.experiment.pojo.vo.TaskReportVo">
+        select tr.id, tr.task_id, tr.user_id, tr.user_nick_name, tr.report_content,
+               tr.report_time, tr.create_time, tr.update_time,
+               t.task_name as taskName
+        from task_report tr
+        left join task t on tr.task_id = t.task_id
+        where tr.task_id in
+        <foreach collection="taskIds" item="taskId" open="(" separator="," close=")">
+            #{taskId}
+        </foreach>
+        <if test="startTime != null">
+            and tr.report_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and tr.report_time &lt;= #{endTime}
+        </if>
+        order by tr.report_time desc
+    </select>
+
     <insert id="insertTaskReport" useGeneratedKeys="true" keyProperty="id">
         insert into task_report
         <trim prefix="(" suffix=")" suffixOverrides=",">

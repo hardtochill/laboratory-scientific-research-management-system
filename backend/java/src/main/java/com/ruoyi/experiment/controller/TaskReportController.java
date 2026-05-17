@@ -45,6 +45,22 @@ public class TaskReportController extends BaseController {
     }
 
     /**
+     * 查询根任务及其所有子任务的汇报列表
+     *
+     * @param rootTaskId 根任务id
+     * @param startTime  开始时间
+     * @param endTime    结束时间
+     * @return 汇报列表
+     */
+    @GetMapping("/listByRootTask/{rootTaskId}")
+    public TableDataInfo listByRootTask(@PathVariable Long rootTaskId,
+                              @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startTime,
+                              @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endTime) {
+        List<TaskReportVo> list = taskReportService.getTaskReportListByRootTask(rootTaskId, startTime, endTime);
+        return getDataTable(list);
+    }
+
+    /**
      * 新增任务汇报
      *
      * @param taskId       任务id

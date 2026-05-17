@@ -41,6 +41,18 @@ public interface TaskReportMapper {
                                             @Param("endTime") LocalDateTime endTime);
 
     /**
+     * 根据多个任务ID查询汇报列表
+     *
+     * @param taskIds   任务ID列表
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @return 任务汇报列表
+     */
+    List<TaskReportVo> selectTaskReportListByTaskIds(@Param("taskIds") List<Long> taskIds,
+                                                     @Param("startTime") LocalDateTime startTime,
+                                                     @Param("endTime") LocalDateTime endTime);
+
+    /**
      * 新增任务汇报
      *
      * @param taskReport 任务汇报

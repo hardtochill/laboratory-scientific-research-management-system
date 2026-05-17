@@ -28,6 +28,11 @@ public class TaskReportVo implements Serializable {
     private Long taskId;
 
     /**
+     * 任务名称
+     */
+    private String taskName;
+
+    /**
      * 用户id
      */
     private Long userId;

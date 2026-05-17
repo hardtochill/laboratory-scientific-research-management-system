@@ -142,6 +142,11 @@
                     <el-button link type="primary" @click.stop="handleTaskReportClick(task)" :icon="Clock"
                       style="margin-left: 0px;"></el-button>
                   </el-tooltip>
+                  <!-- 全部汇报按钮（仅一级父任务） -->
+                  <el-tooltip content="查看全部子任务汇报" placement="top">
+                    <el-button link type="primary" @click.stop="handleAllReportsClick(task)" :icon="Notebook"
+                      style="margin-left: 0px;"></el-button>
+                  </el-tooltip>
                   <!-- 修改状态下拉菜单 -->
                   <el-tooltip content="更新任务状态" placement="top" v-if="hasTaskPermission(task)">
                     <el-dropdown trigger="click" @command="(newStatus) => handleChangeStatus(task, newStatus)">
@@ -619,6 +624,107 @@
           </div>
         </template>
       </el-dialog>
+
+      <!-- 全部子任务汇报对话框 -->
+      <el-dialog v-model="allReportsDialogVisible" title="全部子任务汇报" width="750px" :before-close="handleAllReportsDialogClose">
+        <div class="report-dialog-content">
+          <!-- 任务信息 -->
+          <div class="task-info-section">
+            <h4 class="section-title">根任务信息</h4>
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="任务名称">{{ currentRootTaskForAllReports?.taskName }}</el-descriptions-item>
+              <el-descriptions-item label="任务状态">
+                <el-tag :type="getStatusType(currentRootTaskForAllReports?.taskStatus)">
+                  {{ getStatusText(currentRootTaskForAllReports?.taskStatus) }}
+                </el-tag>
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
+
+          <!-- 时间范围查询 -->
+          <div class="report-query-section">
+            <div class="query-row">
+              <span class="query-label">时间范围：</span>
+              <el-date-picker v-model="allReportsQuery.dateRange" type="daterange" range-separator="至"
+                start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD HH:mm:ss"
+                :default-time="['00:00:00', '23:59:59']" />
+              <el-button type="primary" @click="loadAllReports" style="margin-left: 10px;">查询</el-button>
+            </div>
+            <div class="quick-query-row">
+              <span class="quick-query-label">快捷查询：</span>
+              <el-segmented v-model="allReportsSelectedDateRange" :options="dateSegmentOptions" @change="handleAllReportsDateSegmentChange"
+                size="small" />
+            </div>
+          </div>
+
+          <!-- 汇报记录（按任务分组） -->
+          <div class="report-timeline-section">
+            <h4 class="section-title">汇报记录 ({{ allReportsTotalCount }}条，来自{{ allReportsGrouped.length }}个任务)</h4>
+            <div v-if="allReportsLoading" class="report-loading">
+              <el-skeleton :rows="3" animated />
+            </div>
+            <div v-else-if="allReportsGrouped.length === 0" class="no-reports">
+              <el-empty description="暂无汇报记录" />
+            </div>
+            <div v-else class="all-reports-grouped-container">
+              <el-collapse v-model="allReportsExpandedTasks">
+                <el-collapse-item v-for="group in allReportsGrouped" :key="group.taskId" :name="group.taskId">
+                  <template #title>
+                    <div class="group-header">
+                      <span class="group-task-name">{{ group.taskName }}</span>
+                      <el-tag size="small" type="info" effect="plain" class="group-count">{{ group.reports.length }}条汇报</el-tag>
+                    </div>
+                  </template>
+                  <div class="group-timeline-container">
+                    <el-timeline class="report-timeline">
+                      <el-timeline-item v-for="report in group.reports" :key="report.id" :timestamp="report.reportTime"
+                        placement="top" type="primary">
+                        <el-card class="report-card" shadow="hover">
+                          <div class="report-header">
+                            <span class="report-user">{{ report.userNickName }}</span>
+                          </div>
+                          <div class="report-content-wrapper">
+                            <p class="report-content" :class="{ 'expanded': report.expanded }"
+                              @click="report.expanded = !report.expanded">
+                              {{ report.expanded ? report.reportContent : truncateContent(report.reportContent) }}
+                            </p>
+                            <el-link v-if="report.reportContent && report.reportContent.length > 30" type="primary"
+                              :underline="false" @click="report.expanded = !report.expanded" class="expand-link">
+                              {{ report.expanded ? '收起' : '展开' }}
+                            </el-link>
+                          </div>
+                          <!-- 关联文件列表 -->
+                          <div v-if="report.taskReportFiles && report.taskReportFiles.length > 0" class="report-files-section">
+                            <div class="files-title">关联文件：</div>
+                            <div class="files-list">
+                              <el-link 
+                                v-for="file in report.taskReportFiles" 
+                                :key="file.id" 
+                                type="primary" 
+                                :underline="false"
+                                @click="handleDownloadTaskReportFile(file.id, file.fileName, file.fileType)"
+                                class="file-item"
+                              >
+                                <el-icon><Document /></el-icon>
+                                {{ file.fileName }}.{{ file.fileType }}
+                              </el-link>
+                            </div>
+                          </div>
+                        </el-card>
+                      </el-timeline-item>
+                    </el-timeline>
+                  </div>
+                </el-collapse-item>
+              </el-collapse>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button @click="handleAllReportsDialogClose">关闭</el-button>
+          </div>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -628,11 +734,11 @@ import { ref, onMounted, onUnmounted, reactive, toRefs, computed, nextTick } fro
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getList, getSubTasks, getTaskDetail, addTask, updateTask, updateTaskStatus, deleteTask, getTaskParticipantUsers,getSelectableUsers,getSelectableStudents } from '@/api/task/task'
 import { getTaskFileList, uploadTaskFile, deleteTaskFile } from '@/api/task/taskFile'
-import { getTaskReportList, addTaskReport, deleteTaskReport } from '@/api/task/taskReport'
+import { getTaskReportList, addTaskReport, deleteTaskReport, getTaskReportListByRootTask } from '@/api/task/taskReport'
 import { downloadTaskReportFile } from '@/api/task/taskReportFile'
 import TaskItem from './components/TaskItem.vue'
 import { parseTime, addDateRange } from '@/utils/ruoyi'
-import { CaretRight, CaretBottom, Plus, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files, Clock, Tools, Edit } from '@element-plus/icons-vue'
+import { CaretRight, CaretBottom, Plus, Switch, Delete, InfoFilled, UploadFilled, Download, Document, Files, Clock, Tools, Edit, Notebook } from '@element-plus/icons-vue'
 import useUserStore from '@/store/modules/user'
 import { download } from "@/utils/request"
 
@@ -845,6 +951,18 @@ const dateSegmentOptions = [
   { label: '全部', value: 'all' }
 ]
 const selectedDateRange = ref('last4days')
+
+// 全部子任务汇报相关状态
+const allReportsDialogVisible = ref(false)
+const currentRootTaskForAllReports = ref(null)
+const allReportsGrouped = ref([])
+const allReportsTotalCount = ref(0)
+const allReportsExpandedTasks = ref([])
+const allReportsLoading = ref(false)
+const allReportsQuery = reactive({
+  dateRange: []
+})
+const allReportsSelectedDateRange = ref('all')
 
 // 表单数据
 const formData = reactive({
@@ -1860,6 +1978,108 @@ const handleDeleteReport = async (report) => {
   }
 }
 
+// ========== 全部子任务汇报相关 ==========
+
+// 点击"查看全部子任务汇报"按钮
+const handleAllReportsClick = (task) => {
+  currentRootTaskForAllReports.value = task
+  allReportsDialogVisible.value = true
+  allReportsSelectedDateRange.value = 'all'
+  allReportsQuery.dateRange = []
+  loadAllReports()
+}
+
+// 加载全部子任务汇报列表
+const loadAllReports = async () => {
+  if (!currentRootTaskForAllReports.value) return
+  
+  allReportsLoading.value = true
+  allReportsGrouped.value = []
+  allReportsTotalCount.value = 0
+  
+  try {
+    const params = {}
+    if (allReportsQuery.dateRange && allReportsQuery.dateRange.length === 2) {
+      if (allReportsQuery.dateRange[0]) {
+        params.startTime = allReportsQuery.dateRange[0]
+      }
+      if (allReportsQuery.dateRange[1]) {
+        params.endTime = allReportsQuery.dateRange[1]
+      }
+    }
+    const response = await getTaskReportListByRootTask(currentRootTaskForAllReports.value.taskId, params)
+    await nextTick()
+    const flatList = (response.rows || []).map(report => ({
+      ...report,
+      expanded: false
+    }))
+    allReportsTotalCount.value = flatList.length
+    
+    // 按 taskId 分组
+    const groupMap = new Map()
+    for (const report of flatList) {
+      if (!groupMap.has(report.taskId)) {
+        groupMap.set(report.taskId, {
+          taskId: report.taskId,
+          taskName: report.taskName || '未知任务',
+          reports: []
+        })
+      }
+      groupMap.get(report.taskId).reports.push(report)
+    }
+    allReportsGrouped.value = Array.from(groupMap.values())
+    // 默认展开所有任务分组
+    allReportsExpandedTasks.value = allReportsGrouped.value.map(g => g.taskId)
+  } catch (error) {
+    ElMessage.error('加载汇报记录失败')
+    console.error('加载全部子任务汇报失败:', error)
+  } finally {
+    allReportsLoading.value = false
+  }
+}
+
+// 全部汇报对话框日期快捷选项变化
+const handleAllReportsDateSegmentChange = (value) => {
+  const end = new Date()
+  const start = new Date()
+  
+  switch (value) {
+    case 'today':
+      start.setHours(0, 0, 0, 0)
+      end.setHours(23, 59, 59, 999)
+      allReportsQuery.dateRange = [formatDateTime(start), formatDateTime(end)]
+      break
+    case 'last4days':
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 4)
+      allReportsQuery.dateRange = [formatDateTime(start), formatDateTime(end)]
+      break
+    case 'last1month':
+      start.setMonth(start.getMonth() - 1)
+      allReportsQuery.dateRange = [formatDateTime(start), formatDateTime(end)]
+      break
+    case 'last1year':
+      start.setFullYear(start.getFullYear() - 1)
+      allReportsQuery.dateRange = [formatDateTime(start), formatDateTime(end)]
+      break
+    case 'all':
+      allReportsQuery.dateRange = []
+      break
+    default:
+      allReportsQuery.dateRange = []
+  }
+  loadAllReports()
+}
+
+// 关闭全部汇报对话框
+const handleAllReportsDialogClose = () => {
+  allReportsDialogVisible.value = false
+  currentRootTaskForAllReports.value = null
+  allReportsGrouped.value = []
+  allReportsTotalCount.value = 0
+  allReportsExpandedTasks.value = []
+  allReportsQuery.dateRange = []
+}
+
 // 页面加载时初始化数据
 onMounted(async () => {
   // 如果初始是"我的任务"模式，设置userId
@@ -2754,6 +2974,68 @@ onUnmounted(() => {
 .creator-badge:hover {
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* 全部子任务汇报 - 按任务分组样式 */
+.all-reports-grouped-container {
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.all-reports-grouped-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.all-reports-grouped-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.all-reports-grouped-container::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+.all-reports-grouped-container::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.group-task-name {
+  font-weight: 600;
+  color: #303133;
+  font-size: 14px;
+}
+
+.group-count {
+  flex-shrink: 0;
+}
+
+.group-timeline-container {
+  padding: 10px 0 0 10px;
+}
+
+:deep(.all-reports-grouped-container .el-collapse-item__header) {
+  font-size: 14px;
+  padding: 0 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+:deep(.all-reports-grouped-container .el-collapse-item__wrap) {
+  border-bottom: none;
+}
+
+:deep(.all-reports-grouped-container .el-collapse-item__content) {
+  padding-bottom: 8px;
 }
 
 </style>

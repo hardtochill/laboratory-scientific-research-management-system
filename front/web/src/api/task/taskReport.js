@@ -9,6 +9,15 @@ export function getTaskReportList(taskId, query) {
   })
 }
 
+// 查询根任务及其所有子任务的汇报列表
+export function getTaskReportListByRootTask(rootTaskId, query) {
+  return request({
+    url: '/taskReport/listByRootTask/' + rootTaskId,
+    method: 'get',
+    params: query
+  })
+}
+
 // 新增任务汇报
 export function addTaskReport(taskId, reportContent, fileList) {
   const formData = new FormData()

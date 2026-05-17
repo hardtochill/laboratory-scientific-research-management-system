@@ -24,6 +24,16 @@ public interface TaskReportService {
     List<TaskReportVo> getTaskReportList(Long taskId, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
+     * 查询根任务及其所有子任务的汇报列表
+     *
+     * @param rootTaskId 根任务id
+     * @param startTime  开始时间
+     * @param endTime    结束时间
+     * @return 任务汇报列表
+     */
+    List<TaskReportVo> getTaskReportListByRootTask(Long rootTaskId, LocalDateTime startTime, LocalDateTime endTime);
+
+    /**
      * 新增任务汇报
      *
      * @param taskReportDto 任务汇报DTO
